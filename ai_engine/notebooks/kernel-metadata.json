@@ -1,5 +1,17 @@
 {
+    "id": "husniabdillah/qlop-ner-cv-extraction",
+    "title": "QLOP NER v2 IT Skill Extraction",
+    "code_file": "QLOP_NER_v2_IT_SkillExtraction.ipynb",
+    "language": "python",
+    "kernel_type": "notebook",
+    "is_private": true,
+    "enable_gpu": true,
+    "enable_tpu": false,
+    "enable_internet": true,
     "dataset_sources": [
-        "dataturks/resume-entities-for-ner"
-    ]
-}
+      "husniabdillah/qlop-ner-dataset"
+    ],
+    "competition_sources": [],
+    "kernel_sources": [],
+    "model_sources": []
+  }
