@@ -34,7 +34,7 @@ qlop/
 
 #### 1. Clone the Repository
 ```bash
-git clone [https://github.com/QLOP-CC26/qlop.git](https://github.com/QLOP-CC26/qlop.git)
+git clone https://github.com/QLOP-CC26/qlop.git
 cd qlop
 ```
 
