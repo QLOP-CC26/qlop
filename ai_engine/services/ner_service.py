@@ -31,7 +31,7 @@ async def download_pdf_from_cloudinary(url: str) -> bytes:
         response.raise_for_status()
         content_type = response.headers.get("content-type", "")
         if "pdf" not in content_type and not url.lower().endswith(".pdf"):
-            raise ValueError("URL tidak mengembalikan file PDF valid.")
+            raise ValueError("URL did not return a valid PDF file.")
         return response.content
 
 
@@ -237,17 +237,47 @@ def _normalize_skill(skill_text: str) -> tuple[str, str]:
     return skill_text.strip(), "other_tools"
 
 
+# Common word fragments, location words, and generic terms that the NER
+# mis-tags as Company entities (especially from sliding-window boundaries).
+_COMPANY_BLOCKLIST: frozenset[str] = frozenset({
+    # short fragments
+    "full", "id", "be", "pb", "men", "port", "per", "edu", "bog",
+    "anian", "camp", "the", "and", "of", "in", "at", "to", "for", "by",
+    # cities / country words
+    "remote", "bogor", "jakarta", "bandung", "surabaya", "indonesia",
+    # job roles (mis-tagged when no company is present)
+    "backend", "frontend", "mobile", "web", "cloud", "data", "intern",
+    "staff", "engineer", "developer", "manager", "officer",
+    # language names that bleed from the Languages section
+    "english", "indonesian", "japanese", "mandarin", "chinese",
+    # CV section / training cohort fragments
+    "multi", "cohort", "competency", "relevant", "about",
+    # standalone institution-type words that are fragments of full names
+    "institut", "university", "institute", "college", "academy",
+    "foundation", 
+})
+
+
 def _is_valid_company(text: str) -> bool:
-    """Reject single-char abbreviations and obvious fragments."""
+    """Reject obvious NER fragments, single-char abbreviations, and generic words."""
     s = text.strip()
-    if not s or len(s) < 2:
+    if not s or len(s) < 3:
         return False
     if not re.search(r"[a-zA-Z]", s):
         return False
-    # Reject single-word strings shorter than 3 chars (e.g. "f", "I", "BE")
-    # but allow known 2–3 char abbreviations only if all-caps
-    if len(s) <= 2 and not s.isupper():
+    # Fragments produced by sliding-window boundaries start with lowercase
+    if not s[0].isupper():
         return False
+    words = s.split()
+    if len(words) == 1:
+        # Allow known-valid 3-char all-caps abbreviations (e.g. "IPB", "DBS")
+        if s.isupper() and len(s) >= 3:
+            return s.lower() not in _COMPANY_BLOCKLIST
+        # Single-word companies must have at least 5 chars (e.g. "Tokopedia")
+        if len(s) < 5:
+            return False
+        if s.lower() in _COMPANY_BLOCKLIST:
+            return False
     return True
 
 
@@ -270,11 +300,12 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
         label, text, _ = ent["label"], ent["text"].strip(), ent["confidence"]
 
         if label == "Name" and not output["name"]:
-            # Require at least 2 words or a reasonable length
             if len(text) >= 3 and not text.startswith(("http", "www")):
                 output["name"] = text
         elif label == "Location" and not output["location"]:
-            if len(text) >= 3:
+            # Reject language names, proficiency levels, and section headers
+            # mis-tagged as Location (e.g. "Indonesian", "Relevant")
+            if len(text) >= 3 and text.lower() not in _INVALID_LOCATION_WORDS:
                 output["location"] = text
         elif label == "Company":
             if _is_valid_company(text):
@@ -285,7 +316,12 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
         elif label == "YearsExperience":
             duration_texts.append(text)
         elif label == "Degree":
-            if len(text) >= 3:
+            # Require ≥2 words OR a known degree abbreviation (e.g. "S1", "B.Sc.")
+            # Single generic words like "Multi", "Camp", "Full" are training fragments.
+            words_in_degree = text.split()
+            if len(words_in_degree) >= 2 or (len(text) >= 3 and text[:2].upper() in {
+                "S1", "S2", "S3", "D3", "D4",
+            }):
                 degrees.append(text)
         elif label == "Institution":
             if len(text) >= 3:
@@ -297,6 +333,17 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
                 if key not in skills_seen:
                     skills_seen.add(key)
                     output["skills"].append(normalized)
+
+    # ── Name: if NER returned a single token, try regex on the first 10 lines ──
+    # The DeBERTa model sometimes captures only the first token of a multi-word name
+    # capitalized multi-word name in the document header.
+    if not output["name"] or len(output["name"].split()) < 2:
+        header_lines = raw_text.split("\n")[:10]
+        for line in header_lines:
+            line = line.strip()
+            if _NAME_RE.match(line) and len(line.split()) >= 2:
+                output["name"] = line
+                break
 
     # ── Email & Phone: regex always wins (NER tags these unreliably) ──
     email_match = _EMAIL_RE.search(raw_text)
@@ -318,6 +365,21 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
             "duration": duration_texts[i] if i < len(duration_texts) else "",
         })
 
+    # Post-process: remove duplicate work entries and discard entries where
+    # the company has no designation AND is very short (leftover NER fragments).
+    seen_work: set[tuple[str, str]] = set()
+    clean_work: list[dict] = []
+    for entry in output["work_experience"]:
+        company = entry["company"].strip()
+        designation = entry["designation"].strip()
+        if not designation and len(company) < 6:
+            continue  # likely a fragment like "Camp", "Port", "ID"
+        key = (company.lower(), designation.lower())
+        if key not in seen_work:
+            seen_work.add(key)
+            clean_work.append(entry)
+    output["work_experience"] = clean_work
+
     # ── Education ──
     for i in range(max(len(degrees), len(institutions))):
         output["education"].append({
@@ -334,22 +396,22 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
 
 def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
     """Run full NER pipeline on text (section-aware + full-doc merge)."""
-    all_entities: list[dict] = []
+    # Accumulate entities from section pass first, then full-doc pass.
+    # Deduplicate by (label, text.lower()), keeping the highest-confidence instance.
+    seen: dict[tuple[str, str], dict] = {}
 
     if "skills" in sections:
-        skill_entities = _sliding_window_ner(sections["skills"])
-        all_entities.extend(skill_entities)
+        for ent in _sliding_window_ner(sections["skills"]):
+            key = (ent["label"], ent["text"].lower())
+            if key not in seen or ent["confidence"] > seen[key]["confidence"]:
+                seen[key] = ent
 
-    full_entities = _sliding_window_ner(raw_text)
+    for ent in _sliding_window_ner(raw_text):
+        key = (ent["label"], ent["text"].lower())
+        if key not in seen or ent["confidence"] > seen[key]["confidence"]:
+            seen[key] = ent
 
-    skill_texts = {e["text"].lower() for e in all_entities}
-    for ent in full_entities:
-        if ent["text"].lower() not in skill_texts:
-            all_entities.append(ent)
-        elif ent["label"] != "Skill":
-            all_entities.append(ent)
-
-    return _structure_output(all_entities, raw_text)
+    return _structure_output(list(seen.values()), raw_text)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -367,7 +429,23 @@ _DATE_RANGE_RE = re.compile(
     r"\s+(\d{4})|(?:Now|Present|Current))",
     re.IGNORECASE,
 )
-_NAME_RE = re.compile(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$")
+_NAME_RE = re.compile(r"^[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3}$")
+
+# Words that should never be accepted as a Location entity.
+# Covers language names mis-tagged from the "Languages:" section,
+# proficiency levels, and common CV section headers the NER confuses with locations.
+_INVALID_LOCATION_WORDS: frozenset[str] = frozenset({
+    # language names / nationality adjectives
+    "indonesian", "english", "japanese", "mandarin", "chinese", "korean",
+    "arabic", "french", "german", "spanish", "portuguese", "malay",
+    "javanese", "sundanese",
+    # proficiency levels
+    "native", "fluent", "moderate", "basic", "intermediate", "advanced", "bilingual",
+    # CV section headers / adjectives that bleed into location fields
+    "relevant", "courses", "certifications", "certification", "training",
+    "education", "skills", "experience", "about", "summary", "profile",
+    "contact", "references", "technical",
+})
 
 _KNOWN_SKILLS = {
     "python", "javascript", "typescript", "java", "c++", "c#", "go", "rust",
@@ -378,16 +456,33 @@ _KNOWN_SKILLS = {
     "html", "css", "bootstrap", "tailwind",
 }
 
-# Words that the NER frequently mis-tags as skills but are clearly not
-_SKILL_BLOCKLIST: set[str] = {
-    "english", "moderate", "native", "fluent", "basic", "intermediate", "advanced",
+# Words / phrases that the NER frequently mis-tags as skills but are clearly not.
+# Keys are lowercased full strings (exact match on skill_text.lower()).
+_SKILL_BLOCKLIST: frozenset[str] = frozenset({
+    # language / proficiency words
+    "english", "indonesian", "moderate", "native", "fluent",
+    "basic", "intermediate", "advanced",
+    # URL/contact fragments
     "www", "gmail", "linkedin", "github", "http", "https", "com", "id", "io",
+    # CV section headers
     "certifications", "certification", "training", "education", "experience",
-    "lecturers", "teaching", "assistants", "backup", "incremental",
-    "differential", "replication", "distribution", "modern", "rule",
-    "proffesion", "profession", "programming", "data", "structures",
-    "software", "cloud", "databases", "algorithms", "debugging",
-}
+    "about", "profile", "summary", "contact", "references",
+    # generic/too-broad terms
+    "programming", "data", "structures", "software", "cloud",
+    "databases", "algorithms", "debugging", "distribution", "modern", "rule",
+    # activity / role words (not skills)
+    "lecturers", "teaching", "assistants", "teaching assistants",
+    "response collection", "programming courses", "coding camp",
+    "academic", "deployment",
+    # NER fragment noise
+    "al", "linked", "full", "replica", "ssl",
+    "backup", "incremental", "differential", "replication",
+    # redundant compound phrases (the base skill is already extracted)
+    "scala programming", "basic programming", "core programming",
+    "modern web development", "replica database", "disaster recovery",
+    # other common false positives from Indonesian CV text
+    "proffesion", "profession", "web applications",
+})
 
 # A skill token must pass all these checks
 def _is_valid_skill(text: str) -> bool:
@@ -400,14 +495,21 @@ def _is_valid_skill(text: str) -> bool:
     # Reject single chars (even uppercase)
     if len(s) <= 1:
         return False
-    # Reject trailing/leading special chars like "English ("
+    # Reject overly long phrases (>30 chars) — these are usually descriptions,
+    # not skill names (e.g. "modern web development through academic projects")
+    if len(s) > 30:
+        return False
+    # Reject trailing open brackets/quotes (e.g. "English (")
     if re.search(r"[({[\<\"']$", s):
         return False
-    # Reject if >40% non-alphanumeric (e.g. "C/", "Al", "rithm")
+    # Reject trailing closing chars that indicate a fragment (e.g. "C/", "differential)")
+    if re.search(r"[/)\]>}]$", s):
+        return False
+    # Reject if >40% non-alphanumeric
     alnum_ratio = sum(c.isalnum() or c in "-+#./_ " for c in s) / len(s)
     if alnum_ratio < 0.6:
         return False
-    # Reject purely lowercase single words that are in blocklist
+    # Reject if in blocklist (exact lowercase match)
     if s.lower() in _SKILL_BLOCKLIST:
         return False
     # Reject if looks like an email fragment or URL fragment
@@ -486,7 +588,7 @@ def extract_cv(file_bytes: bytes) -> tuple[CVProfile, dict]:
     pages = pdf_data["pages"]
 
     if not raw_text.strip():
-        raise ValueError("Tidak ada teks yang dapat diekstrak dari PDF.")
+        raise ValueError("No text could be extracted from the PDF.")
 
     if registry.ner_available:
         result = extract_with_ner(raw_text, sections)
