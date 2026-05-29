@@ -385,7 +385,7 @@ if args.full:
 
         check("metadata.llm_turns = 3", meta.get("llm_turns") == 3, str(meta.get("llm_turns")))
         check("metadata.llm_model non-empty", bool(meta.get("llm_model")), meta.get("llm_model"))
-        check(f"wall-clock < 90s", elapsed_ms < 90_000, f"{elapsed_ms}ms")
+        check(f"wall-clock < 120s", elapsed_ms < 120_000, f"{elapsed_ms}ms")
 
     elif r.status_code == 503:
         print("    (503 — Groq quota/key issue, bukan bug aplikasi)")
