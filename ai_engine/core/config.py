@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     ner_sliding_window_size: int = 200
     ner_sliding_window_stride: int = 100
 
+    # --- HuggingFace model cache ---
+    # All HuggingFace downloads (DeBERTa base + SBERT) are stored here.
+    # Defaults to model_assets/hf_cache/ inside the project so the cache
+    # survives restarts and doesn't depend on the OS user home directory.
+    # Override with HF_CACHE_DIR=/path/to/shared/cache in .env for shared servers.
+    hf_cache_dir: Path = _BASE_DIR / "model_assets" / "hf_cache"
+
+    # SBERT model name — change to a larger model if readiness quality needs improvement
+    sbert_model_name: str = "all-MiniLM-L6-v2"
+
     # --- Groq (OpenAI-compatible, free tier) ---
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"

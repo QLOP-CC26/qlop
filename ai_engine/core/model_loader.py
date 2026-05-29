@@ -139,12 +139,19 @@ class ModelRegistry:
                     hidden = self.extra_dropout(outputs.hidden_states[-1], training=training)
                     return self.multi_head(hidden, base_logits, training=training)
 
-            logger.info("Loading DeBERTa-v3-base from HuggingFace (from_pt=True)...")
+            # Ensure cache directory exists before first download
+            settings.hf_cache_dir.mkdir(parents=True, exist_ok=True)
+
+            cache_str = str(settings.hf_cache_dir)
+            logger.info(
+                "Loading DeBERTa-v3-base (from_pt=True) — cache: %s", cache_str
+            )
             deberta_base = TFAutoModelForTokenClassification.from_pretrained(
                 settings.ner_base_model,
                 from_pt=True,
                 num_labels=num_labels,
                 ignore_mismatched_sizes=True,
+                cache_dir=cache_str,
             )
 
             model = QLOPNERModelV2(deberta_base, n_labels=num_labels,
@@ -272,7 +279,13 @@ class ModelRegistry:
     def load_readiness(self) -> None:
         from sentence_transformers import SentenceTransformer
 
-        self.sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
+        settings.hf_cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_str = str(settings.hf_cache_dir)
+        logger.info("Loading SBERT '%s' — cache: %s", settings.sbert_model_name, cache_str)
+        self.sbert_model = SentenceTransformer(
+            settings.sbert_model_name,
+            cache_folder=cache_str,
+        )
 
         data_dir = settings.rec_data_dir
         with open(data_dir / "role_job_skills.json", "r", encoding="utf-8") as f:
