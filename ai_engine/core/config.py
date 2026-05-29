@@ -38,7 +38,9 @@ class Settings(BaseSettings):
 
     # --- Groq (OpenAI-compatible, free tier) ---
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    # llama-3.1-8b-instant  → faster, 20k TPM free tier  (recommended for demo)
+    # llama-3.3-70b-versatile → better quality, 6k TPM free tier (hits 429 more often)
+    groq_model: str = "llama-3.1-8b-instant"
     groq_base_url: str = "https://api.groq.com/openai/v1"
 
     model_config = {"env_file": str(_BASE_DIR / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}

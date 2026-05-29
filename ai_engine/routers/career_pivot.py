@@ -107,7 +107,7 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
             "roles_evaluated": len(registry.role_centroids),
             "roles_returned": len(retrieved_roles),
             "llm_model": settings.groq_model,
-            "llm_turns": 3,
+            "llm_turns": 1,
             "processing_time_ms": elapsed,
         },
     )

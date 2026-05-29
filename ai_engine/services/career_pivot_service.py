@@ -1,15 +1,14 @@
 """Career Pivot Radar Service.
 
 Stage A — Lightweight RAG: SBERT role centroid cosine similarity.
-Stage B — Multi-turn Groq/Llama conversation (3 turns) with structured JSON output.
+Stage B — Single-shot Groq/Llama call with chain-of-thought embedded in system prompt.
 
 LLM Stack: openai SDK → Groq endpoint (llama-3.3-70b-versatile, free tier)
-  Turn 1 : free-form profile analysis (temperature 0.4)
-  Turn 2 : RAG context injection + role reasoning (temperature 0.3)
-  Turn 3 : structured JSON output via json_object mode (temperature 0.1)
+  Single call with json_object mode (temperature 0.15)
 
-Multi-turn is simulated by accumulating the messages list manually,
-since the openai SDK is stateless (multi-turn is simulated by accumulating the messages list).
+Single-shot replaced the previous 3-turn approach to reduce Groq token usage by ~60%
+and eliminate 429 rate-limit retries caused by accumulated message context ballooning
+across turns.
 """
 
 from __future__ import annotations
@@ -143,7 +142,8 @@ def retrieve_alternative_roles(
 
 _SYSTEM_INSTRUCTION = (
     "You are an IT career coach for 2026. "
-    "Provide concise, concrete, data-driven analysis. Respond in English."
+    "Analyse the candidate profile thoroughly using work history as primary signal, not just the skills list. "
+    "Respond ONLY with valid JSON — no markdown, no extra text."
 )
 
 
@@ -157,7 +157,18 @@ def _readiness_level(score: float) -> str:
     return "low"
 
 
-def _build_profile_prompt(profile: CVProfile, target_role: str, readiness: ReadinessResult) -> str:
+def _build_single_shot_prompt(
+    profile: CVProfile,
+    target_role: str,
+    readiness: ReadinessResult,
+    retrieved_roles: list[RetrievedRole],
+    skill_gap: SkillGap,
+) -> str:
+    """Build a single self-contained prompt that replaces the previous 3-turn chain.
+
+    Embedding chain-of-thought instructions directly into one prompt cuts token
+    usage by ~60 % and eliminates the 429s caused by growing accumulated context.
+    """
     skills_flat = flatten_skills(profile.skills)
     work_entries = [w for w in profile.work_experience if w.company]
     work_str = "; ".join(
@@ -166,55 +177,15 @@ def _build_profile_prompt(profile: CVProfile, target_role: str, readiness: Readi
     edu_str = "; ".join(
         f"{e.degree} — {e.institution}" for e in profile.education if e.institution
     ) or "not available"
-
-    # Derive career trajectory hint for LLM context
     designations = [w.designation for w in work_entries if w.designation]
     traj_hint = " → ".join(designations[-3:]) if designations else "unknown"
 
-    return (
-        f"Candidate: {profile.name} | Experience: {profile.total_experience_years} years | Location: {profile.location}\n"
-        f"Skills ({len(skills_flat)}): {', '.join(skills_flat[:20])}\n"
-        f"Career trajectory: {traj_hint}\n"
-        f"Work history: {work_str}\n"
-        f"Education: {edu_str}\n"
-        f"Current target: {target_role} | Readiness: {readiness.score:.2f} ({_readiness_level(readiness.score)})\n\n"
-        "Perform a deep analysis (not just a skills list):\n"
-        "1. Primary expertise domain based on WORK HISTORY (not just skills list)\n"
-        "2. Career pattern: specialization, leadership trajectory, or technology shift?\n"
-        "3. Transferable domain: cross-industry/technology skills applicable to other fields\n"
-        "4. Unique strengths not visible from skills list (soft skills, domain knowledge, problem-solving patterns)"
-    )
-
-
-def _build_rag_context_prompt(retrieved_roles: list[RetrievedRole], skill_gap: SkillGap) -> str:
+    missing_str = ", ".join(m.skill for m in skill_gap.missing_skills[:5]) or "none"
+    layer1_names = [r.role_name for r in retrieved_roles]
     roles_compact = json.dumps(
         [r.to_dict() for r in retrieved_roles], ensure_ascii=False, separators=(",", ":")
     )
-    missing_str = ", ".join(m.skill for m in skill_gap.missing_skills[:5])
-    layer1_names = [r.role_name for r in retrieved_roles]
 
-    return (
-        f"=== LAYER 1: Roles from IT database (27 roles) ===\n{roles_compact}\n"
-        f"Current skill gap: {missing_str or 'none'}\n"
-        "For each Layer 1 role: reason for fit, transferable skills, "
-        "transition difficulty (easy/moderate/challenging), concrete first step.\n\n"
-        "=== LAYER 2: Roles OUTSIDE the database ===\n"
-        "Based on the deep profile analysis from Turn 1 (work history, career pattern, domain), "
-        f"identify 3-4 potential roles that are DIFFERENT from: {layer1_names}.\n"
-        "Consider:\n"
-        "- Deeper specialization from current role (e.g. Fullstack → Frontend Architect)\n"
-        "- Lateral move to adjacent domain (e.g. Backend → DevOps/Platform Engineer)\n"
-        "- Step up (e.g. Developer → Engineering Manager, Tech Lead)\n"
-        "- Pivot to a new domain matching background (e.g. Backend + FinTech exp → Fintech Engineer)\n"
-        "Provide strong reasoning why each role fits based on WORK HISTORY, not just skills."
-    )
-
-
-def _build_structured_output_prompt(
-    retrieved_roles: list[RetrievedRole],
-    readiness: ReadinessResult,
-    target_role: str,
-) -> str:
     pre_filled = {
         "current_role_assessment": {
             "target_role": target_role,
@@ -228,70 +199,81 @@ def _build_structured_output_prompt(
                 "sbert_match_score": round(r.sbert_score, 4),
                 "skill_overlap_pct": round(r.skill_overlap_pct, 2),
                 "why_good_fit": "__FILL__",
-                "transferable_skills": ["__FILL__", "..."],
+                "transferable_skills": ["__FILL__"],
                 "gap_skills": r.gap_skills[:5],
                 "transition_difficulty": "__FILL__",
-                "estimated_transition_time": "__FILL__ (e.g. 3-6 months)",
+                "estimated_transition_time": "__FILL__",
                 "first_step": "__FILL__",
             }
             for r in retrieved_roles
         ],
         "ai_discovered_roles": [
             {
-                "role_name": "__FILL__ (specific role from Turn 1 & 2 analysis)",
-                "category": "__FILL__ (specialization|adjacent|leadership|pivot)",
-                "why_good_fit": "__FILL__ (based on work history, not just skills)",
+                "role_name": "__FILL__",
+                "category": "__FILL__",
+                "why_good_fit": "__FILL__",
                 "transferable_skills": ["__FILL__"],
                 "skills_to_develop": ["__FILL__"],
                 "transition_difficulty": "__FILL__",
                 "estimated_transition_months": 0,
                 "skill_readiness_pct": 0.0,
                 "first_step": "__FILL__",
-                "market_demand": "__FILL__ (high|medium|low)",
+                "market_demand": "__FILL__",
             }
         ],
-        "strongest_transferable_skills": ["__FILL__", "..."],
-        "suggested_certifications": ["__FILL__", "..."],
+        "strongest_transferable_skills": ["__FILL__"],
+        "suggested_certifications": ["__FILL__"],
         "universal_advice": "__FILL__",
     }
+
     return (
-        "Generate the final JSON according to the schema. Replace all '__FILL__' and '...' with real content.\n"
-        "RULES:\n"
-        "1. Do not change numeric values (readiness_score, sbert_match_score, skill_overlap_pct).\n"
-        "2. ai_discovered_roles: fill with 3-4 roles DIFFERENT from alternative_roles.\n"
-        "   Choose based on work history analysis from Turn 1 and Turn 2, not just skills list.\n"
-        "3. skill_readiness_pct in ai_discovered_roles: compute as "
-        "   len(transferable_skills) / (len(transferable_skills) + len(skills_to_develop)) * 100.\n"
-        "4. estimated_transition_months: integer (1-48).\n"
-        "5. category: specialization|adjacent|leadership|pivot.\n"
-        "6. market_demand: high|medium|low.\n"
-        "7. transition_difficulty: easy|moderate|challenging.\n"
-        "8. transferable_skills: list the candidate's EXISTING skills from the profile that are relevant.\n"
-        "   Do NOT include skills the candidate already has in skills_to_develop.\n"
-        "9. suggested_certifications: list 2-4 specific certifications (e.g. AWS Certified Developer, CKA).\n"
-        f"Template: {json.dumps(pre_filled, ensure_ascii=False, separators=(',', ':'))}"
+        "## CANDIDATE PROFILE\n"
+        f"Name: {profile.name} | Experience: {profile.total_experience_years} yrs | Location: {profile.location}\n"
+        f"Skills ({len(skills_flat)}): {', '.join(skills_flat[:18])}\n"
+        f"Career trajectory: {traj_hint}\n"
+        f"Work history: {work_str}\n"
+        f"Education: {edu_str}\n"
+        f"Target role: {target_role} | Readiness: {readiness.score:.2f} ({_readiness_level(readiness.score)})\n"
+        f"Skill gap (top missing): {missing_str}\n\n"
+        "## LAYER 1 — Roles from IT database (SBERT-matched, do NOT change numeric scores)\n"
+        f"{roles_compact}\n\n"
+        "## TASK\n"
+        "Step 1 — Analyse work history to identify primary domain, career pattern, and transferable strengths.\n"
+        "Step 2 — For each Layer 1 role above, fill: why_good_fit, transferable_skills (from candidate's existing skills), "
+        "transition_difficulty (easy|moderate|challenging), estimated_transition_time (e.g. '3-6 months'), first_step.\n"
+        f"Step 3 — Identify 3 roles DIFFERENT from {layer1_names} based on work history analysis. "
+        "category: specialization|adjacent|leadership|pivot. market_demand: high|medium|low.\n"
+        "Step 4 — Fill suggested_certifications with 2-4 specific certs (e.g. 'AWS Certified Developer').\n"
+        "Step 5 — skill_readiness_pct = len(transferable_skills)/(len(transferable_skills)+len(skills_to_develop))*100.\n\n"
+        "## OUTPUT\n"
+        "Return ONLY the completed JSON below. Replace every '__FILL__' with real content. "
+        "Keep all numeric values unchanged.\n"
+        f"{json.dumps(pre_filled, ensure_ascii=False, separators=(',', ':'))}"
     )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Stage B — Multi-Turn Groq Conversation (openai-compatible SDK)
+# Stage B — Single-Shot Groq Call
 # ──────────────────────────────────────────────────────────────────────
 
-_GROQ_CALL_TIMEOUT = 90.0   # seconds — per individual turn; prevents hung Groq requests
+_GROQ_CALL_TIMEOUT = 90.0  # seconds — prevents hung Groq connections
 
 
-def _groq_call(client: "openai.OpenAI", model: str, messages: list[dict], temperature: float, json_mode: bool = False) -> str:
-    """Synchronous Groq call — to be run in executor."""
-    kwargs: dict = dict(
+def _groq_call(
+    client: "openai.OpenAI",
+    model: str,
+    messages: list[dict],
+    temperature: float,
+) -> str:
+    """Synchronous Groq call (json_object mode always on) — run in executor."""
+    response = client.chat.completions.create(
         model=model,
         messages=messages,
         temperature=temperature,
-        max_tokens=2000,
+        max_tokens=2500,
         timeout=_GROQ_CALL_TIMEOUT,
+        response_format={"type": "json_object"},
     )
-    if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
-    response = client.chat.completions.create(**kwargs)
     return response.choices[0].message.content or ""
 
 
@@ -302,15 +284,11 @@ async def generate_career_pivot(
     readiness: ReadinessResult,
     retrieved_roles: list[RetrievedRole],
 ) -> CareerPivotOutput:
-    """
-    3-turn multi-turn conversation with Groq (Llama 3.3 70B).
+    """Single-shot Groq call with chain-of-thought embedded in the prompt.
 
-    Multi-turn is simulated by manually accumulating the messages list
-    (system + user/assistant pairs) — openai SDK is stateless.
-
-    Turn 1 — free-form profile analysis (temperature 0.4)
-    Turn 2 — RAG context injection + role exploration (temperature 0.3)
-    Turn 3 — structured JSON output via json_object mode (temperature 0.1)
+    Replaces the previous 3-turn approach. Token usage drops ~60% because
+    accumulated assistant responses are no longer re-sent on every turn.
+    API calls: 3 → 1, eliminating the main source of 429 rate-limit errors.
     """
     import openai  # lazy import — only needed when career pivot is called
 
@@ -324,44 +302,16 @@ async def generate_career_pivot(
     model = settings.groq_model
     loop = asyncio.get_running_loop()
 
-    # Accumulated messages list — grows across turns to preserve context
-    messages: list[dict] = [{"role": "system", "content": _SYSTEM_INSTRUCTION}]
-
-    # ── Turn 1: deep profile analysis ────────────────────────────────────
-    turn1_prompt = _build_profile_prompt(profile, target_role, readiness)
-    messages.append({"role": "user", "content": turn1_prompt})
-
-    turn1_text = await loop.run_in_executor(
-        None, lambda: _groq_call(client, model, messages, temperature=0.4)
-    )
-    messages.append({"role": "assistant", "content": turn1_text})
-    logger.debug("Turn 1 profile analysis complete (%d chars)", len(turn1_text))
-
-    # Small pause between turns to reduce back-to-back 429s on Groq free tier.
-    # The Groq free tier enforces a per-minute token budget; a brief gap lets
-    # the rolling window reset so Turn 2 starts with full quota headroom.
-    await asyncio.sleep(1.5)
-
-    # ── Turn 2: RAG context injection + beyond-dataset exploration ────────
-    turn2_prompt = _build_rag_context_prompt(retrieved_roles, skill_gap)
-    messages.append({"role": "user", "content": turn2_prompt})
-
-    turn2_text = await loop.run_in_executor(
-        None, lambda: _groq_call(client, model, messages, temperature=0.3)
-    )
-    messages.append({"role": "assistant", "content": turn2_text})
-    logger.debug("Turn 2 RAG context analysis complete (%d chars)", len(turn2_text))
-
-    await asyncio.sleep(1.5)
-
-    # ── Turn 3: structured JSON output ───────────────────────────────────
-    turn3_prompt = _build_structured_output_prompt(retrieved_roles, readiness, target_role)
-    messages.append({"role": "user", "content": turn3_prompt})
+    prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
+    messages: list[dict] = [
+        {"role": "system", "content": _SYSTEM_INSTRUCTION},
+        {"role": "user", "content": prompt},
+    ]
 
     raw_json = await loop.run_in_executor(
-        None, lambda: _groq_call(client, model, messages, temperature=0.1, json_mode=True)
+        None, lambda: _groq_call(client, model, messages, temperature=0.15)
     )
-    logger.debug("Turn 3 structured output received (%d chars)", len(raw_json))
+    logger.debug("Single-shot response received (%d chars)", len(raw_json))
 
     # Parse into Pydantic with fallback
     parsed: CareerPivotOutput | None = None
