@@ -116,6 +116,17 @@ app.include_router(career_pivot_router)
 
 
 # ──────────────────────────────────────────────────────────────────────
+# Roles list
+# ──────────────────────────────────────────────────────────────────────
+
+@app.get("/api/v1/roles")
+async def get_roles():
+    roles = sorted(registry.role_to_idx.keys())
+    from schemas.envelope import success_envelope
+    return success_envelope(data={"roles": roles, "count": len(roles)})
+
+
+# ──────────────────────────────────────────────────────────────────────
 # Health check
 # ──────────────────────────────────────────────────────────────────────
 

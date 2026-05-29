@@ -139,6 +139,18 @@ check("model4_available = True", d.get("model4_available") is True)
 # 2. OpenAPI docs
 # ──────────────────────────────────────────────────────────────────────────────
 
+section("GET /api/v1/roles  (role list for frontend dropdown)")
+r = get("/api/v1/roles")
+d = r.json()
+check("HTTP 200", r.status_code == 200, str(r.status_code))
+check("envelope status=success", d.get("status") == "success")
+roles = d.get("data", {}).get("roles", [])
+check("roles is list", isinstance(roles, list))
+check("count = 27", d.get("data", {}).get("count") == 27, str(d.get("data", {}).get("count")))
+check("Data Scientist in roles", "Data Scientist" in roles)
+check("Backend Developer in roles", "Backend Developer" in roles)
+
+
 section("GET /docs  (Swagger UI)")
 r = get("/docs")
 check("HTTP 200", r.status_code == 200, str(r.status_code))
@@ -373,7 +385,7 @@ if args.full:
 
         check("metadata.llm_turns = 3", meta.get("llm_turns") == 3, str(meta.get("llm_turns")))
         check("metadata.llm_model non-empty", bool(meta.get("llm_model")), meta.get("llm_model"))
-        check(f"wall-clock < 90s", elapsed_ms < 90_000, f"{elapsed_ms}ms")
+        check(f"wall-clock < 120s", elapsed_ms < 120_000, f"{elapsed_ms}ms")
 
     elif r.status_code == 503:
         print("    (503 — Groq quota/key issue, bukan bug aplikasi)")

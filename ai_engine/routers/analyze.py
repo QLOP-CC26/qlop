@@ -28,8 +28,14 @@ async def analyze_endpoint(body: AnalyzeRequest):
 
     target_role = body.target_role.strip()
     if target_role not in registry.role_to_idx:
-        valid = ", ".join(sorted(registry.role_to_idx.keys()))
-        raise HTTPException(status_code=400, detail=f"Role '{target_role}' tidak dikenali. Role yang valid: {valid}")
+        # case-insensitive fallback: accept "data scientist" → canonical "Data Scientist"
+        lower_map = {k.lower(): k for k in registry.role_to_idx}
+        canonical = lower_map.get(target_role.lower())
+        if canonical:
+            target_role = canonical
+        else:
+            valid = ", ".join(sorted(registry.role_to_idx.keys()))
+            raise HTTPException(status_code=400, detail=f"Role '{target_role}' tidak dikenali. Role yang valid: {valid}")
 
     cv_skills = flatten_skills(body.profile.skills)
     if not cv_skills:

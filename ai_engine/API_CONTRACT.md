@@ -651,6 +651,65 @@ After response: display a **Career Pivot Radar** visualization — show Layer 1 
 
 ---
 
+## Roles List
+
+### `GET /api/v1/roles`
+
+**Purpose:** Returns the complete list of 27 supported `target_role` values. Frontend should call this once on startup to populate the role dropdown — avoids hardcoding the list.
+
+```http
+GET /api/v1/roles
+```
+
+### Response `200 OK`
+
+```json
+{
+  "status": "success",
+  "code": 200,
+  "data": {
+    "roles": [
+      "AI Engineer",
+      "Backend Developer",
+      "Business Analyst",
+      "Business Intelligence Analyst",
+      "Cloud Engineer",
+      "Cyber Security Analyst",
+      "Data Analyst",
+      "Data Engineer",
+      "Data Scientist",
+      "Database Administrator",
+      "DevOps Engineer",
+      "ERP Consultant",
+      "Embedded/IoT Engineer",
+      "Frontend Developer",
+      "Full Stack Developer",
+      "General IT Specialist",
+      "IT Consultant",
+      "Machine Learning Engineer",
+      "Mobile Developer",
+      "Network Engineer",
+      "Product Manager",
+      "QA Engineer",
+      "Robotics Engineer",
+      "Security Engineer",
+      "Site Reliability Engineer",
+      "Software Engineer",
+      "Solutions Architect"
+    ],
+    "count": 27
+  },
+  "metadata": {
+    "timestamp": "2026-05-29T08:00:00.000Z"
+  }
+}
+```
+
+> **Frontend guidance:** Render `data.roles` as a searchable `<select>` / combobox. Do not allow free-text input — the ML models are trained exclusively on these 27 roles.  
+> Both `/analyze` and `/career-pivot` accept the role **case-insensitively** (`"data scientist"` → normalized to `"Data Scientist"` server-side), but using the exact values from this endpoint is recommended.
+
+---
+
 ## Health Check
 
 ### `GET /health`

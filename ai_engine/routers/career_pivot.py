@@ -34,6 +34,17 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
         )
 
     target_role = body.target_role.strip()
+
+    # case-insensitive role normalisation (mirrors /analyze behaviour)
+    if target_role not in registry.role_centroids:
+        lower_map = {k.lower(): k for k in registry.role_centroids}
+        canonical = lower_map.get(target_role.lower())
+        if canonical:
+            target_role = canonical
+        else:
+            valid = ", ".join(sorted(registry.role_centroids.keys()))
+            raise HTTPException(status_code=400, detail=f"Role '{target_role}' tidak dikenali. Role yang valid: {valid}")
+
     cv_skills = flatten_skills(body.profile.skills)
 
     if not cv_skills:

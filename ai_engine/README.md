@@ -182,6 +182,23 @@ All responses follow a consistent envelope:
 }
 ```
 
+### `GET /api/v1/roles`
+
+Returns the 27 valid `target_role` values. Frontend should use this to populate the role dropdown.
+
+```json
+{
+  "data": {
+    "roles": ["AI Engineer", "Backend Developer", "..."],
+    "count": 27
+  }
+}
+```
+
+> Do not allow free-text role input — ML models are trained on these 27 roles only. Both `/analyze` and `/career-pivot` normalize case server-side.
+
+---
+
 ### `GET /health`
 
 Returns model loading status.
