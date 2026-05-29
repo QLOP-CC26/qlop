@@ -14,6 +14,14 @@ from core.model_loader import registry
 from schemas.analyze import CourseRecommendation, MissingSkill, SkillGap
 from utils.skill_normalizer import fuzzy_match_skill, safe_float
 
+# Social-media / non-technical terms that appear in the LinkedIn skill vocabulary
+# but should never surface as "missing skills" for a developer profile.
+_SKILL_NOISE_BLOCKLIST: frozenset[str] = frozenset({
+    "facebook", "twitter", "youtube", "instagram", "tiktok",
+    "linkedin", "pinterest", "snapchat", "whatsapp", "telegram",
+    "wechat", "line", "medium", "reddit",
+})
+
 logger = logging.getLogger("qlop.recommendation")
 
 
@@ -30,10 +38,10 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
     r = registry
 
     if target_role not in r.role_to_idx:
-        raise ValueError(f"Role '{target_role}' tidak dikenali.")
+        raise ValueError(f"Role '{target_role}' not recognized.")
 
     if r.infer3 is None:
-        raise RuntimeError("Model3 (skill gap) belum dimuat — periksa path model3_savedmodel di settings.")
+        raise RuntimeError("Model3 (skill gap) is not loaded — check model3_savedmodel path in settings.")
 
     import tensorflow as tf  # lazy import — tensorflow loads at startup via registry
 
@@ -48,7 +56,8 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
             user_vec[0, r.skill_to_idx_li[s_lower]] = 1.0
             recognised_skills.append(s_lower)
         else:
-            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.6)
+            # Threshold 0.75 avoids false positives (e.g. "AWS" → "sap")
+            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.75)
             if best:
                 user_vec[0, r.skill_to_idx_li[best]] = 1.0
                 recognised_skills.append(best)
@@ -64,15 +73,17 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
     mask = user_vec[0] == 0
     pred_scores_masked = np.where(mask, pred_scores, -1.0)
 
-    top_indices = np.argsort(pred_scores_masked)[::-1][:15]
+    top_indices = np.argsort(pred_scores_masked)[::-1][:20]
     missing_skills: list[MissingSkill] = []
     for idx in top_indices:
         score = safe_float(pred_scores_masked[idx])
-        if score > 0:
+        skill_name = r.idx_to_skill_li[str(idx)]
+        if score > 0 and skill_name.lower() not in _SKILL_NOISE_BLOCKLIST:
             missing_skills.append(MissingSkill(
-                skill=r.idx_to_skill_li[str(idx)],
+                skill=skill_name,
                 priority_score=round(score, 4),
             ))
+    missing_skills = missing_skills[:15]
 
     # ── Matched skills (user skills relevant for the target role) ──
     role_skills = r.role_freq.get(target_role, {})
@@ -127,12 +138,20 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
                 if cr_skill in r.skill_to_idx_cr:
                     demand_vec_cr[r.skill_to_idx_cr[cr_skill]] = 1.0
 
+    seen_urls: set[str] = set()
     recommended: list[CourseRecommendation] = []
     for cid in top_course_idx:
         score = safe_float(match_scores[cid])
         if cid >= len(r.df_coursera):
             continue
         row = r.df_coursera.iloc[cid]
+        url = str(row.get("Url", ""))
+
+        # Skip exact-URL duplicates (same course listed multiple times in dataset)
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
         course_vec = r.course_vectors[cid] if r.course_vectors is not None else None
 
         covered = [
@@ -143,7 +162,7 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
 
         recommended.append(CourseRecommendation(
             name=str(row.get("Name", "")),
-            url=str(row.get("Url", "")),
+            url=url,
             match_score=round(score, 4),
             job_category=str(row.get("Job category", "")),
             difficulty=str(row.get("Difficulty", "")),
