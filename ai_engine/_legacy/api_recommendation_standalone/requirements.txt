@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+tensorflow==2.20.0
+numpy
+pandas
+sentence-transformers
+faiss-cpu

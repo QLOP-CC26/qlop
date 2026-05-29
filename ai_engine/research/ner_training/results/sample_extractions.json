@@ -1,0 +1,2042 @@
+[
+  {
+    "name": "JOHN DOE",
+    "email": "john",
+    "phone": "+",
+    "location": "Jakarta, Indonesia",
+    "total_experience_years": 2021.0,
+    "skills": {
+      "programming_languages": [
+        "Python",
+        "Java",
+        "Go",
+        "TypeScript",
+        "Rust",
+        "JavaScript",
+        "gRPC"
+      ],
+      "frameworks": [
+        "FastAPI",
+        "Spring Boot",
+        "React",
+        "Node"
+      ],
+      "cloud_platforms": [
+        "EC2",
+        "Lambda",
+        "RDS",
+        "S3",
+        "EKS",
+        "Google Cloud Platform",
+        "BigQuery",
+        "Cloud Run"
+      ],
+      "databases": [
+        "PostgreSQL",
+        "MongoDB",
+        "Redis",
+        "Elasticsearch",
+        "DynamoDB"
+      ],
+      "devops_tools": [
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "GitHub Actions",
+        "Jenkins",
+        "ArgoCD"
+      ],
+      "ml_ai_tools": [
+        "TensorFlow",
+        "PyTorch",
+        "Pandas",
+        "MLflow"
+      ],
+      "other_tools": [
+        "Sci",
+        "kit",
+        "-learn",
+        "email",
+        ".com",
+        "3",
+        "Databases",
+        "WORK",
+        "query optimization"
+      ]
+    },
+    "work_experience": [
+      {
+        "company": "Tok",
+        "designation": "Senior Software Engineer",
+        "duration": "Jan 2021 - Present"
+      },
+      {
+        "company": "Buk",
+        "designation": "Senior Back",
+        "duration": "Jul 2019 - Dec 2020"
+      },
+      {
+        "company": "",
+        "designation": "Junior Developer",
+        "duration": "1"
+      }
+    ],
+    "education": [
+      {
+        "degree": "",
+        "institution": "PostgreSQL",
+        "year": ""
+      }
+    ],
+    "raw_entities": [
+      {
+        "text": "+",
+        "label": "Phone",
+        "confidence": 0.9999
+      },
+      {
+        "text": "john",
+        "label": "Email",
+        "confidence": 0.9998
+      },
+      {
+        "text": "Sci",
+        "label": "Skill",
+        "confidence": 0.9992
+      },
+      {
+        "text": "Jakarta, Indonesia",
+        "label": "Location",
+        "confidence": 0.9976
+      },
+      {
+        "text": "React",
+        "label": "Skill",
+        "confidence": 0.9942
+      },
+      {
+        "text": "FastAPI",
+        "label": "Skill",
+        "confidence": 0.9937
+      },
+      {
+        "text": "Node",
+        "label": "Skill",
+        "confidence": 0.9929
+      },
+      {
+        "text": "Spring Boot",
+        "label": "Skill",
+        "confidence": 0.988
+      },
+      {
+        "text": "TypeScript",
+        "label": "Skill",
+        "confidence": 0.9879
+      },
+      {
+        "text": "Pandas",
+        "label": "Skill",
+        "confidence": 0.9872
+      },
+      {
+        "text": "Java",
+        "label": "Skill",
+        "confidence": 0.9863
+      },
+      {
+        "text": "JOHN DOE",
+        "label": "Name",
+        "confidence": 0.9843
+      },
+      {
+        "text": "Redis",
+        "label": "Skill",
+        "confidence": 0.9835
+      },
+      {
+        "text": "Elasticsearch",
+        "label": "Skill",
+        "confidence": 0.9833
+      },
+      {
+        "text": "e",
+        "label": "Email",
+        "confidence": 0.9828
+      },
+      {
+        "text": "DynamoDB",
+        "label": "Skill",
+        "confidence": 0.9799
+      },
+      {
+        "text": "Terraform",
+        "label": "Skill",
+        "confidence": 0.9797
+      },
+      {
+        "text": "Python",
+        "label": "Skill",
+        "confidence": 0.9795
+      },
+      {
+        "text": "do",
+        "label": "Email",
+        "confidence": 0.9778
+      },
+      {
+        "text": "PostgreSQL",
+        "label": "Skill",
+        "confidence": 0.9755
+      },
+      {
+        "text": "GitHub Actions",
+        "label": "Skill",
+        "confidence": 0.9647
+      },
+      {
+        "text": "Cloud Run",
+        "label": "Skill",
+        "confidence": 0.9607
+      },
+      {
+        "text": "Senior Software Engineer",
+        "label": "Designation",
+        "confidence": 0.9558
+      },
+      {
+        "text": "MongoDB",
+        "label": "Skill",
+        "confidence": 0.9543
+      },
+      {
+        "text": "Go",
+        "label": "Skill",
+        "confidence": 0.9533
+      },
+      {
+        "text": "3",
+        "label": "Skill",
+        "confidence": 0.9485
+      },
+      {
+        "text": "EC2",
+        "label": "Skill",
+        "confidence": 0.945
+      },
+      {
+        "text": "email",
+        "label": "Skill",
+        "confidence": 0.9421
+      },
+      {
+        "text": "Jan 2021 - Present",
+        "label": "YearsExperience",
+        "confidence": 0.9352
+      },
+      {
+        "text": "EKS",
+        "label": "Skill",
+        "confidence": 0.9242
+      },
+      {
+        "text": "query optimization",
+        "label": "Skill",
+        "confidence": 0.9175
+      },
+      {
+        "text": "Jul 2019 - Dec 2020",
+        "label": "YearsExperience",
+        "confidence": 0.9172
+      },
+      {
+        "text": "Docker",
+        "label": "Skill",
+        "confidence": 0.9115
+      },
+      {
+        "text": "S3",
+        "label": "Skill",
+        "confidence": 0.8926
+      },
+      {
+        "text": "TensorFlow",
+        "label": "Skill",
+        "confidence": 0.8817
+      },
+      {
+        "text": "Jun 2017 - Jun 2019",
+        "label": "YearsExperience",
+        "confidence": 0.8795
+      },
+      {
+        "text": "Rust",
+        "label": "Skill",
+        "confidence": 0.8775
+      },
+      {
+        "text": "Lambda",
+        "label": "Skill",
+        "confidence": 0.8712
+      },
+      {
+        "text": "2 years",
+        "label": "YearsExperience",
+        "confidence": 0.8667
+      },
+      {
+        "text": "RDS",
+        "label": "Skill",
+        "confidence": 0.8666
+      },
+      {
+        "text": "Jenkins",
+        "label": "Skill",
+        "confidence": 0.8506
+      },
+      {
+        "text": "gRPC",
+        "label": "Skill",
+        "confidence": 0.8395
+      },
+      {
+        "text": "PyTorch",
+        "label": "Skill",
+        "confidence": 0.8325
+      },
+      {
+        "text": "Junior Developer",
+        "label": "Designation",
+        "confidence": 0.8262
+      },
+      {
+        "text": "Kubernetes",
+        "label": "Skill",
+        "confidence": 0.8156
+      },
+      {
+        "text": "Buk",
+        "label": "Company",
+        "confidence": 0.8086
+      },
+      {
+        "text": "GCP",
+        "label": "Skill",
+        "confidence": 0.8045
+      },
+      {
+        "text": "1",
+        "label": "YearsExperience",
+        "confidence": 0.7671
+      },
+      {
+        "text": "MLflow",
+        "label": "Skill",
+        "confidence": 0.7508
+      },
+      {
+        "text": "kit",
+        "label": "Skill",
+        "confidence": 0.7466
+      },
+      {
+        "text": "Tok",
+        "label": "Company",
+        "confidence": 0.7373
+      },
+      {
+        "text": "Databases",
+        "label": "Skill",
+        "confidence": 0.7216
+      },
+      {
+        "text": "ArgoCD",
+        "label": "Skill",
+        "confidence": 0.7126
+      },
+      {
+        "text": "BigQuery",
+        "label": "Skill",
+        "confidence": 0.687
+      },
+      {
+        "text": "-learn",
+        "label": "Skill",
+        "confidence": 0.6835
+      },
+      {
+        "text": ".",
+        "label": "Location",
+        "confidence": 0.6787
+      },
+      {
+        "text": "js",
+        "label": "Skill",
+        "confidence": 0.6691
+      },
+      {
+        "text": "PostgreSQL",
+        "label": "Institution",
+        "confidence": 0.6337
+      },
+      {
+        "text": ".com",
+        "label": "Skill",
+        "confidence": 0.5951
+      },
+      {
+        "text": "Senior Back",
+        "label": "Designation",
+        "confidence": 0.593
+      },
+      {
+        "text": "WORK",
+        "label": "Skill",
+        "confidence": 0.5289
+      }
+    ]
+  },
+  {
+    "name": "SARAH CHEN",
+    "email": "sarah",
+    "phone": "",
+    "location": "@",
+    "total_experience_years": 2022.0,
+    "skills": {
+      "programming_languages": [
+        "Python",
+        "R",
+        "SQL",
+        "Scala",
+        "Xml"
+      ],
+      "frameworks": [],
+      "cloud_platforms": [
+        "Amazon Web Services",
+        "Google Cloud Platform"
+      ],
+      "databases": [],
+      "devops_tools": [
+        "Apache",
+        "Docker"
+      ],
+      "ml_ai_tools": [
+        "PyTorch",
+        "TensorFlow",
+        "Keras",
+        "XGBoost",
+        "Lightgbm",
+        "CatBoost",
+        "NLTK",
+        "Gensim",
+        "LangChain",
+        "Spark",
+        "PySpark",
+        "Pandas",
+        "Dask",
+        "Airflow",
+        "Vertex AI",
+        "Mlflow",
+        "Weights And Biases",
+        "DVC",
+        "Matplotlib",
+        "Seaborn",
+        "Plotly",
+        "NLP",
+        "deep learning"
+      ],
+      "other_tools": [
+        "Julia",
+        "M",
+        "HuggingFace Transformers",
+        "spa",
+        "Cy",
+        "k",
+        "db",
+        "t",
+        "Cloud",
+        "Sage",
+        "Azure ML",
+        "Kub",
+        "Mat",
+        "Tableau",
+        "Streamlit",
+        "chen",
+        "gmail"
+      ]
+    },
+    "work_experience": [
+      {
+        "company": "Stripe",
+        "designation": "Data Scientist",
+        "duration": "2022 - Present"
+      },
+      {
+        "company": "Airbnb",
+        "designation": "Senior Data Scientist",
+        "duration": "2020 - 2022"
+      },
+      {
+        "company": "Uber",
+        "designation": "ML Engineer",
+        "duration": "2019 - 2020 -"
+      },
+      {
+        "company": "",
+        "designation": "Data Analyst",
+        "duration": ""
+      }
+    ],
+    "education": [
+      {
+        "degree": "F",
+        "institution": "",
+        "year": ""
+      },
+      {
+        "degree": "M",
+        "institution": "",
+        "year": ""
+      },
+      {
+        "degree": "S",
+        "institution": "",
+        "year": ""
+      }
+    ],
+    "raw_entities": [
+      {
+        "text": "db",
+        "label": "Skill",
+        "confidence": 0.9995
+      },
+      {
+        "text": "M",
+        "label": "Degree",
+        "confidence": 0.9987
+      },
+      {
+        "text": "sarah",
+        "label": "Email",
+        "confidence": 0.9985
+      },
+      {
+        "text": "spa",
+        "label": "Skill",
+        "confidence": 0.9975
+      },
+      {
+        "text": "DVC",
+        "label": "Skill",
+        "confidence": 0.997
+      },
+      {
+        "text": "Apache",
+        "label": "Skill",
+        "confidence": 0.9962
+      },
+      {
+        "text": "Python",
+        "label": "Skill",
+        "confidence": 0.9956
+      },
+      {
+        "text": "2020 - 2022",
+        "label": "YearsExperience",
+        "confidence": 0.9923
+      },
+      {
+        "text": "Spark",
+        "label": "Skill",
+        "confidence": 0.9915
+      },
+      {
+        "text": "Pandas",
+        "label": "Skill",
+        "confidence": 0.9891
+      },
+      {
+        "text": "Docker",
+        "label": "Skill",
+        "confidence": 0.9883
+      },
+      {
+        "text": "ML",
+        "label": "Skill",
+        "confidence": 0.9877
+      },
+      {
+        "text": "TensorFlow",
+        "label": "Skill",
+        "confidence": 0.9873
+      },
+      {
+        "text": "Das",
+        "label": "Skill",
+        "confidence": 0.976
+      },
+      {
+        "text": "San Francisco, CA",
+        "label": "Location",
+        "confidence": 0.976
+      },
+      {
+        "text": "Airbnb",
+        "label": "Company",
+        "confidence": 0.9738
+      },
+      {
+        "text": "Scala",
+        "label": "Skill",
+        "confidence": 0.9737
+      },
+      {
+        "text": "LangChain",
+        "label": "Skill",
+        "confidence": 0.9729
+      },
+      {
+        "text": "Mat",
+        "label": "Skill",
+        "confidence": 0.9693
+      },
+      {
+        "text": "Tableau",
+        "label": "Skill",
+        "confidence": 0.9666
+      },
+      {
+        "text": "CatBoost",
+        "label": "Skill",
+        "confidence": 0.9659
+      },
+      {
+        "text": "Julia",
+        "label": "Skill",
+        "confidence": 0.9656
+      },
+      {
+        "text": "AWS",
+        "label": "Skill",
+        "confidence": 0.9656
+      },
+      {
+        "text": "Weights & Biases",
+        "label": "Skill",
+        "confidence": 0.95
+      },
+      {
+        "text": "Azure ML",
+        "label": "Skill",
+        "confidence": 0.9499
+      },
+      {
+        "text": "NLTK",
+        "label": "Skill",
+        "confidence": 0.9423
+      },
+      {
+        "text": "S",
+        "label": "Degree",
+        "confidence": 0.9403
+      },
+      {
+        "text": "Uber",
+        "label": "Company",
+        "confidence": 0.94
+      },
+      {
+        "text": "Keras",
+        "label": "Skill",
+        "confidence": 0.9339
+      },
+      {
+        "text": "F",
+        "label": "Degree",
+        "confidence": 0.9314
+      },
+      {
+        "text": "Gensim",
+        "label": "Skill",
+        "confidence": 0.9303
+      },
+      {
+        "text": "SQL",
+        "label": "Skill",
+        "confidence": 0.9241
+      },
+      {
+        "text": "t",
+        "label": "Skill",
+        "confidence": 0.9139
+      },
+      {
+        "text": "2022 - Present",
+        "label": "YearsExperience",
+        "confidence": 0.9127
+      },
+      {
+        "text": "2019 - 2020 -",
+        "label": "YearsExperience",
+        "confidence": 0.9116
+      },
+      {
+        "text": "GCP",
+        "label": "Skill",
+        "confidence": 0.9097
+      },
+      {
+        "text": "Apache Airflow",
+        "label": "Skill",
+        "confidence": 0.9076
+      },
+      {
+        "text": "XGBoost",
+        "label": "Skill",
+        "confidence": 0.9016
+      },
+      {
+        "text": "PySpark",
+        "label": "Skill",
+        "confidence": 0.8938
+      },
+      {
+        "text": "k",
+        "label": "Skill",
+        "confidence": 0.8778
+      },
+      {
+        "text": "Streamlit",
+        "label": "Skill",
+        "confidence": 0.8701
+      },
+      {
+        "text": "LightGB",
+        "label": "Skill",
+        "confidence": 0.8624
+      },
+      {
+        "text": "Stripe",
+        "label": "Company",
+        "confidence": 0.8448
+      },
+      {
+        "text": "HuggingFace Transformers",
+        "label": "Skill",
+        "confidence": 0.8309
+      },
+      {
+        "text": "Kub",
+        "label": "Skill",
+        "confidence": 0.8246
+      },
+      {
+        "text": "Plotly",
+        "label": "Skill",
+        "confidence": 0.809
+      },
+      {
+        "text": "PyTorch",
+        "label": "Skill",
+        "confidence": 0.8062
+      },
+      {
+        "text": "GCP Vertex AI",
+        "label": "Skill",
+        "confidence": 0.8024
+      },
+      {
+        "text": "Senior Data Scientist",
+        "label": "Designation",
+        "confidence": 0.8015
+      },
+      {
+        "text": "deep learning",
+        "label": "Skill",
+        "confidence": 0.7791
+      },
+      {
+        "text": "Seaborn",
+        "label": "Skill",
+        "confidence": 0.7768
+      },
+      {
+        "text": "gmail",
+        "label": "Skill",
+        "confidence": 0.7676
+      },
+      {
+        "text": "SARAH CHEN",
+        "label": "Name",
+        "confidence": 0.7584
+      },
+      {
+        "text": "Vertex AI",
+        "label": "Skill",
+        "confidence": 0.7538
+      },
+      {
+        "text": "R",
+        "label": "Skill",
+        "confidence": 0.7265
+      },
+      {
+        "text": "Airflow",
+        "label": "Skill",
+        "confidence": 0.7171
+      },
+      {
+        "text": "415)",
+        "label": "Location",
+        "confidence": 0.7111
+      },
+      {
+        "text": "plotlib",
+        "label": "Skill",
+        "confidence": 0.695
+      },
+      {
+        "text": "Data Analyst",
+        "label": "Designation",
+        "confidence": 0.692
+      },
+      {
+        "text": "Data Scientist",
+        "label": "Designation",
+        "confidence": 0.6684
+      },
+      {
+        "text": "ML",
+        "label": "Skill",
+        "confidence": 0.6548
+      },
+      {
+        "text": "ML Engineer",
+        "label": "Designation",
+        "confidence": 0.6504
+      },
+      {
+        "text": "chen",
+        "label": "Skill",
+        "confidence": 0.643
+      },
+      {
+        "text": "Cy",
+        "label": "Skill",
+        "confidence": 0.6255
+      },
+      {
+        "text": "ML",
+        "label": "Skill",
+        "confidence": 0.6186
+      },
+      {
+        "text": "M",
+        "label": "Skill",
+        "confidence": 0.5959
+      },
+      {
+        "text": "flow",
+        "label": "Skill",
+        "confidence": 0.586
+      },
+      {
+        "text": "Sage",
+        "label": "Skill",
+        "confidence": 0.5619
+      },
+      {
+        "text": "@",
+        "label": "Location",
+        "confidence": 0.5428
+      },
+      {
+        "text": "NLP",
+        "label": "Skill",
+        "confidence": 0.5386
+      },
+      {
+        "text": "Cloud",
+        "label": "Skill",
+        "confidence": 0.529
+      }
+    ]
+  },
+  {
+    "name": "AH",
+    "email": "a",
+    "phone": "+",
+    "location": "Bandung, Indonesia",
+    "total_experience_years": 2021.0,
+    "skills": {
+      "programming_languages": [
+        "Python",
+        "Go",
+        "Bash",
+        "YAML"
+      ],
+      "frameworks": [
+        "Gin"
+      ],
+      "cloud_platforms": [
+        "Google Cloud Platform",
+        "Amazon Web Services",
+        "EC2",
+        "EKS"
+      ],
+      "databases": [
+        "PostgreSQL",
+        "Redis",
+        "Influxdb",
+        "TimescaleDB"
+      ],
+      "devops_tools": [
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "Ansible",
+        "Vagrant",
+        "Jenkins",
+        "GitLab CI",
+        "GitHub Actions",
+        "ArgoCD",
+        "Prometheus",
+        "Grafana",
+        "Datadog",
+        "Nginx",
+        "HAProxy",
+        "Envoy",
+        "Consul",
+        "Vault"
+      ],
+      "ml_ai_tools": [],
+      "other_tools": [
+        "Tek",
+        "ELK Stack",
+        "Jaeger",
+        "I",
+        "tio",
+        "Trae",
+        "HCL",
+        "cert-manager",
+        "OPA",
+        "Falco",
+        "Tri",
+        "vy",
+        "TAMA",
+        "proton",
+        "me",
+        "9",
+        "5",
+        "Cloud",
+        "Languages",
+        "Databases"
+      ]
+    },
+    "work_experience": [
+      {
+        "company": "ton",
+        "designation": "Solutions Architect",
+        "duration": "Mar 2021 - Present"
+      },
+      {
+        "company": "Azure",
+        "designation": "DevOps",
+        "duration": "3 years"
+      },
+      {
+        "company": "ton",
+        "designation": "Solutions Architect",
+        "duration": "Jan 2019 - Feb 2021"
+      },
+      {
+        "company": "Grab",
+        "designation": "",
+        "duration": "2 years"
+      },
+      {
+        "company": "Travel",
+        "designation": "",
+        "duration": ""
+      }
+    ],
+    "education": [
+      {
+        "degree": "S",
+        "institution": "Universitas Padjadjaran",
+        "year": ""
+      }
+    ],
+    "raw_entities": [
+      {
+        "text": "+",
+        "label": "Phone",
+        "confidence": 0.9999
+      },
+      {
+        "text": "2018",
+        "label": "GraduationYear",
+        "confidence": 0.9996
+      },
+      {
+        "text": "a",
+        "label": "Email",
+        "confidence": 0.9986
+      },
+      {
+        "text": "S",
+        "label": "Degree",
+        "confidence": 0.9954
+      },
+      {
+        "text": "OPA",
+        "label": "Skill",
+        "confidence": 0.9941
+      },
+      {
+        "text": "Nginx",
+        "label": "Skill",
+        "confidence": 0.993
+      },
+      {
+        "text": "ELK Stack",
+        "label": "Skill",
+        "confidence": 0.9928
+      },
+      {
+        "text": "Python",
+        "label": "Skill",
+        "confidence": 0.9921
+      },
+      {
+        "text": "GitLab CI",
+        "label": "Skill",
+        "confidence": 0.9894
+      },
+      {
+        "text": "Bandung, Indonesia",
+        "label": "Location",
+        "confidence": 0.9892
+      },
+      {
+        "text": "Vault",
+        "label": "Skill",
+        "confidence": 0.9891
+      },
+      {
+        "text": "Redis",
+        "label": "Skill",
+        "confidence": 0.9876
+      },
+      {
+        "text": "Grab",
+        "label": "Company",
+        "confidence": 0.9871
+      },
+      {
+        "text": "Universitas Padjadjaran",
+        "label": "Institution",
+        "confidence": 0.9862
+      },
+      {
+        "text": "PostgreSQL",
+        "label": "Skill",
+        "confidence": 0.982
+      },
+      {
+        "text": "Falco",
+        "label": "Skill",
+        "confidence": 0.9805
+      },
+      {
+        "text": "Tri",
+        "label": "Skill",
+        "confidence": 0.9776
+      },
+      {
+        "text": "Consul",
+        "label": "Skill",
+        "confidence": 0.9775
+      },
+      {
+        "text": "Bash",
+        "label": "Skill",
+        "confidence": 0.9744
+      },
+      {
+        "text": "proton",
+        "label": "Skill",
+        "confidence": 0.9744
+      },
+      {
+        "text": "Ansible",
+        "label": "Skill",
+        "confidence": 0.9729
+      },
+      {
+        "text": "ArgoCD",
+        "label": "Skill",
+        "confidence": 0.9729
+      },
+      {
+        "text": "YAML",
+        "label": "Skill",
+        "confidence": 0.9717
+      },
+      {
+        "text": "Travel",
+        "label": "Company",
+        "confidence": 0.9677
+      },
+      {
+        "text": "GitHub Actions",
+        "label": "Skill",
+        "confidence": 0.9656
+      },
+      {
+        "text": "Mar 2021 - Present",
+        "label": "YearsExperience",
+        "confidence": 0.9615
+      },
+      {
+        "text": "Docker",
+        "label": "Skill",
+        "confidence": 0.9589
+      },
+      {
+        "text": "HAProxy",
+        "label": "Skill",
+        "confidence": 0.9583
+      },
+      {
+        "text": "Go",
+        "label": "Skill",
+        "confidence": 0.9547
+      },
+      {
+        "text": "Jaeger",
+        "label": "Skill",
+        "confidence": 0.95
+      },
+      {
+        "text": "Terraform",
+        "label": "Skill",
+        "confidence": 0.9498
+      },
+      {
+        "text": "In",
+        "label": "Skill",
+        "confidence": 0.9487
+      },
+      {
+        "text": "AH",
+        "label": "Name",
+        "confidence": 0.9437
+      },
+      {
+        "text": "Envoy",
+        "label": "Skill",
+        "confidence": 0.9374
+      },
+      {
+        "text": "I",
+        "label": "Skill",
+        "confidence": 0.936
+      },
+      {
+        "text": "vy",
+        "label": "Skill",
+        "confidence": 0.9318
+      },
+      {
+        "text": "Trae",
+        "label": "Skill",
+        "confidence": 0.9302
+      },
+      {
+        "text": "d",
+        "label": "Email",
+        "confidence": 0.9254
+      },
+      {
+        "text": "Jan 2019 - Feb 2021",
+        "label": "YearsExperience",
+        "confidence": 0.9166
+      },
+      {
+        "text": "EKS",
+        "label": "Skill",
+        "confidence": 0.9133
+      },
+      {
+        "text": "HCL",
+        "label": "Skill",
+        "confidence": 0.9127
+      },
+      {
+        "text": "TimescaleDB",
+        "label": "Skill",
+        "confidence": 0.8993
+      },
+      {
+        "text": "Jenkins",
+        "label": "Skill",
+        "confidence": 0.8876
+      },
+      {
+        "text": "2 years",
+        "label": "YearsExperience",
+        "confidence": 0.8869
+      },
+      {
+        "text": "Vagrant",
+        "label": "Skill",
+        "confidence": 0.8838
+      },
+      {
+        "text": "EC2",
+        "label": "Skill",
+        "confidence": 0.8724
+      },
+      {
+        "text": "cert-manager",
+        "label": "Skill",
+        "confidence": 0.8547
+      },
+      {
+        "text": "fluxDB",
+        "label": "Skill",
+        "confidence": 0.8511
+      },
+      {
+        "text": "9",
+        "label": "Skill",
+        "confidence": 0.8444
+      },
+      {
+        "text": "Prometheus",
+        "label": "Skill",
+        "confidence": 0.8317
+      },
+      {
+        "text": "Grafana",
+        "label": "Skill",
+        "confidence": 0.8273
+      },
+      {
+        "text": "Solutions Architect",
+        "label": "Designation",
+        "confidence": 0.8193
+      },
+      {
+        "text": "3 years",
+        "label": "YearsExperience",
+        "confidence": 0.7939
+      },
+      {
+        "text": "Datadog",
+        "label": "Skill",
+        "confidence": 0.7857
+      },
+      {
+        "text": "MAD RIZKY",
+        "label": "Name",
+        "confidence": 0.7783
+      },
+      {
+        "text": "tio",
+        "label": "Skill",
+        "confidence": 0.7596
+      },
+      {
+        "text": "hma",
+        "label": "Email",
+        "confidence": 0.7493
+      },
+      {
+        "text": "GCP",
+        "label": "Skill",
+        "confidence": 0.7223
+      },
+      {
+        "text": "Solutions Architect",
+        "label": "Designation",
+        "confidence": 0.6943
+      },
+      {
+        "text": "Databases",
+        "label": "Skill",
+        "confidence": 0.6767
+      },
+      {
+        "text": "Tek",
+        "label": "Skill",
+        "confidence": 0.6552
+      },
+      {
+        "text": "me",
+        "label": "Skill",
+        "confidence": 0.6321
+      },
+      {
+        "text": "Kubernetes",
+        "label": "Skill",
+        "confidence": 0.626
+      },
+      {
+        "text": "ton",
+        "label": "Company",
+        "confidence": 0.6078
+      },
+      {
+        "text": "Azure",
+        "label": "Company",
+        "confidence": 0.5418
+      },
+      {
+        "text": "AWS",
+        "label": "Skill",
+        "confidence": 0.5358
+      },
+      {
+        "text": "Cloud",
+        "label": "Skill",
+        "confidence": 0.5272
+      },
+      {
+        "text": "5",
+        "label": "Skill",
+        "confidence": 0.527
+      },
+      {
+        "text": "ton",
+        "label": "Company",
+        "confidence": 0.5138
+      },
+      {
+        "text": "TAMA",
+        "label": "Skill",
+        "confidence": 0.5115
+      },
+      {
+        "text": "DevOps",
+        "label": "Designation",
+        "confidence": 0.5093
+      },
+      {
+        "text": "Languages",
+        "label": "Skill",
+        "confidence": 0.5037
+      }
+    ]
+  },
+  {
+    "name": "LISA TANAKA",
+    "email": "lisa",
+    "phone": "+",
+    "location": "@",
+    "total_experience_years": 2022.0,
+    "skills": {
+      "programming_languages": [
+        "Dart",
+        "Swift",
+        "Kotlin",
+        "TypeScript",
+        "HTML5",
+        "CSS3",
+        "JavaScript"
+      ],
+      "frameworks": [
+        "Flutter",
+        "React Native",
+        "React",
+        "Node",
+        "Express"
+      ],
+      "cloud_platforms": [
+        "Firebase",
+        "Linode"
+      ],
+      "databases": [
+        "Supabase"
+      ],
+      "devops_tools": [
+        "GitHub Actions"
+      ],
+      "ml_ai_tools": [
+        "Feast"
+      ],
+      "other_tools": [
+        "Jetpack Compose",
+        "Tailwind CSS",
+        "Redux",
+        "MobX",
+        "Riverpod",
+        "Provider",
+        "Bloc",
+        "Jest",
+        "Detox",
+        "XCTest",
+        "Mock",
+        "lane",
+        "Bit",
+        "rise",
+        "App Center",
+        "Figma",
+        "Xcode",
+        "Android Studio",
+        "Vscode",
+        "Git",
+        "UI/UX",
+        "performance",
+        "Fastlane",
+        "WebSocket"
+      ]
+    },
+    "work_experience": [
+      {
+        "company": "Merca",
+        "designation": "Mobile Developer",
+        "duration": "Apr 2022 - Present"
+      },
+      {
+        "company": "ri",
+        "designation": "Senior",
+        "duration": "Jan 2020 - Mar 2022"
+      },
+      {
+        "company": "",
+        "designation": "Mobile Developer",
+        "duration": "2 years"
+      },
+      {
+        "company": "",
+        "designation": "Mobile Developer",
+        "duration": ""
+      }
+    ],
+    "education": [
+      {
+        "degree": "B",
+        "institution": "University of Tokyo",
+        "year": ""
+      }
+    ],
+    "raw_entities": [
+      {
+        "text": "lisa",
+        "label": "Email",
+        "confidence": 0.9998
+      },
+      {
+        "text": "+",
+        "label": "Phone",
+        "confidence": 0.9998
+      },
+      {
+        "text": "2019",
+        "label": "GraduationYear",
+        "confidence": 0.9998
+      },
+      {
+        "text": "B",
+        "label": "Degree",
+        "confidence": 0.9993
+      },
+      {
+        "text": "Tokyo, Japan",
+        "label": "Location",
+        "confidence": 0.9978
+      },
+      {
+        "text": "Git",
+        "label": "Skill",
+        "confidence": 0.9931
+      },
+      {
+        "text": "Fast",
+        "label": "Skill",
+        "confidence": 0.9901
+      },
+      {
+        "text": "Provider",
+        "label": "Skill",
+        "confidence": 0.9848
+      },
+      {
+        "text": "VS Code",
+        "label": "Skill",
+        "confidence": 0.9845
+      },
+      {
+        "text": "Node",
+        "label": "Skill",
+        "confidence": 0.9833
+      },
+      {
+        "text": "LINE",
+        "label": "Skill",
+        "confidence": 0.9823
+      },
+      {
+        "text": "Merca",
+        "label": "Company",
+        "confidence": 0.979
+      },
+      {
+        "text": "Kotlin",
+        "label": "Skill",
+        "confidence": 0.9738
+      },
+      {
+        "text": "Espresso",
+        "label": "Skill",
+        "confidence": 0.9727
+      },
+      {
+        "text": "Mobile Developer",
+        "label": "Designation",
+        "confidence": 0.9692
+      },
+      {
+        "text": "LINE",
+        "label": "Skill",
+        "confidence": 0.9681
+      },
+      {
+        "text": "TypeScript",
+        "label": "Skill",
+        "confidence": 0.9668
+      },
+      {
+        "text": "React Native",
+        "label": "Skill",
+        "confidence": 0.9654
+      },
+      {
+        "text": "tan",
+        "label": "Email",
+        "confidence": 0.9631
+      },
+      {
+        "text": "Bit",
+        "label": "Skill",
+        "confidence": 0.9603
+      },
+      {
+        "text": "Dart",
+        "label": "Skill",
+        "confidence": 0.9547
+      },
+      {
+        "text": "WebSocket",
+        "label": "Skill",
+        "confidence": 0.9539
+      },
+      {
+        "text": "Jan 2020 - Mar 2022",
+        "label": "YearsExperience",
+        "confidence": 0.9538
+      },
+      {
+        "text": "Firebase",
+        "label": "Skill",
+        "confidence": 0.9507
+      },
+      {
+        "text": "React",
+        "label": "Skill",
+        "confidence": 0.9495
+      },
+      {
+        "text": "Bloc",
+        "label": "Skill",
+        "confidence": 0.9485
+      },
+      {
+        "text": "Jetpack Compose",
+        "label": "Skill",
+        "confidence": 0.9387
+      },
+      {
+        "text": "Riverpod",
+        "label": "Skill",
+        "confidence": 0.9335
+      },
+      {
+        "text": "Swift",
+        "label": "Skill",
+        "confidence": 0.9294
+      },
+      {
+        "text": "HTML5",
+        "label": "Skill",
+        "confidence": 0.929
+      },
+      {
+        "text": "LISA TANAKA",
+        "label": "Name",
+        "confidence": 0.9286
+      },
+      {
+        "text": "Detox",
+        "label": "Skill",
+        "confidence": 0.9277
+      },
+      {
+        "text": "GitHub Actions",
+        "label": "Skill",
+        "confidence": 0.9251
+      },
+      {
+        "text": "Tailwind CSS",
+        "label": "Skill",
+        "confidence": 0.9196
+      },
+      {
+        "text": "2 years",
+        "label": "YearsExperience",
+        "confidence": 0.9191
+      },
+      {
+        "text": "CSS3",
+        "label": "Skill",
+        "confidence": 0.9176
+      },
+      {
+        "text": "XCTest",
+        "label": "Skill",
+        "confidence": 0.9154
+      },
+      {
+        "text": "Jest",
+        "label": "Skill",
+        "confidence": 0.9132
+      },
+      {
+        "text": "aka",
+        "label": "Email",
+        "confidence": 0.9091
+      },
+      {
+        "text": "Xcode",
+        "label": "Skill",
+        "confidence": 0.9043
+      },
+      {
+        "text": "Apr 2022 - Present",
+        "label": "YearsExperience",
+        "confidence": 0.9038
+      },
+      {
+        "text": "Flutter",
+        "label": "Skill",
+        "confidence": 0.903
+      },
+      {
+        "text": "App Center",
+        "label": "Skill",
+        "confidence": 0.9
+      },
+      {
+        "text": "University of Tokyo",
+        "label": "Institution",
+        "confidence": 0.8754
+      },
+      {
+        "text": "Express",
+        "label": "Skill",
+        "confidence": 0.8691
+      },
+      {
+        "text": "Android Studio",
+        "label": "Skill",
+        "confidence": 0.8678
+      },
+      {
+        "text": "Figma",
+        "label": "Skill",
+        "confidence": 0.8553
+      },
+      {
+        "text": "SwiftUI",
+        "label": "Skill",
+        "confidence": 0.8513
+      },
+      {
+        "text": "ri",
+        "label": "Company",
+        "confidence": 0.8497
+      },
+      {
+        "text": "Redux",
+        "label": "Skill",
+        "confidence": 0.7875
+      },
+      {
+        "text": "Supabase",
+        "label": "Skill",
+        "confidence": 0.7629
+      },
+      {
+        "text": "Fastlane",
+        "label": "Skill",
+        "confidence": 0.7527
+      },
+      {
+        "text": "Mobile Developer",
+        "label": "Designation",
+        "confidence": 0.7358
+      },
+      {
+        "text": "MobX",
+        "label": "Skill",
+        "confidence": 0.7194
+      },
+      {
+        "text": "Mobile Developer",
+        "label": "Designation",
+        "confidence": 0.6197
+      },
+      {
+        "text": "Senior",
+        "label": "Designation",
+        "confidence": 0.5698
+      },
+      {
+        "text": "rise",
+        "label": "Skill",
+        "confidence": 0.5637
+      },
+      {
+        "text": "Mock",
+        "label": "Skill",
+        "confidence": 0.535
+      },
+      {
+        "text": "js",
+        "label": "Skill",
+        "confidence": 0.5269
+      },
+      {
+        "text": "@",
+        "label": "Location",
+        "confidence": 0.5241
+      },
+      {
+        "text": "lane",
+        "label": "Skill",
+        "confidence": 0.5233
+      },
+      {
+        "text": "UI/UX",
+        "label": "Skill",
+        "confidence": 0.505
+      },
+      {
+        "text": "performance",
+        "label": "Skill",
+        "confidence": 0.5005
+      }
+    ]
+  },
+  {
+    "name": "PUT",
+    "email": "put",
+    "phone": "+",
+    "location": "Yogyakarta, Indonesia",
+    "total_experience_years": 2023.0,
+    "skills": {
+      "programming_languages": [
+        "Python",
+        "JavaScript",
+        "Java",
+        "C++",
+        "SQL",
+        "HTML",
+        "CSS",
+        "TypeScript"
+      ],
+      "frameworks": [
+        "React",
+        "Node",
+        "Next.js",
+        "FastAPI"
+      ],
+      "cloud_platforms": [
+        "Firebase"
+      ],
+      "databases": [
+        "MySQL",
+        "MongoDB"
+      ],
+      "devops_tools": [
+        "Docker"
+      ],
+      "ml_ai_tools": [
+        "NLP",
+        "TensorFlow"
+      ],
+      "other_tools": [
+        "Bootstrap",
+        "Git",
+        "Vscode",
+        "Ju",
+        "Jupyter",
+        "Postman",
+        "Figma",
+        "student.",
+        "ac.id",
+        "web",
+        "Programming",
+        "Database"
+      ]
+    },
+    "work_experience": [
+      {
+        "company": "Google",
+        "designation": "customer",
+        "duration": "2023 -"
+      },
+      {
+        "company": "",
+        "designation": "customer",
+        "duration": ""
+      }
+    ],
+    "education": [
+      {
+        "degree": "S",
+        "institution": "Universitas Gadjah Mada",
+        "year": ""
+      }
+    ],
+    "raw_entities": [
+      {
+        "text": "+",
+        "label": "Phone",
+        "confidence": 1.0
+      },
+      {
+        "text": "put",
+        "label": "Email",
+        "confidence": 0.9997
+      },
+      {
+        "text": "S",
+        "label": "Degree",
+        "confidence": 0.9987
+      },
+      {
+        "text": "PUT",
+        "label": "Name",
+        "confidence": 0.9979
+      },
+      {
+        "text": "Yogyakarta, Indonesia",
+        "label": "Location",
+        "confidence": 0.9966
+      },
+      {
+        "text": "Git",
+        "label": "Skill",
+        "confidence": 0.9955
+      },
+      {
+        "text": "Node",
+        "label": "Skill",
+        "confidence": 0.9912
+      },
+      {
+        "text": "Docker",
+        "label": "Skill",
+        "confidence": 0.9911
+      },
+      {
+        "text": "JavaScript",
+        "label": "Skill",
+        "confidence": 0.991
+      },
+      {
+        "text": "Ju",
+        "label": "Skill",
+        "confidence": 0.9898
+      },
+      {
+        "text": "Java",
+        "label": "Skill",
+        "confidence": 0.9872
+      },
+      {
+        "text": "HTML",
+        "label": "Skill",
+        "confidence": 0.9865
+      },
+      {
+        "text": "Python",
+        "label": "Skill",
+        "confidence": 0.9861
+      },
+      {
+        "text": "TypeScript",
+        "label": "Skill",
+        "confidence": 0.9823
+      },
+      {
+        "text": "Bootstrap",
+        "label": "Skill",
+        "confidence": 0.9807
+      },
+      {
+        "text": "SQL",
+        "label": "Skill",
+        "confidence": 0.9806
+      },
+      {
+        "text": "Postman",
+        "label": "Skill",
+        "confidence": 0.9805
+      },
+      {
+        "text": "VS Code",
+        "label": "Skill",
+        "confidence": 0.9744
+      },
+      {
+        "text": "ri",
+        "label": "Email",
+        "confidence": 0.9655
+      },
+      {
+        "text": "MySQL",
+        "label": "Skill",
+        "confidence": 0.9645
+      },
+      {
+        "text": "React",
+        "label": "Skill",
+        "confidence": 0.9464
+      },
+      {
+        "text": "CSS",
+        "label": "Skill",
+        "confidence": 0.9395
+      },
+      {
+        "text": "Universitas Gadjah Mada",
+        "label": "Institution",
+        "confidence": 0.9381
+      },
+      {
+        "text": "MongoDB",
+        "label": "Skill",
+        "confidence": 0.9378
+      },
+      {
+        "text": "Database",
+        "label": "Skill",
+        "confidence": 0.9285
+      },
+      {
+        "text": "FastAPI",
+        "label": "Skill",
+        "confidence": 0.9269
+      },
+      {
+        "text": "Google",
+        "label": "Company",
+        "confidence": 0.8997
+      },
+      {
+        "text": "React",
+        "label": "Skill",
+        "confidence": 0.8832
+      },
+      {
+        "text": "Next.js",
+        "label": "Skill",
+        "confidence": 0.8679
+      },
+      {
+        "text": "Figma",
+        "label": "Skill",
+        "confidence": 0.8516
+      },
+      {
+        "text": "NLP",
+        "label": "Skill",
+        "confidence": 0.8279
+      },
+      {
+        "text": "web",
+        "label": "Skill",
+        "confidence": 0.7912
+      },
+      {
+        "text": "Node",
+        "label": "Skill",
+        "confidence": 0.7793
+      },
+      {
+        "text": "customer",
+        "label": "Designation",
+        "confidence": 0.7167
+      },
+      {
+        "text": "RI MA",
+        "label": "Name",
+        "confidence": 0.7105
+      },
+      {
+        "text": "ac.id",
+        "label": "Skill",
+        "confidence": 0.6937
+      },
+      {
+        "text": "student.",
+        "label": "Skill",
+        "confidence": 0.6805
+      },
+      {
+        "text": "pyter",
+        "label": "Skill",
+        "confidence": 0.668
+      },
+      {
+        "text": "C++",
+        "label": "Skill",
+        "confidence": 0.6479
+      },
+      {
+        "text": "TensorFlow",
+        "label": "Skill",
+        "confidence": 0.6353
+      },
+      {
+        "text": "2023 -",
+        "label": "YearsExperience",
+        "confidence": 0.6275
+      },
+      {
+        "text": "Firebase",
+        "label": "Skill",
+        "confidence": 0.5964
+      },
+      {
+        "text": "customer",
+        "label": "Designation",
+        "confidence": 0.5884
+      },
+      {
+        "text": "Programming",
+        "label": "Skill",
+        "confidence": 0.5766
+      },
+      {
+        "text": "for",
+        "label": "Location",
+        "confidence": 0.5113
+      }
+    ]
+  }
+]
