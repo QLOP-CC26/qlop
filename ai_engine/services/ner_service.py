@@ -120,7 +120,7 @@ def decode_predictions_to_spans(
     current_tokens: list[str] = []
     current_conf: list[float] = []
 
-    for token, pred_id, conf in zip(tokens, preds, confidences):
+    for token, pred_id, conf in zip(tokens, preds, confidences, strict=False):
         if token in tokenizer.all_special_tokens:
             continue
         label = id2label.get(int(pred_id), "O")
@@ -163,7 +163,6 @@ def decode_predictions_to_spans(
 def _run_ner_on_chunk(text: str) -> list[dict]:
     if not text.strip():
         return []
-    import tensorflow as tf
 
     encoded = registry.tokenizer(
         text, truncation=True, padding="max_length",
@@ -254,7 +253,7 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
     skills_seen: set[str] = set()
 
     for ent in entities:
-        label, text, conf = ent["label"], ent["text"].strip(), ent["confidence"]
+        label, text, _ = ent["label"], ent["text"].strip(), ent["confidence"]
 
         if label == "Name" and not output["name"]:
             # Require at least 2 words or a reasonable length
@@ -388,7 +387,7 @@ def _is_valid_skill(text: str) -> bool:
     if len(s) <= 1:
         return False
     # Reject trailing/leading special chars like "English ("
-    if re.search(r"[({(\[<\"']$", s):
+    if re.search(r"[({[\<\"']$", s):
         return False
     # Reject if >40% non-alphanumeric (e.g. "C/", "Al", "rithm")
     alnum_ratio = sum(c.isalnum() or c in "-+#./_ " for c in s) / len(s)
@@ -415,8 +414,8 @@ def _extract_experience_years_from_text(raw_text: str) -> float:
         if candidates:
             return max(candidates)
 
-    # Parse all 4-digit years in the range 2000-2030 from the raw text
-    years_found = [int(y) for y in re.findall(r"\b(20[012]\d)\b", raw_text)]
+    # Parse all 4-digit years in the range 2000-2039 from the raw text
+    years_found = [int(y) for y in re.findall(r"\b(20[0-3]\d)\b", raw_text)]
     if len(years_found) >= 2:
         import datetime
         current_year = datetime.datetime.now().year

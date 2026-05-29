@@ -1,12 +1,15 @@
 """Career Pivot Radar Service.
 
 Stage A — Lightweight RAG: SBERT role centroid cosine similarity.
-Stage B — Multi-turn Gemini conversation (3 turns) with structured JSON output.
+Stage B — Multi-turn Groq/Llama conversation (3 turns) with structured JSON output.
 
-LLM Stack: google-genai SDK → gemini-1.5-flash
+LLM Stack: openai SDK → Groq endpoint (llama-3.3-70b-versatile, free tier)
   Turn 1 : free-form profile analysis (temperature 0.4)
   Turn 2 : RAG context injection + role reasoning (temperature 0.3)
-  Turn 3 : structured output locked to CareerPivotOutput schema (temperature 0.1)
+  Turn 3 : structured JSON output via json_object mode (temperature 0.1)
+
+Multi-turn is simulated by accumulating the messages list manually,
+since the openai SDK is stateless (unlike Gemini's chat sessions).
 """
 
 from __future__ import annotations
@@ -14,14 +17,17 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import openai
 
 import numpy as np
 
 from core.config import settings
 from core.model_loader import registry
 from schemas.analyze import ReadinessResult, SkillGap
-from schemas.career_pivot import CareerPivotOutput, AIDiscoveredRole
+from schemas.career_pivot import CareerPivotOutput
 from schemas.cv_profile import CVProfile
 from utils.skill_normalizer import flatten_skills, fuzzy_match_skill
 
@@ -262,8 +268,22 @@ def _build_structured_output_prompt(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Stage B — Multi-Turn Gemini Conversation
+# Stage B — Multi-Turn Groq Conversation (openai-compatible SDK)
 # ──────────────────────────────────────────────────────────────────────
+
+def _groq_call(client: "openai.OpenAI", model: str, messages: list[dict], temperature: float, json_mode: bool = False) -> str:
+    """Synchronous Groq call — to be run in executor."""
+    kwargs: dict = dict(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=2000,
+    )
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+
 
 async def generate_career_pivot(
     profile: CVProfile,
@@ -273,108 +293,81 @@ async def generate_career_pivot(
     retrieved_roles: list[RetrievedRole],
 ) -> CareerPivotOutput:
     """
-    3-turn multi-turn conversation with Gemini 1.5 Flash.
+    3-turn multi-turn conversation with Groq (Llama 3.3 70B).
+
+    Multi-turn is simulated by manually accumulating the messages list
+    (system + user/assistant pairs) — openai SDK is stateless.
 
     Turn 1 — free-form profile analysis (temperature 0.4)
-      LLM builds deep understanding of the candidate's background.
-
-    Turn 2 — RAG context injection (temperature 0.3)
-      LLM reflects on SBERT-retrieved alternatives with domain knowledge.
-
-    Turn 3 — structured output locked to CareerPivotOutput (temperature 0.1)
-      Uses response_mime_type="application/json" + response_schema=CareerPivotOutput
-      to guarantee pure JSON output that maps directly to our Pydantic model.
-
-    The chat object maintains conversation history automatically across turns;
-    each send_message call can override the generation config.
+    Turn 2 — RAG context injection + role exploration (temperature 0.3)
+    Turn 3 — structured JSON output via json_object mode (temperature 0.1)
     """
-    from google import genai  # lazy import — only needed when career pivot is called
-    from google.genai import types
+    import openai  # lazy import — only needed when career pivot is called
 
-    client = genai.Client(api_key=settings.google_api_key)
-    model = settings.gemini_model
+    if not settings.groq_api_key:
+        raise ValueError("GROQ_API_KEY not configured")
 
+    client = openai.OpenAI(
+        api_key=settings.groq_api_key,
+        base_url=settings.groq_base_url,
+    )
+    model = settings.groq_model
     loop = asyncio.get_running_loop()
 
-    # Create persistent chat session with system instruction
-    # (chat history is maintained internally by the SDK)
-    chat = client.chats.create(
-        model=model,
-        config=types.GenerateContentConfig(
-            system_instruction=_SYSTEM_INSTRUCTION,
-        ),
-    )
+    # Accumulated messages list — grows across turns to preserve context
+    messages: list[dict] = [{"role": "system", "content": _SYSTEM_INSTRUCTION}]
 
-    # ── Turn 1: profile snapshot (capped — only needs to build context) ──
+    # ── Turn 1: deep profile analysis ────────────────────────────────────
     turn1_prompt = _build_profile_prompt(profile, target_role, readiness)
+    messages.append({"role": "user", "content": turn1_prompt})
 
-    turn1_response = await loop.run_in_executor(
-        None,
-        lambda: chat.send_message(
-            turn1_prompt,
-            config=types.GenerateContentConfig(temperature=0.4, max_output_tokens=300),
-        ),
+    turn1_text = await loop.run_in_executor(
+        None, lambda: _groq_call(client, model, messages, temperature=0.4)
     )
-    profile_analysis = turn1_response.text
-    logger.debug("Turn 1 profile analysis complete (%d chars)", len(profile_analysis or ""))
+    messages.append({"role": "assistant", "content": turn1_text})
+    logger.debug("Turn 1 profile analysis complete (%d chars)", len(turn1_text))
 
-    # ── Turn 2: RAG context injection (capped) ───────────────────────────
+    # ── Turn 2: RAG context injection + beyond-dataset exploration ────────
     turn2_prompt = _build_rag_context_prompt(retrieved_roles, skill_gap)
+    messages.append({"role": "user", "content": turn2_prompt})
 
-    turn2_response = await loop.run_in_executor(
-        None,
-        lambda: chat.send_message(
-            turn2_prompt,
-            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=400),
-        ),
+    turn2_text = await loop.run_in_executor(
+        None, lambda: _groq_call(client, model, messages, temperature=0.3)
     )
-    logger.debug("Turn 2 RAG context analysis complete (%d chars)", len(turn2_response.text or ""))
+    messages.append({"role": "assistant", "content": turn2_text})
+    logger.debug("Turn 2 RAG context analysis complete (%d chars)", len(turn2_text))
 
-    # ── Turn 3: structured output (Pydantic-locked via Gemini schema) ────
+    # ── Turn 3: structured JSON output ───────────────────────────────────
     turn3_prompt = _build_structured_output_prompt(retrieved_roles, readiness, target_role)
+    messages.append({"role": "user", "content": turn3_prompt})
 
-    turn3_response = await loop.run_in_executor(
-        None,
-        lambda: chat.send_message(
-            turn3_prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=CareerPivotOutput,
-                temperature=0.1,
-                max_output_tokens=2000,  # increased: now outputs both Layer 1 + Layer 2 roles
-            ),
-        ),
+    raw_json = await loop.run_in_executor(
+        None, lambda: _groq_call(client, model, messages, temperature=0.1, json_mode=True)
     )
-
-    # Gemini with response_schema returns valid JSON text — parse into Pydantic
-    raw_json = turn3_response.text or ""
     logger.debug("Turn 3 structured output received (%d chars)", len(raw_json))
 
-    # Primary: strict parse
+    # Parse into Pydantic with fallback
     parsed: CareerPivotOutput | None = None
     try:
         parsed = CareerPivotOutput.model_validate_json(raw_json)
     except Exception as primary_exc:
         logger.warning("Strict JSON parse failed (%s), trying lenient fallback", primary_exc)
-        # Fallback: extract JSON block in case Gemini adds prose around it
         try:
             start_idx = raw_json.find("{")
             end_idx = raw_json.rfind("}") + 1
             if start_idx != -1 and end_idx > start_idx:
-                clean_json = raw_json[start_idx:end_idx]
-                parsed = CareerPivotOutput.model_validate_json(clean_json)
+                parsed = CareerPivotOutput.model_validate_json(raw_json[start_idx:end_idx])
         except Exception as fallback_exc:
             logger.warning("Lenient JSON parse also failed (%s)", fallback_exc)
             raise RuntimeError(
-                f"Gemini returned malformed JSON. Primary: {primary_exc}. "
-                f"Fallback: {fallback_exc}. Raw ({len(raw_json)} chars): {raw_json[:300]}"
+                f"LLM returned malformed JSON. Primary: {primary_exc}. "
+                f"Fallback: {fallback_exc}. Raw ({len(raw_json)} chars): {raw_json[:400]}"
             ) from fallback_exc
 
     if parsed is None:
-        raise RuntimeError(f"No valid JSON found in Gemini response: {raw_json[:300]}")
+        raise RuntimeError(f"No valid JSON found in LLM response: {raw_json[:400]}")
 
-    # Post-process: recompute skill_readiness_pct for ai_discovered_roles server-side
-    # Formula: transferable / (transferable + to_develop) * 100 — consistent, data-derived
+    # Post-process: recompute skill_readiness_pct server-side
     for ai_role in parsed.ai_discovered_roles:
         t = len(ai_role.transferable_skills)
         d = len(ai_role.skills_to_develop)
