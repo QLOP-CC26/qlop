@@ -1,11 +1,64 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from schemas.analyze import CourseRecommendation, ReadinessResult, SkillGap
 from schemas.cv_profile import CVProfile
+
+
+# ---------------------------------------------------------------------------
+# LLM output normalisation helpers
+# ---------------------------------------------------------------------------
+
+# Template hints embedded in prompt placeholders, e.g. "(high|medium|low)",
+# "(specific role from Turn 1 & 2 analysis)", "(e.g. 3-6 months)".
+_HINT_RE = re.compile(r"\s*\([^)]*\)\s*$")
+
+# Sentinel strings the LLM might leave verbatim from the JSON template.
+_SENTINELS: frozenset[str] = frozenset({"__fill__", "...", "....", "placeholder"})
+
+
+def _lower(v: Any) -> Any:
+    """Normalise a Literal field: strip trailing hint text, then lowercase.
+
+    Handles two LLM failure modes in one pass:
+    - Title Case:  "Moderate"                        → "moderate"
+    - Hint suffix: "adjacent (specialization|...)"   → "adjacent"
+    - Both:        "High (high|medium|low)"           → "high"
+    """
+    if isinstance(v, str):
+        return _HINT_RE.sub("", v).strip().lower()
+    return v
+
+
+def _strip_hint(v: Any) -> Any:
+    """Strip trailing parenthetical hints from free-text string fields.
+
+    Example: "3-6 months (e.g. 3-6 months)"  →  "3-6 months"
+    Also removes a bare "__FILL__" sentinel, returning "" instead.
+    """
+    if isinstance(v, str):
+        v = _HINT_RE.sub("", v).strip()
+        if v.startswith("__FILL__"):
+            return ""
+    return v
+
+
+def _clean_list(v: Any) -> Any:
+    """Remove sentinel placeholder strings from LLM-generated list fields.
+
+    The prompt template uses ["__FILL__", "..."] as placeholders. If the LLM
+    partially fills a list it may leave those tokens in the output.
+    """
+    if isinstance(v, list):
+        return [
+            item for item in v
+            if not (isinstance(item, str) and item.strip().lower() in _SENTINELS)
+        ]
+    return v
 
 
 # ---------------------------------------------------------------------------
@@ -41,12 +94,26 @@ class AlternativeRole(BaseModel):
     estimated_transition_time: str
     first_step: str
 
+    @field_validator("transition_difficulty", mode="before")
+    @classmethod
+    def normalize_difficulty(cls, v: Any) -> Any:
+        return _lower(v)
+
+    @field_validator("estimated_transition_time", mode="before")
+    @classmethod
+    def strip_time_hint(cls, v: Any) -> Any:
+        return _strip_hint(v)
+
     @field_validator("transferable_skills", mode="before")
     @classmethod
     def coerce_transferable_skills(cls, v: Any) -> Any:
-        """Coerce plain strings to TransferableSkill objects when LLM returns simplified output."""
+        """Coerce plain strings → TransferableSkill; drop sentinel placeholders."""
         if isinstance(v, list):
-            return [{"skill": item, "relevance": ""} if isinstance(item, str) else item for item in v]
+            cleaned = _clean_list(v)
+            return [
+                {"skill": item, "relevance": ""} if isinstance(item, str) else item
+                for item in cleaned
+            ]
         return v
 
 
@@ -70,6 +137,21 @@ class AIDiscoveredRole(BaseModel):
     first_step: str
     market_demand: Literal["high", "medium", "low"]
 
+    @field_validator("transition_difficulty", "category", "market_demand", mode="before")
+    @classmethod
+    def normalize_literals(cls, v: Any) -> Any:
+        return _lower(v)
+
+    @field_validator("role_name", "why_good_fit", mode="before")
+    @classmethod
+    def strip_ai_role_hints(cls, v: Any) -> Any:
+        return _strip_hint(v)
+
+    @field_validator("transferable_skills", "skills_to_develop", mode="before")
+    @classmethod
+    def clean_skill_lists(cls, v: Any) -> Any:
+        return _clean_list(v)
+
 
 class SuggestedCertification(BaseModel):
     name: str
@@ -81,6 +163,11 @@ class CurrentRoleAssessment(BaseModel):
     readiness_score: float
     readiness_level: Literal["low", "moderate", "high", "excellent"]
     verdict: str
+
+    @field_validator("readiness_level", mode="before")
+    @classmethod
+    def normalize_readiness_level(cls, v: Any) -> Any:
+        return _lower(v)
 
 
 class CareerPivotOutput(BaseModel):
@@ -98,12 +185,21 @@ class CareerPivotOutput(BaseModel):
     suggested_certifications: list[SuggestedCertification]
     universal_advice: str
 
+    @field_validator("strongest_transferable_skills", mode="before")
+    @classmethod
+    def clean_strongest_skills(cls, v: Any) -> Any:
+        return _clean_list(v)
+
     @field_validator("suggested_certifications", mode="before")
     @classmethod
     def coerce_certifications(cls, v: Any) -> Any:
-        """Coerce plain strings to SuggestedCertification objects when LLM returns simplified output."""
+        """Coerce plain strings → SuggestedCertification; drop sentinel placeholders."""
         if isinstance(v, list):
-            return [{"name": item, "relevance": ""} if isinstance(item, str) else item for item in v]
+            cleaned = _clean_list(v)
+            return [
+                {"name": item, "relevance": ""} if isinstance(item, str) else item
+                for item in cleaned
+            ]
         return v
 
 
