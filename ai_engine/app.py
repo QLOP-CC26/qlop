@@ -41,6 +41,14 @@ async def lifespan(app: FastAPI):
     logger.info("Starting QLOP AI Engine — loading models …")
     registry.load_all()
     logger.info("All models loaded. API ready.")
+
+    from core.config import settings as _s
+    if not _s.groq_api_key:
+        logger.warning(
+            "GROQ_API_KEY is not set in .env — "
+            "POST /api/v1/cv/career-pivot will return 503 until the key is configured."
+        )
+
     yield
     logger.info("Shutting down QLOP AI Engine.")
 
