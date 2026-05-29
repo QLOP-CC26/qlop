@@ -26,9 +26,10 @@ class Settings(BaseSettings):
     ner_sliding_window_size: int = 200
     ner_sliding_window_stride: int = 100
 
-    # --- Gemini (Google AI Studio) ---
-    google_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash-lite"
+    # --- Groq (OpenAI-compatible, free tier) ---
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
 
     model_config = {"env_file": str(_BASE_DIR / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
