@@ -25,7 +25,7 @@ saved_model/
 *.csv
 *.xlsx
 *.parquet
-!sample_data.csv 
+!sample_data.csv
 
 # OS Generated Files
 .DS_Store

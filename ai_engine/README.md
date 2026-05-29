@@ -237,7 +237,7 @@ Returns model loading status.
     { "company": "Tokopedia", "designation": "Backend Engineer", "duration": "2 years" }
   ],
   "education": [
-    { "degree": "S1 Informatika", "institution": "UI", "year": "2021" }
+    { "degree": "B.Sc. Computer Science", "institution": "University of Indonesia", "year": "2021" }
   ]
 }
 ```
@@ -321,44 +321,44 @@ Accepts the full payload from Phase 2 plus the profile.
     "target_role": "Backend Developer",
     "readiness_score": 0.3155,
     "readiness_level": "moderate",
-    "verdict": "Profil Anda cocok untuk Backend Developer dengan beberapa gap yang perlu diisi."
+    "verdict": "Your profile fits Backend Developer with a few gaps to address."
   },
   "alternative_roles": [
     {
       "role_name": "Full Stack Developer",
       "sbert_match_score": 0.8234,
       "skill_overlap_pct": 60.0,
-      "why_good_fit": "Keahlian React dan JavaScript sangat relevan untuk peran full-stack.",
+      "why_good_fit": "Your React and JavaScript skills are highly relevant for a full-stack role.",
       "transferable_skills": [
-        { "skill": "JavaScript", "relevance": "Bahasa utama untuk full-stack development" },
-        { "skill": "React",      "relevance": "Langsung digunakan di sisi frontend" }
+        { "skill": "JavaScript", "relevance": "Primary language for full-stack development" },
+        { "skill": "React",      "relevance": "Directly applicable on the frontend side" }
       ],
       "gap_skills": ["vue.js", "node.js"],
       "transition_difficulty": "easy",
-      "estimated_transition_time": "3-6 bulan",
-      "first_step": "Ikuti kursus Node.js dan bangun proyek full-stack portfolio"
+      "estimated_transition_time": "3-6 months",
+      "first_step": "Take a Node.js course and build a full-stack portfolio project."
     }
   ],
   "ai_discovered_roles": [
     {
       "role_name": "API Platform Engineer",
       "category": "specialization",
-      "why_good_fit": "Pengalaman backend Anda di API design sangat relevan untuk membangun platform API internal.",
+      "why_good_fit": "Your backend experience in API design is directly relevant for building internal API platforms.",
       "transferable_skills": ["python", "fastapi", "docker", "postgresql"],
       "skills_to_develop": ["kong", "api gateway", "openapi spec"],
       "transition_difficulty": "moderate",
       "estimated_transition_months": 4,
       "skill_readiness_pct": 57.1,
-      "first_step": "Buat proyek API gateway menggunakan Kong atau AWS API Gateway di portfolio.",
+      "first_step": "Build an API gateway project using Kong or AWS API Gateway for your portfolio.",
       "market_demand": "high"
     }
   ],
   "strongest_transferable_skills": ["python", "docker", "react"],
   "suggested_certifications": [
-    { "name": "AWS Certified Developer", "relevance": "Memvalidasi cloud skill dan membuka peluang di startup tech." },
-    { "name": "Google Professional Cloud Developer", "relevance": "Relevan untuk peran backend di ekosistem GCP." }
+    { "name": "AWS Certified Developer", "relevance": "Validates your cloud skills and opens doors at tech startups." },
+    { "name": "Google Professional Cloud Developer", "relevance": "Relevant for backend roles in the GCP ecosystem." }
   ],
-  "universal_advice": "Fokus pada pendalaman satu cloud platform (AWS atau GCP) untuk membedakan diri dari developer lain."
+  "universal_advice": "Focus on deepening one cloud platform (AWS or GCP) to differentiate yourself from other developers."
 }
 ```
 
@@ -377,7 +377,7 @@ All errors use the same envelope:
   "code": 400,
   "data": null,
   "metadata": { "timestamp": "..." },
-  "detail": "Role 'Astronaut' tidak dikenali. Role yang valid: ..."
+  "detail": "Role 'Astronaut' not recognized. Valid roles: ..."
 }
 ```
 
@@ -413,11 +413,11 @@ While waiting for Phase 2 (typically 1–5 seconds), rotate these messages every
 
 ```javascript
 const loadingMessages = [
-  "Menganalisis matriks skill kamu...",
-  "Mencocokkan dengan 27 role di database...",
-  "Menghitung readiness score...",
-  "Mencari kursus Coursera yang relevan...",
-  "Menyusun laporan skill gap...",
+  "Analyzing your skill matrix...",
+  "Matching against 27 roles in the database...",
+  "Calculating readiness score...",
+  "Searching for relevant Coursera courses...",
+  "Compiling your skill gap report...",
 ];
 ```
 
@@ -425,11 +425,11 @@ Phase 3 (Career Pivot, 10–30 seconds) rotation:
 
 ```javascript
 const pivotMessages = [
-  "Memuat sistem Career Pivot Radar...",
-  "Menganalisis vektor keahlian kamu...",
-  "Menemukan jalur karier alternatif...",
-  "Berkonsultasi dengan AI career coach...",
-  "Menyusun rekomendasi personal...",
+  "Loading Career Pivot Radar system...",
+  "Analyzing your skill vectors...",
+  "Discovering alternative career paths...",
+  "Consulting AI career coach...",
+  "Composing personalized recommendations...",
 ];
 ```
 
