@@ -139,6 +139,18 @@ check("model4_available = True", d.get("model4_available") is True)
 # 2. OpenAPI docs
 # ──────────────────────────────────────────────────────────────────────────────
 
+section("GET /api/v1/roles  (role list for frontend dropdown)")
+r = get("/api/v1/roles")
+d = r.json()
+check("HTTP 200", r.status_code == 200, str(r.status_code))
+check("envelope status=success", d.get("status") == "success")
+roles = d.get("data", {}).get("roles", [])
+check("roles is list", isinstance(roles, list))
+check("count = 27", d.get("data", {}).get("count") == 27, str(d.get("data", {}).get("count")))
+check("Data Scientist in roles", "Data Scientist" in roles)
+check("Backend Developer in roles", "Backend Developer" in roles)
+
+
 section("GET /docs  (Swagger UI)")
 r = get("/docs")
 check("HTTP 200", r.status_code == 200, str(r.status_code))
