@@ -34,6 +34,8 @@ async def extract_endpoint(body: ExtractRequest):
         pdf_bytes = await download_pdf_from_cloudinary(body.cloudinary_url)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=400, detail=f"Gagal mengunduh file: HTTP {exc.response.status_code}") from exc
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError) as exc:
+        raise HTTPException(status_code=502, detail=f"Tidak dapat menjangkau Cloudinary: {exc}") from exc
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Gagal mengunduh file dari URL: {exc}") from exc
 

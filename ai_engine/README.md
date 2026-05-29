@@ -207,23 +207,21 @@ Returns model loading status.
 { "cloudinary_url": "https://res.cloudinary.com/.../cv.pdf" }
 ```
 
-**Response `data`:**
+**Response `data`:** *(CVProfile object directly — no wrapper)*
 ```json
 {
-  "profile": {
-    "name": "Budi Santoso",
-    "email": "budi@example.com",
-    "phone": "08123456789",
-    "location": "Jakarta",
-    "total_experience_years": 3.0,
-    "skills": ["Python", "FastAPI", "Docker", "PostgreSQL"],
-    "work_experience": [
-      { "company": "Tokopedia", "designation": "Backend Engineer", "duration": "2 years" }
-    ],
-    "education": [
-      { "degree": "S1 Informatika", "institution": "UI", "year": "2021" }
-    ]
-  }
+  "name": "Budi Santoso",
+  "email": "budi@example.com",
+  "phone": "08123456789",
+  "location": "Jakarta",
+  "total_experience_years": 3.0,
+  "skills": ["Python", "FastAPI", "Docker", "PostgreSQL"],
+  "work_experience": [
+    { "company": "Tokopedia", "designation": "Backend Engineer", "duration": "2 years" }
+  ],
+  "education": [
+    { "degree": "S1 Informatika", "institution": "UI", "year": "2021" }
+  ]
 }
 ```
 
@@ -251,26 +249,23 @@ Returns model loading status.
     "missing_skills": [
       { "skill": "go", "priority_score": 0.6152 },
       { "skill": "kubernetes", "priority_score": 0.4801 }
-    ],
-    "match_score": 0.45
+    ]
   },
   "course_recommendations": [
     {
       "name": "Go Programming Language",
       "url": "https://www.coursera.org/...",
       "match_score": 0.87,
-      "reason": "Covers Go — a critical gap skill",
       "job_category": "Backend Development",
       "difficulty": "Beginner",
-      "duration": "17 hours"
+      "duration": "17 hours",
+      "covered_skills": ["go"]
     }
   ],
   "readiness_score": {
     "score": 0.3155,
     "matched_skills": ["python", "docker"],
-    "interpretation": "moderate fit",
-    "experience_bonus": 0.05,
-    "breadth_bonus": 0.02
+    "interpretation": "moderate fit"
   }
 }
 ```

@@ -362,7 +362,7 @@ Site Reliability Engineer Software Engineer         Solutions Architect
 
 #### `data.course_recommendations`
 
-Array of up to 5 courses. Each item:
+Array of up to 20 courses, ranked by `match_score`. Each item:
 
 | Field             | Type       | Description                                    |
 |-------------------|------------|------------------------------------------------|
