@@ -1,10 +1,10 @@
 """
 QLOP AI Engine — Endpoint Test Suite
 =====================================
-Jalankan dari folder ai_engine dengan venv aktif:
+Run from the ai_engine folder with the venv active:
 
-    python test_api.py                  # semua test, skip career-pivot (cepat)
-    python test_api.py --full           # semua test termasuk career-pivot (LLM, ~30 detik)
+    python test_api.py                  # all tests, skip career-pivot (fast)
+    python test_api.py --full           # all tests including career-pivot (LLM, ~30 seconds)
     python test_api.py --host 0.0.0.0   # custom host
     python test_api.py --port 9000       # custom port
 """
@@ -81,7 +81,7 @@ PROFILE = {
         {"company": "Startup XYZ", "designation": "Junior Dev", "duration": "1 year"},
     ],
     "education": [
-        {"degree": "S1 Informatika", "institution": "Universitas Indonesia", "year": "2021"}
+        {"degree": "B.Sc. Computer Science", "institution": "University of Indonesia", "year": "2021"}
     ],
 }
 
@@ -261,7 +261,7 @@ r = post("/api/v1/cv/analyze", {"profile": PROFILE, "target_role": "Astronaut"})
 check("unknown role → 400", r.status_code == 400, str(r.status_code))
 check("error envelope (unknown role)", r.json().get("status") == "error")
 detail = r.json().get("detail", "")
-check("detail lists valid roles", "Role yang valid:" in detail)
+check("detail lists valid roles", "Valid roles:" in detail)
 
 r = post("/api/v1/cv/analyze", {
     "profile": {**PROFILE, "skills": []},
@@ -321,7 +321,7 @@ if args.full:
         "readiness_score": ANALYZE_DATA.get("readiness_score", READINESS),
     }
 
-    print("    (calling Groq/Llama — mungkin 20–40 detik...)")
+    print("    (calling Groq/Llama — may take 20–40 seconds...)")
     t0 = time.perf_counter()
     r = post("/api/v1/cv/career-pivot", pivot_input, timeout=120)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
@@ -388,12 +388,12 @@ if args.full:
         check(f"wall-clock < 120s", elapsed_ms < 120_000, f"{elapsed_ms}ms")
 
     elif r.status_code == 503:
-        print("    (503 — Groq quota/key issue, bukan bug aplikasi)")
+        print("    (503 — Groq quota/key issue, not an application bug)")
         check("503 envelope status=error", d.get("status") == "error")
 
 else:
-    section("POST /api/v1/cv/career-pivot — full LLM call  (dilewati)")
-    print(f"    [{SKIP}] Jalankan dengan --full untuk test Groq/Llama LLM")
+    section("POST /api/v1/cv/career-pivot — full LLM call  (skipped)")
+    print(f"    [{SKIP}] Run with --full to test Groq/Llama LLM")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -405,19 +405,19 @@ passed  = sum(1 for _, ok, _ in results if ok)
 failed  = total - passed
 
 print(f"\n{'═'*60}")
-print(f"{BOLD}  HASIL: {passed}/{total} pass", end="")
+print(f"{BOLD}  RESULTS: {passed}/{total} passed", end="")
 if failed:
-    print(f"  |  {failed} GAGAL", end="")
+    print(f"  |  {failed} FAILED", end="")
 print(f"{END}")
 print(f"{'═'*60}")
 
 if failed:
-    print(f"\n{BOLD}  Test yang gagal:{END}")
+    print(f"\n{BOLD}  Failed tests:{END}")
     for label, ok, detail in results:
         if not ok:
             print(f"    [{FAIL}] {label}" + (f"  ({detail})" if detail else ""))
     print()
     sys.exit(1)
 else:
-    print(f"\n  Semua test lulus! Server siap digunakan.\n")
+    print(f"\n  All tests passed! Server is ready.\n")
     sys.exit(0)
