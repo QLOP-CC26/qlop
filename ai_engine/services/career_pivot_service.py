@@ -277,6 +277,9 @@ def _build_structured_output_prompt(
 # Stage B — Multi-Turn Groq Conversation (openai-compatible SDK)
 # ──────────────────────────────────────────────────────────────────────
 
+_GROQ_CALL_TIMEOUT = 90.0   # seconds — per individual turn; prevents hung Groq requests
+
+
 def _groq_call(client: "openai.OpenAI", model: str, messages: list[dict], temperature: float, json_mode: bool = False) -> str:
     """Synchronous Groq call — to be run in executor."""
     kwargs: dict = dict(
@@ -284,6 +287,7 @@ def _groq_call(client: "openai.OpenAI", model: str, messages: list[dict], temper
         messages=messages,
         temperature=temperature,
         max_tokens=2000,
+        timeout=_GROQ_CALL_TIMEOUT,
     )
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
@@ -333,6 +337,11 @@ async def generate_career_pivot(
     messages.append({"role": "assistant", "content": turn1_text})
     logger.debug("Turn 1 profile analysis complete (%d chars)", len(turn1_text))
 
+    # Small pause between turns to reduce back-to-back 429s on Groq free tier.
+    # The Groq free tier enforces a per-minute token budget; a brief gap lets
+    # the rolling window reset so Turn 2 starts with full quota headroom.
+    await asyncio.sleep(1.5)
+
     # ── Turn 2: RAG context injection + beyond-dataset exploration ────────
     turn2_prompt = _build_rag_context_prompt(retrieved_roles, skill_gap)
     messages.append({"role": "user", "content": turn2_prompt})
@@ -342,6 +351,8 @@ async def generate_career_pivot(
     )
     messages.append({"role": "assistant", "content": turn2_text})
     logger.debug("Turn 2 RAG context analysis complete (%d chars)", len(turn2_text))
+
+    await asyncio.sleep(1.5)
 
     # ── Turn 3: structured JSON output ───────────────────────────────────
     turn3_prompt = _build_structured_output_prompt(retrieved_roles, readiness, target_role)
