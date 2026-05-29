@@ -28,3 +28,6 @@ h5py>=3.11.0
 
 # LLM — Groq (OpenAI-compatible endpoint) via openai SDK
 openai>=1.30.0
+
+# JSON repair — recovers truncated/malformed LLM output (missing braces, trailing commas, etc.)
+json-repair>=0.30.0
