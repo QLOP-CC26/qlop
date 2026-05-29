@@ -25,7 +25,7 @@ import httpx
 parser = argparse.ArgumentParser(description="QLOP API test suite")
 parser.add_argument("--host", default="127.0.0.1")
 parser.add_argument("--port", default="8000")
-parser.add_argument("--full", action="store_true", help="Include career-pivot (calls Gemini, ~30s)")
+parser.add_argument("--full", action="store_true", help="Include career-pivot (calls Groq/Llama, ~30s)")
 args = parser.parse_args()
 
 BASE = f"http://{args.host}:{args.port}"
@@ -309,7 +309,7 @@ if args.full:
         "readiness_score": ANALYZE_DATA.get("readiness_score", READINESS),
     }
 
-    print("    (calling Gemini — mungkin 20–40 detik...)")
+    print("    (calling Groq/Llama — mungkin 20–40 detik...)")
     t0 = time.perf_counter()
     r = post("/api/v1/cv/career-pivot", pivot_input, timeout=120)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
@@ -376,12 +376,12 @@ if args.full:
         check(f"wall-clock < 90s", elapsed_ms < 90_000, f"{elapsed_ms}ms")
 
     elif r.status_code == 503:
-        print("    (503 — Gemini quota/key issue, bukan bug aplikasi)")
+        print("    (503 — Groq quota/key issue, bukan bug aplikasi)")
         check("503 envelope status=error", d.get("status") == "error")
 
 else:
     section("POST /api/v1/cv/career-pivot — full LLM call  (dilewati)")
-    print(f"    [{SKIP}] Jalankan dengan --full untuk test Gemini LLM")
+    print(f"    [{SKIP}] Jalankan dengan --full untuk test Groq/Llama LLM")
 
 
 # ──────────────────────────────────────────────────────────────────────────────

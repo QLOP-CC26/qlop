@@ -11,7 +11,16 @@ gets its own B-Skills tag. Punctuation between skills becomes O.
 import json, re, sys, shutil
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+# Some runtime environments (and static analyzers) may not expose
+# TextIO.reconfigure. Use getattr to avoid attribute access errors.
+stdout = getattr(sys, "stdout", None)
+reconf = getattr(stdout, "reconfigure", None)
+if callable(reconf):
+    try:
+        reconf(encoding="utf-8")
+    except Exception:
+        # best-effort; if it fails, continue without reconfiguring
+        pass
 
 # Tokens that must be O between skills
 BOUNDARY_TOKENS = re.compile(
