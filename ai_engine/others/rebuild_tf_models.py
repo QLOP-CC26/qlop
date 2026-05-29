@@ -25,10 +25,10 @@ import tensorflow as tf
 
 print(f"TF version: {tf.__version__}")
 
-BASE = "ai_engine/assets/recommendation"
-MODEL3_PATH = f"{BASE}/tf_models/model3_savedmodel"
-MODEL4_PATH = f"{BASE}/tf_models/model4_savedmodel"
-DATA_DIR = f"{BASE}/data"
+BASE = "ai_engine/model_assets/recommendation"
+MODEL3_PATH = f"{BASE}/model3_savedmodel"
+MODEL4_PATH = f"{BASE}/model4_savedmodel"
+DATA_DIR = BASE
 NPZ3 = f"{DATA_DIR}/synthetic_users_model3.npz"
 NPZ4 = f"{DATA_DIR}/synthetic_demand_course_model4.npz"
 

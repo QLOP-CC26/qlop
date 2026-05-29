@@ -27,8 +27,11 @@ async def extract_endpoint(body: ExtractRequest):
     start = time.perf_counter()
 
     parsed = urlparse(body.cloudinary_url)
-    if not parsed.scheme or not parsed.netloc:
-        raise HTTPException(status_code=400, detail="URL tidak valid.")
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or not parsed.netloc or not (
+        host == "res.cloudinary.com" or host.endswith(".cloudinary.com")
+    ):
+        raise HTTPException(status_code=400, detail="URL tidak valid. Harus HTTPS Cloudinary URL.")
 
     try:
         pdf_bytes = await download_pdf_from_cloudinary(body.cloudinary_url)
