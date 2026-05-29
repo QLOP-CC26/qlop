@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from schemas.analyze import CourseRecommendation, ReadinessResult, SkillGap
 from schemas.cv_profile import CVProfile
@@ -26,7 +26,7 @@ class CareerPivotRequest(BaseModel):
 
 class TransferableSkill(BaseModel):
     skill: str
-    relevance: str
+    relevance: str = ""
 
 
 class AlternativeRole(BaseModel):
@@ -40,6 +40,14 @@ class AlternativeRole(BaseModel):
     transition_difficulty: Literal["easy", "moderate", "challenging"]
     estimated_transition_time: str
     first_step: str
+
+    @field_validator("transferable_skills", mode="before")
+    @classmethod
+    def coerce_transferable_skills(cls, v: Any) -> Any:
+        """Coerce plain strings to TransferableSkill objects when LLM returns simplified output."""
+        if isinstance(v, list):
+            return [{"skill": item, "relevance": ""} if isinstance(item, str) else item for item in v]
+        return v
 
 
 class AIDiscoveredRole(BaseModel):
@@ -65,7 +73,7 @@ class AIDiscoveredRole(BaseModel):
 
 class SuggestedCertification(BaseModel):
     name: str
-    relevance: str
+    relevance: str = ""
 
 
 class CurrentRoleAssessment(BaseModel):
@@ -89,6 +97,14 @@ class CareerPivotOutput(BaseModel):
     strongest_transferable_skills: list[str]
     suggested_certifications: list[SuggestedCertification]
     universal_advice: str
+
+    @field_validator("suggested_certifications", mode="before")
+    @classmethod
+    def coerce_certifications(cls, v: Any) -> Any:
+        """Coerce plain strings to SuggestedCertification objects when LLM returns simplified output."""
+        if isinstance(v, list):
+            return [{"name": item, "relevance": ""} if isinstance(item, str) else item for item in v]
+        return v
 
 
 class CareerPivotMetadata(BaseModel):
