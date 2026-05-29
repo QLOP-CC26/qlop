@@ -101,19 +101,39 @@ class AlternativeRole(BaseModel):
 
     @field_validator("estimated_transition_time", mode="before")
     @classmethod
-    def strip_time_hint(cls, v: Any) -> Any:
+    def coerce_transition_time(cls, v: Any) -> Any:
+        """Accept int/float from LLM (e.g. 6 → "6 months") and strip hint text."""
+        if isinstance(v, (int, float)):
+            return f"{int(v)} months"
         return _strip_hint(v)
 
     @field_validator("transferable_skills", mode="before")
     @classmethod
     def coerce_transferable_skills(cls, v: Any) -> Any:
-        """Coerce plain strings → TransferableSkill; drop sentinel placeholders."""
+        """Coerce plain strings → TransferableSkill; drop sentinel placeholders.
+
+        When the LLM returns an object {"skill": "...", "relevance": "..."} it is
+        passed through unchanged so the filled relevance is preserved.
+        When it returns a plain string the relevance defaults to "".
+        """
         if isinstance(v, list):
             cleaned = _clean_list(v)
-            return [
-                {"skill": item, "relevance": ""} if isinstance(item, str) else item
-                for item in cleaned
-            ]
+            result = []
+            for item in cleaned:
+                if isinstance(item, str):
+                    # Strip any sentinel from skill name too
+                    skill_val = _strip_hint(item)
+                    if skill_val and skill_val.lower() not in _SENTINELS:
+                        result.append({"skill": skill_val, "relevance": ""})
+                elif isinstance(item, dict):
+                    # Preserve relevance if LLM filled it; strip sentinels
+                    rel = _strip_hint(item.get("relevance", ""))
+                    if rel and rel.lower() in _SENTINELS:
+                        rel = ""
+                    skill_val = _strip_hint(item.get("skill", ""))
+                    if skill_val and skill_val.lower() not in _SENTINELS:
+                        result.append({"skill": skill_val, "relevance": rel})
+            return result
         return v
 
 
@@ -150,7 +170,21 @@ class AIDiscoveredRole(BaseModel):
     @field_validator("transferable_skills", "skills_to_develop", mode="before")
     @classmethod
     def clean_skill_lists(cls, v: Any) -> Any:
-        return _clean_list(v)
+        """Accept list[str] or list[dict] — extract skill name from dicts."""
+        if isinstance(v, list):
+            result = []
+            for item in v:
+                if isinstance(item, str):
+                    val = _strip_hint(item)
+                    if val and val.lower() not in _SENTINELS:
+                        result.append(val)
+                elif isinstance(item, dict):
+                    # LLM returned {"skill": "...", "relevance": "..."} — keep name only
+                    val = _strip_hint(item.get("skill", item.get("name", "")))
+                    if val and val.lower() not in _SENTINELS:
+                        result.append(val)
+            return result
+        return v
 
 
 class SuggestedCertification(BaseModel):
@@ -193,13 +227,23 @@ class CareerPivotOutput(BaseModel):
     @field_validator("suggested_certifications", mode="before")
     @classmethod
     def coerce_certifications(cls, v: Any) -> Any:
-        """Coerce plain strings → SuggestedCertification; drop sentinel placeholders."""
+        """Coerce plain strings → SuggestedCertification; preserve relevance when LLM fills it."""
         if isinstance(v, list):
             cleaned = _clean_list(v)
-            return [
-                {"name": item, "relevance": ""} if isinstance(item, str) else item
-                for item in cleaned
-            ]
+            result = []
+            for item in cleaned:
+                if isinstance(item, str):
+                    name_val = _strip_hint(item)
+                    if name_val and name_val.lower() not in _SENTINELS:
+                        result.append({"name": name_val, "relevance": ""})
+                elif isinstance(item, dict):
+                    rel = _strip_hint(item.get("relevance", ""))
+                    if rel and rel.lower() in _SENTINELS:
+                        rel = ""
+                    name_val = _strip_hint(item.get("name", ""))
+                    if name_val and name_val.lower() not in _SENTINELS:
+                        result.append({"name": name_val, "relevance": rel})
+            return result
         return v
 
 

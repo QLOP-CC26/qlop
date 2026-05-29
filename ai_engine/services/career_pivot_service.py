@@ -186,6 +186,26 @@ def _build_single_shot_prompt(
         [r.to_dict() for r in retrieved_roles], ensure_ascii=False, separators=(",", ":")
     )
 
+    # Build transferable_skills objects so the LLM fills relevance per role
+    alt_role_template = [
+        {
+            "role_name": r.role_name,
+            "sbert_match_score": round(r.sbert_score, 4),
+            "skill_overlap_pct": round(r.skill_overlap_pct, 2),
+            "why_good_fit": "__FILL__ (cite specific work history, not generic)",
+            "transferable_skills": [
+                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
+                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
+                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
+            ],
+            "gap_skills": r.gap_skills[:5],
+            "transition_difficulty": "__FILL__",
+            "estimated_transition_time": "__FILL__",
+            "first_step": f"__FILL__ (specific action to become {r.role_name}, NOT generic)",
+        }
+        for r in retrieved_roles
+    ]
+
     pre_filled = {
         "current_role_assessment": {
             "target_role": target_role,
@@ -193,36 +213,26 @@ def _build_single_shot_prompt(
             "readiness_level": _readiness_level(readiness.score),
             "verdict": "__FILL__",
         },
-        "alternative_roles": [
-            {
-                "role_name": r.role_name,
-                "sbert_match_score": round(r.sbert_score, 4),
-                "skill_overlap_pct": round(r.skill_overlap_pct, 2),
-                "why_good_fit": "__FILL__",
-                "transferable_skills": ["__FILL__"],
-                "gap_skills": r.gap_skills[:5],
-                "transition_difficulty": "__FILL__",
-                "estimated_transition_time": "__FILL__",
-                "first_step": "__FILL__",
-            }
-            for r in retrieved_roles
-        ],
+        "alternative_roles": alt_role_template,
         "ai_discovered_roles": [
             {
                 "role_name": "__FILL__",
                 "category": "__FILL__",
-                "why_good_fit": "__FILL__",
-                "transferable_skills": ["__FILL__"],
-                "skills_to_develop": ["__FILL__"],
+                "why_good_fit": "__FILL__ (cite work history)",
+                "transferable_skills": ["__FILL__", "__FILL__"],
+                "skills_to_develop": ["__FILL__", "__FILL__"],
                 "transition_difficulty": "__FILL__",
                 "estimated_transition_months": 0,
                 "skill_readiness_pct": 0.0,
-                "first_step": "__FILL__",
+                "first_step": "__FILL__ (specific, actionable)",
                 "market_demand": "__FILL__",
             }
         ],
-        "strongest_transferable_skills": ["__FILL__"],
-        "suggested_certifications": ["__FILL__"],
+        "strongest_transferable_skills": ["__FILL__", "__FILL__", "__FILL__"],
+        "suggested_certifications": [
+            {"name": "__FILL__", "relevance": "__FILL_WHY_THIS_CERT__"},
+            {"name": "__FILL__", "relevance": "__FILL_WHY_THIS_CERT__"},
+        ],
         "universal_advice": "__FILL__",
     }
 
@@ -238,16 +248,24 @@ def _build_single_shot_prompt(
         "## LAYER 1 — Roles from IT database (SBERT-matched, do NOT change numeric scores)\n"
         f"{roles_compact}\n\n"
         "## TASK\n"
-        "Step 1 — Analyse work history to identify primary domain, career pattern, and transferable strengths.\n"
-        "Step 2 — For each Layer 1 role above, fill: why_good_fit, transferable_skills (from candidate's existing skills), "
-        "transition_difficulty (easy|moderate|challenging), estimated_transition_time (e.g. '3-6 months'), first_step.\n"
-        f"Step 3 — Identify 3 roles DIFFERENT from {layer1_names} based on work history analysis. "
+        "Step 1 — Analyse work history: primary domain, career pattern, unique strengths.\n"
+        "Step 2 — For each Layer 1 role, fill all __FILL__ fields:\n"
+        "  - why_good_fit: cite SPECIFIC work experience, not generic phrases.\n"
+        "  - transferable_skills: pick 3-5 skills from the candidate's profile that are MOST relevant "
+        "    to THIS specific role. Each must have a relevance explaining why that skill applies to THIS role.\n"
+        "  - first_step: a concrete, role-specific action (different for each role).\n"
+        "  - transition_difficulty: easy|moderate|challenging\n"
+        f"Step 3 — Identify 3 roles DIFFERENT from {layer1_names} (from work history analysis). "
         "category: specialization|adjacent|leadership|pivot. market_demand: high|medium|low.\n"
-        "Step 4 — Fill suggested_certifications with 2-4 specific certs (e.g. 'AWS Certified Developer').\n"
+        "Step 4 — suggested_certifications: 2-4 specific certs with relevance explaining why each cert helps.\n"
         "Step 5 — skill_readiness_pct = len(transferable_skills)/(len(transferable_skills)+len(skills_to_develop))*100.\n\n"
+        "## CRITICAL RULES\n"
+        "- transferable_skills must be role-specific — DO NOT copy the same list to every role.\n"
+        "- first_step must be different and specific for each role.\n"
+        "- relevance fields must NOT be empty.\n"
+        "- Do not change any numeric values (readiness_score, sbert_match_score, skill_overlap_pct).\n\n"
         "## OUTPUT\n"
-        "Return ONLY the completed JSON below. Replace every '__FILL__' with real content. "
-        "Keep all numeric values unchanged.\n"
+        "Return ONLY the completed JSON. Replace every __FILL__ token with real content.\n"
         f"{json.dumps(pre_filled, ensure_ascii=False, separators=(',', ':'))}"
     )
 
