@@ -24,4 +24,4 @@ Semua logika di atas sudah diintegrasikan ke:
 - `services/ner_service.py` — pengganti `pdf_extractor.py` (NER + regex + sliding window)
 - `services/recommendation_service.py` — pengganti endpoint skill gap di standalone
 - `services/readiness_service.py` — pengganti readiness score di standalone
-- `services/career_pivot_service.py` — tambahan baru (Gemini RAG)
+- `services/career_pivot_service.py` — tambahan baru (Groq/Llama RAG)

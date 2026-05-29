@@ -32,6 +32,9 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
     if target_role not in r.role_to_idx:
         raise ValueError(f"Role '{target_role}' tidak dikenali.")
 
+    if r.infer3 is None:
+        raise RuntimeError("Model3 (skill gap) belum dimuat — periksa path model3_savedmodel di settings.")
+
     import tensorflow as tf  # lazy import — tensorflow loads at startup via registry
 
     # ── Build user multi-hot vector (LinkedIn vocab) ──
@@ -91,6 +94,8 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
 
     r = registry
 
+    if r.infer4 is None:
+        return []
     if r.df_coursera is None or r.df_coursera.empty:
         return []
 
@@ -101,13 +106,16 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
             demand_vec_li[r.skill_to_idx_li[sk]] = 1.0
 
     demand_batch = np.tile(demand_vec_li.reshape(1, -1), (r.num_courses, 1)).astype(np.float32)
+    if r.course_vectors is None:
+        return []
+
     course_batch = r.course_vectors.astype(np.float32)
 
     demand_f16 = tf.cast(tf.constant(demand_batch), tf.float16)
     course_f16 = tf.cast(tf.constant(course_batch), tf.float16)
 
     out4 = r.infer4(args_0=demand_f16, args_0_1=course_f16)
-    match_scores = list(out4.values())[0].numpy().flatten()
+    match_scores = next(iter(out4.values())).numpy().flatten()
 
     top_course_idx = np.argsort(match_scores)[::-1][:20]
 
@@ -125,11 +133,12 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
         if cid >= len(r.df_coursera):
             continue
         row = r.df_coursera.iloc[cid]
+        course_vec = r.course_vectors[cid] if r.course_vectors is not None else None
 
         covered = [
             r.idx_to_skill_cr[str(k)]
             for k in range(r.n_skills_cr)
-            if r.course_vectors[cid][k] > 0 and demand_vec_cr[k] > 0
+            if course_vec is not None and course_vec[k] > 0 and demand_vec_cr[k] > 0
         ]
 
         recommended.append(CourseRecommendation(

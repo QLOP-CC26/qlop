@@ -1,9 +1,9 @@
-# QLOP AI Engine — API Contract v2.0
+# QLOP AI Engine — API Contract v2.1
 
 > **Base URL:** `http://<host>:8000`  
 > **Interactive docs:** `http://<host>:8000/docs` (Swagger UI) · `http://<host>:8000/redoc`  
 > **Content-Type:** `application/json` (all request & response bodies)  
-> **Auth:** None (bearer token integration planned for v2.1)
+> **Auth:** None (bearer token integration planned for v2.2)
 
 ---
 
@@ -40,7 +40,7 @@ PDF (Cloudinary URL)
            ▼
 ┌────────────────────────────┐
 │  Phase 3 — Career Pivot    │  POST /api/v1/cv/career-pivot
-│  RAG + Gemini 3-turn LLM   │
+│  SBERT RAG + Groq 3-turn   │
 └────────────────────────────┘
 ```
 
@@ -105,15 +105,7 @@ The core profile object exchanged between all phases.
   "phone": "+62 812 3456 7890",
   "location": "Jakarta, Indonesia",
   "total_experience_years": 4.5,
-  "skills": {
-    "programming_languages": ["Python", "JavaScript"],
-    "frameworks":            ["FastAPI", "React"],
-    "cloud_platforms":       ["AWS", "GCP"],
-    "databases":             ["PostgreSQL", "Redis"],
-    "devops_tools":          ["Docker", "Kubernetes"],
-    "ml_ai_tools":           ["TensorFlow", "scikit-learn"],
-    "other_tools":           ["Git", "Jira"]
-  },
+  "skills": ["Python", "JavaScript", "FastAPI", "React", "AWS", "PostgreSQL", "Docker", "Git"],
   "work_experience": [
     {
       "company":     "Tokopedia",
@@ -131,28 +123,34 @@ The core profile object exchanged between all phases.
 }
 ```
 
-| Field                     | Type            | Required | Notes                                 |
-|---------------------------|-----------------|----------|---------------------------------------|
-| `name`                    | string          | no       | Full name extracted from CV           |
-| `email`                   | string          | no       | Email address                         |
-| `phone`                   | string          | no       | Phone number                          |
-| `location`                | string          | no       | City / country                        |
-| `total_experience_years`  | float           | no       | Sum of all work durations             |
-| `skills`                  | `SkillsDict`    | no       | Nested skill categories (see below)   |
-| `work_experience`         | `WorkExp[]`     | no       | List of job entries                   |
-| `education`               | `Education[]`   | no       | List of education entries             |
+> **`skills` is always a flat `string[]`** — all skill categories are merged into one list. The frontend may display them grouped if needed, but the API always sends and receives a flat list.
 
-#### `SkillsDict`
+| Field                     | Type        | Required | Notes                                 |
+|---------------------------|-------------|----------|---------------------------------------|
+| `name`                    | string      | no       | Full name extracted from CV           |
+| `email`                   | string      | no       | Email address                         |
+| `phone`                   | string      | no       | Phone number                          |
+| `location`                | string      | no       | City / country                        |
+| `total_experience_years`  | float       | no       | Sum of all work durations             |
+| `skills`                  | `string[]`  | no       | Flat list of all skills (merged)      |
+| `work_experience`         | `WorkExp[]` | no       | List of job entries                   |
+| `education`               | `Education[]` | no     | List of education entries             |
 
-| Field                  | Type       | Description                      |
-|------------------------|------------|----------------------------------|
-| `programming_languages`| string[]   | e.g. `["Python", "Go"]`          |
-| `frameworks`           | string[]   | e.g. `["Django", "FastAPI"]`     |
-| `cloud_platforms`      | string[]   | e.g. `["AWS", "GCP"]`           |
-| `databases`            | string[]   | e.g. `["MySQL", "MongoDB"]`      |
-| `devops_tools`         | string[]   | e.g. `["Docker", "Jenkins"]`     |
-| `ml_ai_tools`          | string[]   | e.g. `["TensorFlow", "PyTorch"]` |
-| `other_tools`          | string[]   | e.g. `["Git", "Postman"]`        |
+#### `WorkExperience`
+
+| Field         | Type   | Description                  |
+|---------------|--------|------------------------------|
+| `company`     | string | Employer name                |
+| `designation` | string | Job title / role             |
+| `duration`    | string | Free-text duration (e.g. `"2 years"`) |
+
+#### `Education`
+
+| Field         | Type   | Description                   |
+|---------------|--------|-------------------------------|
+| `degree`      | string | Degree name                   |
+| `institution` | string | University / institution name |
+| `year`        | string | Graduation year               |
 
 ---
 
@@ -197,15 +195,7 @@ Content-Type: application/json
     "phone": "+62 812 3456 7890",
     "location": "Jakarta, Indonesia",
     "total_experience_years": 4.5,
-    "skills": {
-      "programming_languages": ["Python", "SQL"],
-      "frameworks":            ["FastAPI", "TensorFlow"],
-      "cloud_platforms":       ["GCP"],
-      "databases":             ["PostgreSQL"],
-      "devops_tools":          ["Docker"],
-      "ml_ai_tools":           ["scikit-learn"],
-      "other_tools":           ["Git"]
-    },
+    "skills": ["python", "sql", "fastapi", "tensorflow", "gcp", "postgresql", "docker", "git"],
     "work_experience": [
       { "company": "Tokopedia", "designation": "Data Engineer", "duration": "2 years" }
     ],
@@ -223,10 +213,6 @@ Content-Type: application/json
   }
 }
 ```
-
-#### `data` fields (`CVProfile`)
-
-See [Shared Data Models → CVProfile](#cvprofile).
 
 #### `metadata` fields
 
@@ -256,7 +242,7 @@ See [Shared Data Models → CVProfile](#cvprofile).
 
 ### Frontend UX Hint
 
-While this endpoint processes, show sequential loading messages to manage user expectations:
+While this endpoint processes, show sequential loading messages:
 
 ```
 1s  → "Mengunduh dokumen dari Cloudinary…"
@@ -288,7 +274,7 @@ Content-Type: application/json
 
 ```json
 {
-  "profile": { ... },
+  "profile": { "...": "CVProfile object" },
   "target_role": "Data Scientist"
 }
 ```
@@ -296,18 +282,23 @@ Content-Type: application/json
 | Field         | Type        | Required | Description                                                             |
 |---------------|-------------|----------|-------------------------------------------------------------------------|
 | `profile`     | `CVProfile` | **yes**  | The (possibly edited) CVProfile from Phase 1                           |
-| `target_role` | string      | **yes**  | The job role the user is targeting. Must match a known role in the system (see supported roles below). |
+| `target_role` | string      | **yes**  | The job role the user is targeting. Must be one of the 27 supported roles below. |
 
-#### Supported `target_role` values
-
-> The list below is defined by the training data. Unknown roles receive zero scores.
+#### Supported `target_role` values (27 roles)
 
 ```
-Backend Engineer, Data Analyst, Data Engineer, Data Scientist, DevOps Engineer,
-Embedded/IoT Engineer, Frontend Engineer, Full Stack Engineer, Machine Learning Engineer,
-Mobile Developer, QA Engineer, Security Engineer, UI/UX Designer, Cloud Architect,
-Database Administrator
+AI Engineer               Backend Developer         Business Analyst
+Business Intelligence Analyst  Cloud Engineer        Cyber Security Analyst
+Data Analyst              Data Engineer             Data Scientist
+Database Administrator    DevOps Engineer           ERP Consultant
+Embedded/IoT Engineer     Frontend Developer        Full Stack Developer
+General IT Specialist     IT Consultant             Machine Learning Engineer
+Mobile Developer          Network Engineer          Product Manager
+QA Engineer               Robotics Engineer         Security Engineer
+Site Reliability Engineer Software Engineer         Solutions Architect
 ```
+
+> Sending an unknown role returns `HTTP 400` with the full list of valid roles in the error detail.
 
 ---
 
@@ -318,14 +309,14 @@ Database Administrator
   "status": "success",
   "code": 200,
   "data": {
-    "profile": { "name": "Budi Santoso", "..." : "..." },
+    "profile": { "name": "Budi Santoso", "skills": ["python", "sql", "..."], "...": "..." },
     "target_role": "Data Scientist",
     "skill_gap": {
-      "matched_skills": ["Python", "SQL", "scikit-learn"],
+      "matched_skills": ["python", "sql", "scikit-learn"],
       "missing_skills": [
-        { "skill": "PyTorch",        "priority_score": 0.92 },
-        { "skill": "Statistics",     "priority_score": 0.87 },
-        { "skill": "Deep Learning",  "priority_score": 0.81 }
+        { "skill": "pytorch",        "priority_score": 0.92 },
+        { "skill": "statistics",     "priority_score": 0.87 },
+        { "skill": "deep learning",  "priority_score": 0.81 }
       ]
     },
     "course_recommendations": [
@@ -336,12 +327,12 @@ Database Administrator
         "job_category":     "Data Scientist",
         "difficulty":       "Intermediate",
         "duration":         "3 months",
-        "covered_skills":   ["Deep Learning", "Neural Networks", "PyTorch"]
+        "covered_skills":   ["deep learning", "neural networks", "pytorch"]
       }
     ],
     "readiness_score": {
       "score":           0.71,
-      "matched_skills":  ["Python", "SQL", "scikit-learn", "GCP"],
+      "matched_skills":  ["python", "sql", "scikit-learn", "gcp"],
       "interpretation":  "Good fit — you have the core skills but need to deepen ML knowledge."
     }
   },
@@ -359,37 +350,37 @@ Database Administrator
 
 | Field            | Type             | Description                                   |
 |------------------|------------------|-----------------------------------------------|
-| `matched_skills` | string[]         | Skills the candidate already has for the role |
+| `matched_skills` | `string[]`       | Skills the candidate already has for the role |
 | `missing_skills` | `MissingSkill[]` | Skills needed, ranked by `priority_score`     |
 
 #### `MissingSkill`
 
 | Field            | Type  | Range  | Description                                        |
 |------------------|-------|--------|----------------------------------------------------|
-| `skill`          | string| —      | Skill name                                         |
+| `skill`          | string| —      | Skill name (lowercase)                             |
 | `priority_score` | float | 0–1    | How critical this skill is (1.0 = most critical)   |
 
 #### `data.course_recommendations`
 
 Array of up to 5 courses. Each item:
 
-| Field             | Type     | Description                                    |
-|-------------------|----------|------------------------------------------------|
-| `name`            | string   | Course title                                   |
-| `url`             | string   | Direct Coursera link                           |
-| `match_score`     | float    | Relevance score (0–1)                          |
-| `job_category`    | string   | Role this course targets                       |
-| `difficulty`      | string   | `Beginner` / `Intermediate` / `Advanced`       |
-| `duration`        | string   | Estimated completion time                      |
-| `covered_skills`  | string[] | Skills this course teaches                     |
+| Field             | Type       | Description                                    |
+|-------------------|------------|------------------------------------------------|
+| `name`            | string     | Course title                                   |
+| `url`             | string     | Direct Coursera link                           |
+| `match_score`     | float      | Relevance score (0–1)                          |
+| `job_category`    | string     | Role this course targets                       |
+| `difficulty`      | string     | `Beginner` / `Intermediate` / `Advanced`       |
+| `duration`        | string     | Estimated completion time                      |
+| `covered_skills`  | `string[]` | Skills this course teaches                     |
 
 #### `data.readiness_score`
 
-| Field             | Type     | Description                                              |
-|-------------------|----------|----------------------------------------------------------|
-| `score`           | float    | 0.0–1.0 semantic similarity score (SBERT-based)          |
-| `matched_skills`  | string[] | Skills that contributed to the score                     |
-| `interpretation`  | string   | Plain-language verdict generated from the score range    |
+| Field             | Type       | Description                                              |
+|-------------------|------------|----------------------------------------------------------|
+| `score`           | float      | 0.0–1.0 SBERT semantic similarity score                  |
+| `matched_skills`  | `string[]` | Skills that contributed to the score                     |
+| `interpretation`  | string     | Plain-language verdict generated from the score range    |
 
 #### Interpretation scale
 
@@ -416,7 +407,8 @@ Array of up to 5 courses. Each item:
 
 | HTTP | `code` | Scenario                                       |
 |------|--------|------------------------------------------------|
-| 400  | 400    | `target_role` is an empty string               |
+| 400  | 400    | `target_role` is unknown or empty              |
+| 400  | 400    | `profile.skills` is empty                      |
 | 422  | 422    | Request body does not match schema             |
 | 500  | 500    | Internal model inference error                 |
 
@@ -439,7 +431,11 @@ After response: display a **dashboard** with the skill gap, a course list, and t
 
 ### `POST /api/v1/cv/career-pivot`
 
-**Purpose:** Given the full Phase 2 analysis, use RAG (SBERT role centroid similarity) + Google Gemini 1.5 Flash (3-turn chain-of-thought) to recommend the best alternative career paths.
+**Purpose:** Given the full Phase 2 analysis, use RAG (SBERT role centroid similarity) + Groq Llama 3.3 70B (3-turn chain-of-thought) to recommend alternative career paths.
+
+The response contains **two layers** of recommendations:
+- **Layer 1 (`alternative_roles`)** — Data-backed roles from the 27-role dataset with real metrics (SBERT score, skill overlap %)
+- **Layer 2 (`ai_discovered_roles`)** — Roles discovered by Groq LLM from full CV analysis, **not limited to the dataset**. Includes roles like specializations, lateral moves, leadership paths, and pivots that the static dataset cannot cover.
 
 **Phase:** 3 of 3 (final output)
 
@@ -454,24 +450,24 @@ Content-Type: application/json
 
 ```json
 {
-  "profile": { ... },
+  "profile": { "...": "CVProfile object" },
   "target_role": "Data Scientist",
   "skill_gap": {
-    "matched_skills": ["Python", "SQL"],
+    "matched_skills": ["python", "sql"],
     "missing_skills": [
-      { "skill": "PyTorch", "priority_score": 0.92 }
+      { "skill": "pytorch", "priority_score": 0.92 }
     ]
   },
-  "course_recommendations": [ ... ],
+  "course_recommendations": [ "..." ],
   "readiness_score": {
     "score": 0.71,
-    "matched_skills": ["Python", "SQL"],
+    "matched_skills": ["python", "sql"],
     "interpretation": "Good fit."
   }
 }
 ```
 
-> **Tip:** The `data` field returned by `POST /api/v1/cv/analyze` can be sent **as-is** as the body of this endpoint.
+> **Tip:** The `data` field returned by `POST /api/v1/cv/analyze` can be sent **as-is** as the body of this endpoint — no transformation needed.
 
 | Field                   | Type                       | Required | Description                                 |
 |-------------------------|----------------------------|----------|---------------------------------------------|
@@ -494,58 +490,70 @@ Content-Type: application/json
       "target_role":      "Data Scientist",
       "readiness_score":  0.71,
       "readiness_level":  "high",
-      "verdict":          "You're a strong candidate for Data Scientist. A few gaps in deep learning can be closed with targeted courses."
+      "verdict":          "Profil Anda kuat untuk Data Scientist. Gap di deep learning bisa ditutup dalam 2-3 bulan."
     },
     "alternative_roles": [
       {
         "role_name":                  "Machine Learning Engineer",
-        "sbert_match_score":          0.89,
+        "sbert_match_score":          0.8912,
         "skill_overlap_pct":          72.0,
-        "why_good_fit":               "Your Python and data pipeline experience maps directly to MLOps workflows.",
+        "why_good_fit":               "Pipeline data dan Python Anda langsung relevan untuk MLOps.",
         "transferable_skills": [
-          { "skill": "Python",    "relevance": "Core language for ML pipelines" },
-          { "skill": "Docker",    "relevance": "Essential for model containerization" }
+          { "skill": "python",    "relevance": "Bahasa utama untuk ML pipeline" },
+          { "skill": "docker",    "relevance": "Esensial untuk containerisasi model" }
         ],
-        "gap_skills":                 ["MLflow", "Kubernetes", "CI/CD for ML"],
+        "gap_skills":                 ["mlflow", "kubernetes", "ci/cd for ml"],
         "transition_difficulty":      "moderate",
-        "estimated_transition_time":  "3-6 months",
-        "first_step":                 "Complete the MLOps Specialization on Coursera to bridge the deployment gap."
-      },
-      {
-        "role_name":                  "Data Engineer",
-        "sbert_match_score":          0.85,
-        "skill_overlap_pct":          65.0,
-        "why_good_fit":               "Strong SQL and cloud skills are exactly what data engineering demands.",
-        "transferable_skills": [
-          { "skill": "SQL",        "relevance": "Core for ETL query building" },
-          { "skill": "GCP",        "relevance": "BigQuery and Dataflow are widely used" }
-        ],
-        "gap_skills":                 ["Apache Spark", "Airflow", "dbt"],
-        "transition_difficulty":      "easy",
-        "estimated_transition_time":  "1-2 months",
-        "first_step":                 "Build a portfolio project using Airflow + BigQuery on GCP Free Tier."
+        "estimated_transition_time":  "3-6 bulan",
+        "first_step":                 "Selesaikan MLOps Specialization di Coursera untuk menjembatani gap deployment."
       }
     ],
-    "strongest_transferable_skills": ["Python", "SQL", "GCP", "scikit-learn"],
+    "ai_discovered_roles": [
+      {
+        "role_name":                  "ML Platform Engineer",
+        "category":                   "specialization",
+        "why_good_fit":               "Riwayat kerja Anda di data engineering + ML skill membentuk kandidat ideal untuk membangun infrastruktur ML platform.",
+        "transferable_skills":        ["python", "docker", "gcp", "sql"],
+        "skills_to_develop":          ["kubeflow", "mlflow", "terraform"],
+        "transition_difficulty":      "moderate",
+        "estimated_transition_months": 6,
+        "skill_readiness_pct":        57.1,
+        "first_step":                 "Deploy model pertama menggunakan Kubeflow Pipelines di GCP.",
+        "market_demand":              "high"
+      },
+      {
+        "role_name":                  "AI/ML Tech Lead",
+        "category":                   "leadership",
+        "why_good_fit":               "Dengan 4.5 tahun pengalaman dan breadth skill, Anda siap memimpin tim data/ML kecil.",
+        "transferable_skills":        ["python", "tensorflow", "scikit-learn", "gcp"],
+        "skills_to_develop":          ["team leadership", "system design", "stakeholder management"],
+        "transition_difficulty":      "challenging",
+        "estimated_transition_months": 18,
+        "skill_readiness_pct":        57.1,
+        "first_step":                 "Ambil peran senior engineer dulu, lalu mentori junior sambil membangun track record kepemimpinan.",
+        "market_demand":              "medium"
+      }
+    ],
+    "strongest_transferable_skills": ["python", "sql", "gcp", "scikit-learn"],
     "suggested_certifications": [
       {
         "name":      "Google Professional Data Engineer",
-        "relevance": "Validates your GCP skills and opens data engineering doors."
+        "relevance": "Memvalidasi skill GCP Anda dan membuka pintu data engineering."
       },
       {
         "name":      "TensorFlow Developer Certificate",
-        "relevance": "Fills your deep learning gap for Data Scientist / MLE roles."
+        "relevance": "Mengisi gap deep learning untuk peran Data Scientist / MLE."
       }
     ],
-    "universal_advice": "Your cross-domain Python + cloud foundation is your biggest asset. Double down on it by adding one orchestration tool (Airflow) and one experiment tracking tool (MLflow) — these two alone will make you a competitive candidate for both Data Engineer and ML Engineer roles within 3 months."
+    "universal_advice": "Fondasi Python + cloud Anda adalah aset terbesar. Tambahkan satu tool orkestrasi (Airflow) dan satu tool experiment tracking (MLflow) — dua ini saja sudah cukup untuk membuat Anda kompetitif untuk Data Engineer dan MLE dalam 3 bulan."
   },
   "metadata": {
     "retrieval_method":    "sbert_role_centroid_cosine",
-    "roles_evaluated":     15,
-    "roles_returned":      3,
-    "llm_model":           "gemini-1.5-flash",
+    "roles_evaluated":     27,
+    "roles_returned":      5,
+    "llm_model":           "llama-3.3-70b-versatile",
     "llm_turns":           3,
-    "processing_time_ms":  4230,
+    "processing_time_ms":  18420,
     "timestamp":           "2026-05-29T08:00:05.789000+00:00"
   }
 }
@@ -553,26 +561,26 @@ Content-Type: application/json
 
 #### `data.current_role_assessment`
 
-| Field             | Type                                         | Description                             |
-|-------------------|----------------------------------------------|-----------------------------------------|
-| `target_role`     | string                                       | Echoes the requested role               |
-| `readiness_score` | float (0.0–1.0)                              | From Phase 2                            |
-| `readiness_level` | `"low"` \| `"moderate"` \| `"high"` \| `"excellent"` | Semantic label              |
-| `verdict`         | string                                       | LLM-generated plain-language verdict    |
+| Field             | Type                                                        | Description                             |
+|-------------------|-------------------------------------------------------------|-----------------------------------------|
+| `target_role`     | string                                                      | Echoes the requested role               |
+| `readiness_score` | float (0.0–1.0)                                             | From Phase 2, not modified              |
+| `readiness_level` | `"low"` \| `"moderate"` \| `"high"` \| `"excellent"`       | Derived from score server-side          |
+| `verdict`         | string                                                      | LLM-generated plain-language assessment |
 
-#### `data.alternative_roles` (array)
+#### `data.alternative_roles[]` — Layer 1 (data-backed)
 
-| Field                        | Type                                          | Description                                     |
-|------------------------------|-----------------------------------------------|-------------------------------------------------|
-| `role_name`                  | string                                        | Suggested alternative role                      |
-| `sbert_match_score`          | float (0.0–1.0)                               | SBERT cosine similarity — how close skills are  |
-| `skill_overlap_pct`          | float (0.0–100.0)                             | % of candidate skills matching role requirements|
-| `why_good_fit`               | string                                        | LLM explanation                                 |
-| `transferable_skills`        | `TransferableSkill[]`                         | Skills that transfer with explanation            |
-| `gap_skills`                 | string[]                                      | Skills still needed for this alternative role    |
-| `transition_difficulty`      | `"easy"` \| `"moderate"` \| `"challenging"`   | LLM assessment                                  |
-| `estimated_transition_time`  | string                                        | e.g. `"3-6 months"`                             |
-| `first_step`                 | string                                        | Actionable first recommendation                  |
+| Field                        | Type                                          | Source        | Description                                     |
+|------------------------------|-----------------------------------------------|---------------|-------------------------------------------------|
+| `role_name`                  | string                                        | dataset       | Role from the 27-role dataset                   |
+| `sbert_match_score`          | float (0.0–1.0)                               | server-computed | SBERT cosine similarity of user skills vs role  |
+| `skill_overlap_pct`          | float (0.0–100.0)                             | server-computed | % of user skills matching role requirements     |
+| `why_good_fit`               | string                                        | AI-generated  | LLM explanation based on profile analysis       |
+| `transferable_skills`        | `TransferableSkill[]`                         | AI-generated  | Skills that transfer with explanation           |
+| `gap_skills`                 | `string[]`                                    | server-computed | Skills still needed from the dataset            |
+| `transition_difficulty`      | `"easy"` \| `"moderate"` \| `"challenging"`   | AI-generated  | LLM assessment                                  |
+| `estimated_transition_time`  | string                                        | AI-generated  | e.g. `"3-6 bulan"`                              |
+| `first_step`                 | string                                        | AI-generated  | Actionable first recommendation                  |
 
 #### `TransferableSkill`
 
@@ -581,7 +589,24 @@ Content-Type: application/json
 | `skill`     | string | Skill name                      |
 | `relevance` | string | Why this skill matters for role |
 
-#### `data.suggested_certifications` (array)
+#### `data.ai_discovered_roles[]` — Layer 2 (AI-discovered, not limited to dataset)
+
+| Field                        | Type                                                          | Source        | Description                                       |
+|------------------------------|---------------------------------------------------------------|---------------|---------------------------------------------------|
+| `role_name`                  | string                                                        | AI-generated  | Role suggested by Groq LLM from full CV analysis  |
+| `category`                   | `"specialization"` \| `"adjacent"` \| `"leadership"` \| `"pivot"` | AI-generated | Type of career move |
+| `why_good_fit`               | string                                                        | AI-generated  | Reasoning based on work history, not just skills  |
+| `transferable_skills`        | `string[]`                                                    | AI-generated  | User's existing skills relevant to this role      |
+| `skills_to_develop`          | `string[]`                                                    | AI-generated  | Top skills to learn for the transition            |
+| `transition_difficulty`      | `"easy"` \| `"moderate"` \| `"challenging"`                   | AI-generated  | Effort estimate                                   |
+| `estimated_transition_months`| int (1–48)                                                    | AI-generated  | Numeric months estimate (sortable)                |
+| `skill_readiness_pct`        | float (0.0–100.0)                                             | server-computed | `len(transferable) / (transferable + to_develop) * 100` |
+| `first_step`                 | string                                                        | AI-generated  | Concrete first action to take                     |
+| `market_demand`              | `"high"` \| `"medium"` \| `"low"`                             | AI-generated  | LLM assessment of current job market demand       |
+
+> **Note on metrics trust:** `sbert_match_score`, `skill_overlap_pct` (Layer 1), and `skill_readiness_pct` (Layer 2) are all computed server-side from real data — they are **not** AI estimates. Only text fields and `estimated_transition_months` are AI-generated.
+
+#### `data.suggested_certifications[]`
 
 | Field       | Type   | Description                          |
 |-------------|--------|--------------------------------------|
@@ -593,10 +618,10 @@ Content-Type: application/json
 | Field                 | Type   | Description                                          |
 |-----------------------|--------|------------------------------------------------------|
 | `retrieval_method`    | string | Always `"sbert_role_centroid_cosine"`                |
-| `roles_evaluated`     | int    | Total roles compared using SBERT similarity          |
-| `roles_returned`      | int    | Number of alternative roles in `alternative_roles`   |
-| `llm_model`           | string | Active Gemini model (from `GEMINI_MODEL` env var)    |
-| `llm_turns`           | int    | Number of LLM conversation turns used (always 3)     |
+| `roles_evaluated`     | int    | Total roles compared using SBERT similarity (27)     |
+| `roles_returned`      | int    | Number of roles in `alternative_roles` (up to 5)    |
+| `llm_model`           | string | Active Groq model (from `GROQ_MODEL` env var)        |
+| `llm_turns`           | int    | LLM conversation turns used (always 3)               |
 | `processing_time_ms`  | int    | Total wall-clock time including LLM latency          |
 | `timestamp`           | string | ISO-8601 UTC                                         |
 
@@ -606,10 +631,10 @@ Content-Type: application/json
 
 | HTTP | `code` | Scenario                                              |
 |------|--------|-------------------------------------------------------|
-| 400  | 400    | `target_role` is empty                                |
-| 503  | 503    | `GOOGLE_API_KEY` not configured on server             |
+| 400  | 400    | `target_role` is empty or `skills` is empty           |
 | 422  | 422    | Request body does not match schema                    |
-| 500  | 500    | Gemini API error or malformed structured output       |
+| 503  | 503    | `GROQ_API_KEY` not configured, or Groq quota exceeded     |
+| 500  | 500    | Unexpected internal error                             |
 
 ---
 
@@ -618,11 +643,11 @@ Content-Type: application/json
 ```
 2s  → "Model AI sedang mengambil peran alternatif yang sesuai…"
 4s  → "Menganalisis kesesuaian dan transferable skills Anda…"
-8s  → "AI sedang merangkum rekomendasi karier terbaik untuk Anda…"
-12s → "Hampir selesai — memformat hasil rekomendasi…"
+8s  → "AI sedang menjelajahi karier di luar database…"
+12s → "Hampir selesai — memformat hasil rekomendasi karier…"
 ```
 
-After response: display a **Career Pivot Radar** visualization — a radar/spider chart plotting skill overlap for each alternative role, with collapsible detail cards for each role.
+After response: display a **Career Pivot Radar** visualization — show Layer 1 roles on a radar/spider chart (real skill overlap data), and Layer 2 roles as AI suggestion cards with category badge (specialization / adjacent / leadership / pivot).
 
 ---
 
@@ -642,19 +667,23 @@ GET /health
 {
   "status": "ok",
   "ner_available": true,
-  "roles_loaded": 15,
+  "roles_loaded": 27,
   "sbert_loaded": true,
-  "role_centroids": 15
+  "role_centroids": 27,
+  "model3_available": true,
+  "model4_available": true
 }
 ```
 
-| Field             | Type    | Description                                             |
-|-------------------|---------|---------------------------------------------------------|
-| `status`          | string  | `"ok"` when healthy                                     |
-| `ner_available`   | boolean | `true` if DeBERTa NER model loaded successfully         |
-| `roles_loaded`    | int     | Number of role indexes loaded (expected: 15)            |
-| `sbert_loaded`    | boolean | `true` if Sentence-BERT model is in memory              |
-| `role_centroids`  | int     | Number of precomputed role centroids for Career Pivot   |
+| Field               | Type    | Description                                             |
+|---------------------|---------|---------------------------------------------------------|
+| `status`            | string  | `"ok"` when healthy                                     |
+| `ner_available`     | boolean | `true` if DeBERTa NER model loaded successfully         |
+| `roles_loaded`      | int     | Number of role indexes loaded (expected: 27)            |
+| `sbert_loaded`      | boolean | `true` if Sentence-BERT model is in memory              |
+| `role_centroids`    | int     | Number of precomputed role centroids (expected: 27)     |
+| `model3_available`  | boolean | `true` if Skill Gap TF SavedModel loaded                |
+| `model4_available`  | boolean | `true` if Course Recommendation TF SavedModel loaded    |
 
 > **Frontend guidance:** Poll this endpoint once on app startup. If `sbert_loaded` is `false` or `roles_loaded` is 0, show a "AI service is warming up…" banner and retry after 5 seconds.
 
@@ -663,37 +692,34 @@ GET /health
 ## Starting the Server
 
 ```bash
-# From d:\DBSCodingCamp\qlop\ai_engine\ (with .venv activated)
+# From ai_engine/ directory (with .venv activated)
 
 # Development (auto-reload)
-uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 
 # Production
 uvicorn app:app --host 0.0.0.0 --port 8000 --workers 1
 ```
 
-> Use `--workers 1` in production because TensorFlow and PyTorch models are held in process memory. Multi-worker spawning would multiply RAM usage and may cause CUDA conflicts.
+> Use `--workers 1` because TensorFlow and PyTorch models are held in process memory. Multi-worker spawning would multiply RAM usage.
 
 ### Required Environment Variables (`.env`)
 
 ```ini
-# --- NER Model ---
-NER_MODEL_DIR=assets/ner/qlop_ner_v2
-NER_VOCAB_FILE=assets/ner/qlop_ner_v2/vocab.txt
-NER_LABELS_FILE=assets/ner/qlop_ner_v2/label_list.txt
+# Groq API key — required for Career Pivot Radar (Phase 3)
+# Get yours FREE (no credit card) at: https://console.groq.com/keys
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# --- Recommendation Models ---
-REC_MODEL3_DIR=assets/recommendation/model3_skillgap
-REC_MODEL4_DIR=assets/recommendation/model4_courses
-REC_SKILL_VOCAB_LI=assets/recommendation/skill_vocab_linkedin.json
-REC_SKILL_VOCAB_CO=assets/recommendation/skill_vocab_coursera.json
-REC_COURSERA_CSV=assets/recommendation/coursera_courses.csv
-REC_JOB_EMBEDDINGS_DIR=assets/recommendation/job_embeddings
+# Groq model (default: llama-3.3-70b-versatile)
+# Other options: llama-3.1-8b-instant (faster), llama-4-scout-17b-16e-instruct (newer)
+GROQ_MODEL=llama-3.3-70b-versatile
 
-# --- Gemini (Google AI Studio) ---
-GOOGLE_API_KEY=your_google_ai_studio_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
+# Optional overrides (defaults shown — relative to ai_engine/)
+NER_CONFIDENCE_THRESHOLD=0.5
+NER_BASE_MODEL=microsoft/deberta-v3-base
 ```
+
+All model file paths are resolved automatically from `model_assets/` — no manual path configuration needed.
 
 ---
 
@@ -701,11 +727,11 @@ GEMINI_MODEL=gemini-1.5-flash
 
 | HTTP | Meaning                         | Common Causes                                    |
 |------|---------------------------------|--------------------------------------------------|
-| 400  | Bad Request                     | Invalid URL, empty field, non-PDF file           |
+| 400  | Bad Request                     | Invalid URL, empty field, unknown role           |
 | 422  | Unprocessable Entity            | JSON schema mismatch (wrong types, missing keys) |
 | 500  | Internal Server Error           | ML model crash, unexpected exception             |
 | 502  | Bad Gateway                     | Cannot reach Cloudinary (Phase 1 only)           |
-| 503  | Service Unavailable             | API key missing (Phase 3 only)                   |
+| 503  | Service Unavailable             | API key missing or Groq quota exceeded (Phase 3)   |
 
 ---
 
@@ -735,4 +761,4 @@ Frontend                         QLOP AI Engine
 
 ---
 
-*Document version: 2.0 · Last updated: 2026-05-29 · Maintained by QLOP AI Team*
+*Document version: 2.1 · Last updated: 2026-05-29 · Maintained by QLOP AI Team*

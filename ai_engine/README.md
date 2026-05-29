@@ -23,7 +23,7 @@ Express.js (main backend)
        │    [User optionally clicks "Explore Career Pivot"]
        │
        └─ Phase 3 ──► POST /api/v1/cv/career-pivot
-                       SBERT RAG retrieval + 3-turn Gemini conversation
+                       SBERT RAG retrieval + 3-turn Groq/Llama conversation
                        ← Returns structured CareerPivotOutput (Pydantic-locked JSON)
 ```
 
@@ -37,7 +37,7 @@ Express.js (main backend)
 | 2 | Readiness Scoring | SBERT cosine similarity (`all-MiniLM-L6-v2`) |
 | 3 | Skill Gap Analysis | TensorFlow SavedModel (`model3_savedmodel`) |
 | 4 | Course Recommendation | TensorFlow SavedModel (`model4_savedmodel`) + `coursera_cleaned.csv` |
-| 5 | Career Pivot Radar | SBERT RAG + Gemini 2.0 Flash (3-turn multi-turn, structured output) |
+| 5 | Career Pivot Radar | SBERT RAG + Groq Llama 3.3 70B via OpenAI-compatible SDK (3-turn, structured JSON) |
 
 ---
 
@@ -47,7 +47,7 @@ Express.js (main backend)
 ai_engine/
 ├── app.py                    # FastAPI entry point, lifespan, CORS, exception handlers
 ├── requirements.txt
-├── .env                      # GOOGLE_API_KEY, GEMINI_MODEL (not committed)
+├── .env                      # GROQ_API_KEY, GROQ_MODEL (not committed)
 ├── .env.example
 ├── API_CONTRACT.md           # Complete API contract for the Express.js team
 │
@@ -64,7 +64,7 @@ ai_engine/
 │   ├── ner_service.py        # PDF download, text extraction, NER inference
 │   ├── recommendation_service.py  # Skill gap + course recommendation (Model3/4)
 │   ├── readiness_service.py  # SBERT readiness scoring
-│   └── career_pivot_service.py    # RAG retrieval + Gemini conversation
+│   └── career_pivot_service.py    # RAG retrieval + Groq/Llama conversation
 │
 ├── schemas/
 │   ├── cv_profile.py         # CVProfile (skills = flat list[str])
@@ -107,7 +107,7 @@ Key packages and version constraints:
 | `tf-keras` | `>=2.16.0` | Keras 2 backward-compat for TF 2.16+ |
 | `tensorflow` | `>=2.16.0` | Model3/4 SavedModel loading |
 | `sentence-transformers` | `>=3.0.0` | SBERT readiness scoring |
-| `google-genai` | latest | Gemini 2.5 Flash Lite SDK |
+| `openai` | `>=1.30.0` | Groq API (OpenAI-compatible SDK) |
 
 ---
 
@@ -130,12 +130,13 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env` and fill in:
 
 ```env
-# Google AI Studio API key — required for Career Pivot Radar (Phase 3)
-# Get yours free at: https://aistudio.google.com/app/apikey
-GOOGLE_API_KEY=AIzaSy...
+# Groq API key — required for Career Pivot Radar (Phase 3)
+# Get yours FREE (no credit card) at: https://console.groq.com/keys
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# Gemini model (default: gemini-2.0-flash)
-GEMINI_MODEL=gemini-2.5-flash-lite
+# Groq model (default: llama-3.3-70b-versatile)
+# Other options: llama-3.1-8b-instant (faster), llama-4-scout-17b-16e-instruct (newer)
+GROQ_MODEL=llama-3.3-70b-versatile
 
 # NER confidence threshold (default: 0.5)
 NER_CONFIDENCE_THRESHOLD=0.5
@@ -308,28 +309,49 @@ Accepts the full payload from Phase 2 plus the profile.
     "target_role": "Backend Developer",
     "readiness_score": 0.3155,
     "readiness_level": "moderate",
-    "verdict": "Profil Anda cocok untuk Backend Developer..."
+    "verdict": "Profil Anda cocok untuk Backend Developer dengan beberapa gap yang perlu diisi."
   },
   "alternative_roles": [
     {
       "role_name": "Full Stack Developer",
-      "sbert_match_score": 0.82,
+      "sbert_match_score": 0.8234,
       "skill_overlap_pct": 60.0,
-      "why_good_fit": "Keahlian React dan JavaScript sangat relevan...",
-      "transferable_skills": ["JavaScript", "React", "Git"],
-      "gap_skills": ["Vue.js", "Node.js"],
+      "why_good_fit": "Keahlian React dan JavaScript sangat relevan untuk peran full-stack.",
+      "transferable_skills": [
+        { "skill": "JavaScript", "relevance": "Bahasa utama untuk full-stack development" },
+        { "skill": "React",      "relevance": "Langsung digunakan di sisi frontend" }
+      ],
+      "gap_skills": ["vue.js", "node.js"],
       "transition_difficulty": "easy",
       "estimated_transition_time": "3-6 bulan",
       "first_step": "Ikuti kursus Node.js dan bangun proyek full-stack portfolio"
     }
   ],
-  "strongest_transferable_skills": ["Python", "Docker", "React"],
-  "suggested_certifications": ["AWS Certified Developer", "Google Professional Cloud Developer"],
-  "universal_advice": "Fokus pada..."
+  "ai_discovered_roles": [
+    {
+      "role_name": "API Platform Engineer",
+      "category": "specialization",
+      "why_good_fit": "Pengalaman backend Anda di API design sangat relevan untuk membangun platform API internal.",
+      "transferable_skills": ["python", "fastapi", "docker", "postgresql"],
+      "skills_to_develop": ["kong", "api gateway", "openapi spec"],
+      "transition_difficulty": "moderate",
+      "estimated_transition_months": 4,
+      "skill_readiness_pct": 57.1,
+      "first_step": "Buat proyek API gateway menggunakan Kong atau AWS API Gateway di portfolio.",
+      "market_demand": "high"
+    }
+  ],
+  "strongest_transferable_skills": ["python", "docker", "react"],
+  "suggested_certifications": [
+    { "name": "AWS Certified Developer", "relevance": "Memvalidasi cloud skill dan membuka peluang di startup tech." },
+    { "name": "Google Professional Cloud Developer", "relevance": "Relevan untuk peran backend di ekosistem GCP." }
+  ],
+  "universal_advice": "Fokus pada pendalaman satu cloud platform (AWS atau GCP) untuk membedakan diri dari developer lain."
 }
 ```
 
-> Returns **503** if `GOOGLE_API_KEY` is not set, or if Gemini quota/model is unavailable.
+> Returns **503** if `GROQ_API_KEY` is not set, or if Groq quota/model is unavailable.  
+> `alternative_roles` = Layer 1 dari dataset (metric data-backed). `ai_discovered_roles` = Layer 2 dari Groq LLM (tidak terbatas 27 role).
 
 ---
 
@@ -351,7 +373,7 @@ All errors use the same envelope:
 |-----------|---------|
 | 400 | Invalid request (unknown role, empty skills, bad URL) |
 | 422 | Pydantic validation error (missing required fields) |
-| 503 | Service unavailable (missing/invalid API key, Gemini quota exceeded) |
+| 503 | Service unavailable (missing/invalid API key, Groq quota exceeded)   |
 | 500 | Internal server error (unexpected failure) |
 
 ---
@@ -409,6 +431,6 @@ const pivotMessages = [
 | `No module named 'tf_keras'` | `pip install tf-keras>=2.16.0` |
 | `ImportError: cannot import TFAutoModel...` | `pip install 'transformers>=4.40.0,<5.0.0'` |
 | Port 8000 already in use | `Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force` |
-| Gemini returns 503 | Check `GOOGLE_API_KEY` in `.env`; upgrade plan if quota is 0 |
+| Groq returns 503 | Check `GROQ_API_KEY` in `.env`; verify quota at console.groq.com |
 | Model3/4 not found | Verify `model_assets/recommendation/model3_savedmodel/saved_model.pb` exists |
 | NER loads but accuracy is low | Confirm `model_assets/ner/best_weights.weights.h5` is the fine-tuned weights file |
