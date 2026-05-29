@@ -245,10 +245,10 @@ Content-Type: application/json
 While this endpoint processes, show sequential loading messages:
 
 ```
-1s  → "Mengunduh dokumen dari Cloudinary…"
-3s  → "Membaca teks dari PDF…"
-5s  → "Model AI sedang mengekstrak informasi CV Anda…"
-8s  → "Hampir selesai, memvalidasi hasil ekstraksi…"
+1s  → "Downloading document from Cloudinary…"
+3s  → "Reading text from PDF…"
+5s  → "AI model is extracting your CV information…"
+8s  → "Almost done, validating extraction results…"
 ```
 
 After response: open an **editable form** pre-filled with `data`. User can correct any field before proceeding to Phase 2.
@@ -417,10 +417,10 @@ Array of up to 20 courses, ranked by `match_score`. Each item:
 ### Frontend UX Hint
 
 ```
-1s  → "Memproses profil CV Anda…"
-2s  → "Model AI menganalisis skill gap untuk peran ini…"
-4s  → "Mencari rekomendasi kursus yang relevan…"
-6s  → "Menghitung skor kesiapan Anda…"
+1s  → "Processing your CV profile…"
+2s  → "AI model is analyzing the skill gap for this role…"
+4s  → "Searching for relevant course recommendations…"
+6s  → "Calculating your readiness score…"
 ```
 
 After response: display a **dashboard** with the skill gap, a course list, and the readiness score. User may then click "Generate Career Pivot" to proceed to Phase 3.
@@ -490,47 +490,47 @@ Content-Type: application/json
       "target_role":      "Data Scientist",
       "readiness_score":  0.71,
       "readiness_level":  "high",
-      "verdict":          "Profil Anda kuat untuk Data Scientist. Gap di deep learning bisa ditutup dalam 2-3 bulan."
+      "verdict":          "Strong profile for Data Scientist. The deep learning gap can be closed in 2-3 months."
     },
     "alternative_roles": [
       {
         "role_name":                  "Machine Learning Engineer",
         "sbert_match_score":          0.8912,
         "skill_overlap_pct":          72.0,
-        "why_good_fit":               "Pipeline data dan Python Anda langsung relevan untuk MLOps.",
+        "why_good_fit":               "Your data pipeline and Python experience are directly relevant for MLOps.",
         "transferable_skills": [
-          { "skill": "python",    "relevance": "Bahasa utama untuk ML pipeline" },
-          { "skill": "docker",    "relevance": "Esensial untuk containerisasi model" }
+          { "skill": "python",    "relevance": "Primary language for ML pipelines" },
+          { "skill": "docker",    "relevance": "Essential for model containerization" }
         ],
         "gap_skills":                 ["mlflow", "kubernetes", "ci/cd for ml"],
         "transition_difficulty":      "moderate",
-        "estimated_transition_time":  "3-6 bulan",
-        "first_step":                 "Selesaikan MLOps Specialization di Coursera untuk menjembatani gap deployment."
+        "estimated_transition_time":  "3-6 months",
+        "first_step":                 "Complete the MLOps Specialization on Coursera to bridge the deployment gap."
       }
     ],
     "ai_discovered_roles": [
       {
         "role_name":                  "ML Platform Engineer",
         "category":                   "specialization",
-        "why_good_fit":               "Riwayat kerja Anda di data engineering + ML skill membentuk kandidat ideal untuk membangun infrastruktur ML platform.",
+        "why_good_fit":               "Your background in data engineering combined with ML skills makes you an ideal candidate for building ML platform infrastructure.",
         "transferable_skills":        ["python", "docker", "gcp", "sql"],
         "skills_to_develop":          ["kubeflow", "mlflow", "terraform"],
         "transition_difficulty":      "moderate",
         "estimated_transition_months": 6,
         "skill_readiness_pct":        57.1,
-        "first_step":                 "Deploy model pertama menggunakan Kubeflow Pipelines di GCP.",
+        "first_step":                 "Deploy your first model using Kubeflow Pipelines on GCP.",
         "market_demand":              "high"
       },
       {
         "role_name":                  "AI/ML Tech Lead",
         "category":                   "leadership",
-        "why_good_fit":               "Dengan 4.5 tahun pengalaman dan breadth skill, Anda siap memimpin tim data/ML kecil.",
+        "why_good_fit":               "With 4.5 years of experience and broad skill depth, you are ready to lead a small data/ML team.",
         "transferable_skills":        ["python", "tensorflow", "scikit-learn", "gcp"],
         "skills_to_develop":          ["team leadership", "system design", "stakeholder management"],
         "transition_difficulty":      "challenging",
         "estimated_transition_months": 18,
         "skill_readiness_pct":        57.1,
-        "first_step":                 "Ambil peran senior engineer dulu, lalu mentori junior sambil membangun track record kepemimpinan.",
+        "first_step":                 "Take on a senior engineer role first, then mentor juniors to build a leadership track record.",
         "market_demand":              "medium"
       }
     ],
@@ -538,14 +538,14 @@ Content-Type: application/json
     "suggested_certifications": [
       {
         "name":      "Google Professional Data Engineer",
-        "relevance": "Memvalidasi skill GCP Anda dan membuka pintu data engineering."
+        "relevance": "Validates your GCP skills and opens doors to data engineering roles."
       },
       {
         "name":      "TensorFlow Developer Certificate",
-        "relevance": "Mengisi gap deep learning untuk peran Data Scientist / MLE."
+        "relevance": "Closes the deep learning gap for Data Scientist / MLE positions."
       }
     ],
-    "universal_advice": "Fondasi Python + cloud Anda adalah aset terbesar. Tambahkan satu tool orkestrasi (Airflow) dan satu tool experiment tracking (MLflow) — dua ini saja sudah cukup untuk membuat Anda kompetitif untuk Data Engineer dan MLE dalam 3 bulan."
+    "universal_advice": "Your Python + cloud foundation is your biggest asset. Add one orchestration tool (Airflow) and one experiment tracking tool (MLflow) — just these two are enough to make you competitive for Data Engineer and MLE roles within 3 months."
   },
   "metadata": {
     "retrieval_method":    "sbert_role_centroid_cosine",
@@ -641,10 +641,10 @@ Content-Type: application/json
 ### Frontend UX Hint
 
 ```
-2s  → "Model AI sedang mengambil peran alternatif yang sesuai…"
-4s  → "Menganalisis kesesuaian dan transferable skills Anda…"
-8s  → "AI sedang menjelajahi karier di luar database…"
-12s → "Hampir selesai — memformat hasil rekomendasi karier…"
+2s  → "AI model is retrieving matching alternative roles…"
+4s  → "Analyzing fit and your transferable skills…"
+8s  → "AI is exploring career paths outside the database…"
+12s → "Almost done — formatting your personalized career recommendations…"
 ```
 
 After response: display a **Career Pivot Radar** visualization — show Layer 1 roles on a radar/spider chart (real skill overlap data), and Layer 2 roles as AI suggestion cards with category badge (specialization / adjacent / leadership / pivot).
@@ -794,29 +794,36 @@ All model file paths are resolved automatically from `model_assets/` — no manu
 
 ---
 
-## Integration Sequence (Frontend → Backend)
+## Integration Sequence (Frontend → Backend → AI Engine)
+
+> **Architecture:** The frontend never calls the AI Engine directly. All AI requests are proxied through the Express.js backend (`backend/`), which holds auth middleware, DB persistence, and business logic.
 
 ```
-Frontend                         QLOP AI Engine
-    │                                  │
-    │──── POST /api/v1/cv/extract ─────►│  (Phase 1)
-    │◄─── 200 CVProfile JSON ───────────│
-    │                                  │
-    │  [User edits profile in UI]       │
-    │                                  │
-    │──── POST /api/v1/cv/analyze ─────►│  (Phase 2)
-    │◄─── 200 AnalyzeData JSON ─────────│
-    │                                  │
-    │  [User reviews analysis]          │
-    │  [Clicks "Career Pivot"]          │
-    │                                  │
-    │──── POST /api/v1/cv/career-pivot ►│  (Phase 3)
-    │◄─── 200 CareerPivotOutput JSON ───│
-    │                                  │
-    │  [Display radar + detail cards]   │
+Frontend (React)          Backend (Express.js)       QLOP AI Engine (FastAPI)
+     │                           │                           │
+     │── POST /api/cv/upload ───►│                           │
+     │                           │── POST /api/v1/cv/extract►│  (Phase 1)
+     │                           │◄── 200 CVProfile JSON ────│
+     │◄── CVProfile JSON ────────│                           │
+     │                           │                           │
+     │  [User edits profile]     │                           │
+     │                           │                           │
+     │── POST /api/cv/analyze ──►│                           │
+     │                           │── POST /api/v1/cv/analyze►│  (Phase 2)
+     │                           │◄── 200 AnalyzeData JSON ──│
+     │◄── AnalyzeData JSON ──────│  (saved to DB)            │
+     │                           │                           │
+     │  [User clicks Career Pivot]│                          │
+     │                           │                           │
+     │── POST /api/cv/pivot ────►│                           │
+     │                           │── POST /api/v1/cv/career-pivot►│  (Phase 3)
+     │                           │◄── 200 CareerPivotOutput ─│
+     │◄── CareerPivotOutput ─────│  (saved to DB)            │
+     │                           │                           │
+     │  [Display radar + cards]  │                           │
 ```
 
-> **Important for frontend:** The body of `POST /api/v1/cv/career-pivot` is exactly the `data` field from the `POST /api/v1/cv/analyze` response — no transformation needed.
+> **For the Express.js backend team:** The body of `POST /api/v1/cv/career-pivot` (sent to the AI Engine) is exactly the `data` field from the `POST /api/v1/cv/analyze` response — no transformation needed. Store the full AI response in the database before forwarding the result to the frontend.
 
 ---
 
