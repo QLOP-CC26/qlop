@@ -92,7 +92,7 @@ def retrieve_alternative_roles(
         if s_lower in r.skill_to_idx_li:
             normalised.append(s_lower)
         else:
-            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.6)
+            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.75)
             if best:
                 normalised.append(best)
 
@@ -142,8 +142,8 @@ def retrieve_alternative_roles(
 # ──────────────────────────────────────────────────────────────────────
 
 _SYSTEM_INSTRUCTION = (
-    "Kamu adalah career coach IT Indonesia 2026. "
-    "Analisis singkat, konkret, berbasis data. Jawab dalam bahasa Indonesia."
+    "You are an IT career coach for 2026. "
+    "Provide concise, concrete, data-driven analysis. Respond in English."
 )
 
 
@@ -162,27 +162,27 @@ def _build_profile_prompt(profile: CVProfile, target_role: str, readiness: Readi
     work_entries = [w for w in profile.work_experience if w.company]
     work_str = "; ".join(
         f"{w.designation} @ {w.company} ({w.duration})" for w in work_entries
-    ) or "tidak tersedia"
+    ) or "not available"
     edu_str = "; ".join(
         f"{e.degree} — {e.institution}" for e in profile.education if e.institution
-    ) or "tidak tersedia"
+    ) or "not available"
 
     # Derive career trajectory hint for LLM context
     designations = [w.designation for w in work_entries if w.designation]
-    traj_hint = " → ".join(designations[-3:]) if designations else "tidak diketahui"
+    traj_hint = " → ".join(designations[-3:]) if designations else "unknown"
 
     return (
-        f"Kandidat: {profile.name} | Pengalaman: {profile.total_experience_years} tahun | Lokasi: {profile.location}\n"
+        f"Candidate: {profile.name} | Experience: {profile.total_experience_years} years | Location: {profile.location}\n"
         f"Skills ({len(skills_flat)}): {', '.join(skills_flat[:20])}\n"
-        f"Riwayat karier: {traj_hint}\n"
-        f"Detail kerja: {work_str}\n"
-        f"Pendidikan: {edu_str}\n"
-        f"Target saat ini: {target_role} | Readiness: {readiness.score:.2f} ({_readiness_level(readiness.score)})\n\n"
-        "Lakukan analisis mendalam (bukan hanya daftar skills):\n"
-        "1. Domain keahlian utama berdasarkan RIWAYAT KERJA (bukan hanya skills list)\n"
-        "2. Pola karier: spesialisasi, leadership trajectory, atau pergeseran teknologi?\n"
-        "3. Transferable domain: keahlian lintas industri/teknologi yang bisa diaplikasikan ke bidang lain\n"
-        "4. Kekuatan unik yang tidak terlihat dari skills list (soft skills, domain knowledge, pola problem-solving)"
+        f"Career trajectory: {traj_hint}\n"
+        f"Work history: {work_str}\n"
+        f"Education: {edu_str}\n"
+        f"Current target: {target_role} | Readiness: {readiness.score:.2f} ({_readiness_level(readiness.score)})\n\n"
+        "Perform a deep analysis (not just a skills list):\n"
+        "1. Primary expertise domain based on WORK HISTORY (not just skills list)\n"
+        "2. Career pattern: specialization, leadership trajectory, or technology shift?\n"
+        "3. Transferable domain: cross-industry/technology skills applicable to other fields\n"
+        "4. Unique strengths not visible from skills list (soft skills, domain knowledge, problem-solving patterns)"
     )
 
 
@@ -194,19 +194,19 @@ def _build_rag_context_prompt(retrieved_roles: list[RetrievedRole], skill_gap: S
     layer1_names = [r.role_name for r in retrieved_roles]
 
     return (
-        f"=== LAYER 1: Role dari database IT (27 role) ===\n{roles_compact}\n"
-        f"Skill gap saat ini: {missing_str or 'tidak ada'}\n"
-        "Untuk setiap role Layer 1: alasan cocok, skill transferable, "
-        "kesulitan transisi (easy/moderate/challenging), langkah pertama konkret.\n\n"
-        "=== LAYER 2: Eksplorasi role DI LUAR database ===\n"
-        "Berdasarkan analisis profil mendalam dari Turn 1 (riwayat kerja, pola karier, domain), "
-        f"identifikasi 3-4 role potensial yang BERBEDA dari: {layer1_names}.\n"
-        "Pertimbangkan:\n"
-        "- Spesialisasi lebih dalam dari role saat ini (contoh: Fullstack → Frontend Architect)\n"
-        "- Lateral move ke domain adjacent (contoh: Backend → DevOps/Platform Engineer)\n"
-        "- Naik jabatan (contoh: Developer → Engineering Manager, Tech Lead)\n"
-        "- Pivot ke domain baru yang sesuai background (contoh: Backend + FinTech exp → Fintech Engineer)\n"
-        "Berikan reasoning kuat mengapa role ini cocok berdasarkan RIWAYAT KERJA, bukan hanya skills."
+        f"=== LAYER 1: Roles from IT database (27 roles) ===\n{roles_compact}\n"
+        f"Current skill gap: {missing_str or 'none'}\n"
+        "For each Layer 1 role: reason for fit, transferable skills, "
+        "transition difficulty (easy/moderate/challenging), concrete first step.\n\n"
+        "=== LAYER 2: Roles OUTSIDE the database ===\n"
+        "Based on the deep profile analysis from Turn 1 (work history, career pattern, domain), "
+        f"identify 3-4 potential roles that are DIFFERENT from: {layer1_names}.\n"
+        "Consider:\n"
+        "- Deeper specialization from current role (e.g. Fullstack → Frontend Architect)\n"
+        "- Lateral move to adjacent domain (e.g. Backend → DevOps/Platform Engineer)\n"
+        "- Step up (e.g. Developer → Engineering Manager, Tech Lead)\n"
+        "- Pivot to a new domain matching background (e.g. Backend + FinTech exp → Fintech Engineer)\n"
+        "Provide strong reasoning why each role fits based on WORK HISTORY, not just skills."
     )
 
 
@@ -228,19 +228,19 @@ def _build_structured_output_prompt(
                 "sbert_match_score": round(r.sbert_score, 4),
                 "skill_overlap_pct": round(r.skill_overlap_pct, 2),
                 "why_good_fit": "__FILL__",
-                "transferable_skills": [],
+                "transferable_skills": ["__FILL__", "..."],
                 "gap_skills": r.gap_skills[:5],
                 "transition_difficulty": "__FILL__",
-                "estimated_transition_time": "__FILL__ (contoh: 3-6 bulan)",
+                "estimated_transition_time": "__FILL__ (e.g. 3-6 months)",
                 "first_step": "__FILL__",
             }
             for r in retrieved_roles
         ],
         "ai_discovered_roles": [
             {
-                "role_name": "__FILL__ (role spesifik dari analisis Turn 1 & 2)",
+                "role_name": "__FILL__ (specific role from Turn 1 & 2 analysis)",
                 "category": "__FILL__ (specialization|adjacent|leadership|pivot)",
-                "why_good_fit": "__FILL__ (berbasis riwayat kerja, bukan hanya skills)",
+                "why_good_fit": "__FILL__ (based on work history, not just skills)",
                 "transferable_skills": ["__FILL__"],
                 "skills_to_develop": ["__FILL__"],
                 "transition_difficulty": "__FILL__",
@@ -250,22 +250,25 @@ def _build_structured_output_prompt(
                 "market_demand": "__FILL__ (high|medium|low)",
             }
         ],
-        "strongest_transferable_skills": [],
-        "suggested_certifications": [],
+        "strongest_transferable_skills": ["__FILL__", "..."],
+        "suggested_certifications": ["__FILL__", "..."],
         "universal_advice": "__FILL__",
     }
     return (
-        "Hasilkan JSON final sesuai schema. Ganti semua '__FILL__' dengan konten nyata.\n"
-        "ATURAN:\n"
-        "1. Jangan ubah nilai numerik (readiness_score, sbert_match_score, skill_overlap_pct).\n"
-        "2. ai_discovered_roles: isi 3-4 role BERBEDA dari alternative_roles.\n"
-        "   Pilih berdasarkan analisis riwayat kerja dari Turn 1 dan Turn 2, bukan hanya skills list.\n"
-        "3. skill_readiness_pct di ai_discovered_roles: hitung sebagai "
+        "Generate the final JSON according to the schema. Replace all '__FILL__' and '...' with real content.\n"
+        "RULES:\n"
+        "1. Do not change numeric values (readiness_score, sbert_match_score, skill_overlap_pct).\n"
+        "2. ai_discovered_roles: fill with 3-4 roles DIFFERENT from alternative_roles.\n"
+        "   Choose based on work history analysis from Turn 1 and Turn 2, not just skills list.\n"
+        "3. skill_readiness_pct in ai_discovered_roles: compute as "
         "   len(transferable_skills) / (len(transferable_skills) + len(skills_to_develop)) * 100.\n"
-        "4. estimated_transition_months: angka integer (1-48).\n"
+        "4. estimated_transition_months: integer (1-48).\n"
         "5. category: specialization|adjacent|leadership|pivot.\n"
         "6. market_demand: high|medium|low.\n"
         "7. transition_difficulty: easy|moderate|challenging.\n"
+        "8. transferable_skills: list the candidate's EXISTING skills from the profile that are relevant.\n"
+        "   Do NOT include skills the candidate already has in skills_to_develop.\n"
+        "9. suggested_certifications: list 2-4 specific certifications (e.g. AWS Certified Developer, CKA).\n"
         f"Template: {json.dumps(pre_filled, ensure_ascii=False, separators=(',', ':'))}"
     )
 

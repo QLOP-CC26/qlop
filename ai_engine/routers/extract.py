@@ -31,19 +31,19 @@ async def extract_endpoint(body: ExtractRequest):
     if parsed.scheme != "https" or not parsed.netloc or not (
         host == "res.cloudinary.com" or host.endswith(".cloudinary.com")
     ):
-        raise HTTPException(status_code=400, detail="URL tidak valid. Harus HTTPS Cloudinary URL.")
+        raise HTTPException(status_code=400, detail="Invalid URL. Must be an HTTPS Cloudinary URL.")
 
     try:
         pdf_bytes = await download_pdf_from_cloudinary(body.cloudinary_url)
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=400, detail=f"Gagal mengunduh file: HTTP {exc.response.status_code}") from exc
+        raise HTTPException(status_code=400, detail=f"Failed to download file: HTTP {exc.response.status_code}") from exc
     except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError) as exc:
-        raise HTTPException(status_code=502, detail=f"Tidak dapat menjangkau Cloudinary: {exc}") from exc
+        raise HTTPException(status_code=502, detail=f"Unable to reach Cloudinary: {exc}") from exc
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Gagal mengunduh file dari URL: {exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Failed to download file from URL: {exc}") from exc
 
     if not pdf_bytes:
-        raise HTTPException(status_code=400, detail="File yang diunduh kosong.")
+        raise HTTPException(status_code=400, detail="Downloaded file is empty.")
 
     loop = asyncio.get_running_loop()
     try:
@@ -52,7 +52,7 @@ async def extract_endpoint(body: ExtractRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("NER extraction failed")
-        raise HTTPException(status_code=500, detail="Gagal memproses PDF.") from exc
+        raise HTTPException(status_code=500, detail="Failed to process PDF.") from exc
 
     filename = parsed.path.rsplit("/", 1)[-1] if parsed.path else "uploaded.pdf"
     elapsed = int((time.perf_counter() - start) * 1000)
