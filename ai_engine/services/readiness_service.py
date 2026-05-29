@@ -27,7 +27,7 @@ def score(cv_skills: list[str], target_role: str) -> ReadinessResult:
     r = registry
 
     if target_role not in r.job_embeddings:
-        raise ValueError(f"Role '{target_role}' tidak dikenali.")
+        raise ValueError(f"Role '{target_role}' not recognized.")
 
     vocab_keys = list(r.skill_to_idx_li.keys())
     user_skills: list[str] = []
@@ -36,7 +36,8 @@ def score(cv_skills: list[str], target_role: str) -> ReadinessResult:
         if s_lower in r.skill_to_idx_li:
             user_skills.append(s_lower)
         else:
-            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.6)
+            # Threshold 0.75 avoids false positives (e.g. "Postman" → "kicad")
+            best = fuzzy_match_skill(s_lower, vocab_keys, threshold=0.75)
             if best:
                 user_skills.append(best)
 
@@ -44,7 +45,7 @@ def score(cv_skills: list[str], target_role: str) -> ReadinessResult:
         return ReadinessResult(
             score=0.0,
             matched_skills=[],
-            interpretation="Tidak ada skill yang berhasil dikenali.",
+            interpretation="No skills could be recognized.",
         )
 
     user_text = " ".join(user_skills)
@@ -69,7 +70,7 @@ def score(cv_skills: list[str], target_role: str) -> ReadinessResult:
         return ReadinessResult(
             score=0.0,
             matched_skills=user_skills,
-            interpretation="Tidak ada data lowongan untuk role ini.",
+            interpretation="No job posting data available for this role.",
         )
 
     user_contrib = sum(skill_contrib.get(skill, 0) for skill in user_skills)
@@ -79,7 +80,7 @@ def score(cv_skills: list[str], target_role: str) -> ReadinessResult:
         score=round(safe_float(final_score), 4),
         matched_skills=user_skills,
         interpretation=(
-            "Skor ini menunjukkan seberapa selaras skill Anda dengan kebutuhan pasar "
-            "secara keseluruhan. Semakin tinggi (mendekati 1), semakin siap Anda."
+            "This score indicates how well your skills align with overall market demand. "
+            "The higher the score (closer to 1), the more market-ready you are."
         ),
     )

@@ -26,10 +26,26 @@ class Settings(BaseSettings):
     ner_sliding_window_size: int = 200
     ner_sliding_window_stride: int = 100
 
+    # --- HuggingFace model cache ---
+    # All HuggingFace downloads (DeBERTa base + SBERT) are stored here.
+    # Defaults to model_assets/hf_cache/ inside the project so the cache
+    # survives restarts and doesn't depend on the OS user home directory.
+    # Override with HF_CACHE_DIR=/path/to/shared/cache in .env for shared servers.
+    hf_cache_dir: Path = _BASE_DIR / "model_assets" / "hf_cache"
+
+    # SBERT model name — change to a larger model if readiness quality needs improvement
+    sbert_model_name: str = "all-MiniLM-L6-v2"
+
     # --- Groq (OpenAI-compatible, free tier) ---
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    # llama-3.1-8b-instant → fast; free tier ~6k TPM per request (input + max_tokens combined)
+    # meta-llama/llama-4-scout-17b-16e-instruct → higher TPM headroom (~30k), better quality
+    groq_model: str = "llama-3.1-8b-instant"
     groq_base_url: str = "https://api.groq.com/openai/v1"
+    # Groq rejects a request when prompt_tokens + max_tokens exceeds the model TPM cap.
+    # Keep this ≤ 2048 on 8b free tier; raise only if you switch to Scout/70B.
+    groq_max_tokens: int = 2048
+    career_pivot_top_k: int = 4
 
     model_config = {"env_file": str(_BASE_DIR / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
