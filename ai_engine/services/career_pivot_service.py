@@ -143,7 +143,8 @@ def retrieve_alternative_roles(
 _SYSTEM_INSTRUCTION = (
     "You are an IT career coach for 2026. "
     "Analyse the candidate profile thoroughly using work history as primary signal, not just the skills list. "
-    "Respond ONLY with valid JSON — no markdown, no extra text."
+    "Respond ONLY with valid JSON — no markdown, no extra text. "
+    "Write concise, concrete, and non-generic career guidance."
 )
 
 
@@ -194,14 +195,35 @@ def _build_single_shot_prompt(
             "skill_overlap_pct": round(r.skill_overlap_pct, 2),
             "why_good_fit": "__FILL__ (cite specific work history, not generic)",
             "transferable_skills": [
-                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
-                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
-                {"skill": "__FILL_SKILL__", "relevance": "__FILL_WHY_THIS_SKILL_MATTERS_FOR_THIS_ROLE__"},
+                {
+                    "skill": "__FILL_SKILL__",
+                    "relevance": (
+                        "__FILL__ (specific evidence + role-task mapping + impact; "
+                        "min 14 words, no generic phrasing)"
+                    ),
+                },
+                {
+                    "skill": "__FILL_SKILL__",
+                    "relevance": (
+                        "__FILL__ (specific evidence + role-task mapping + impact; "
+                        "min 14 words, no generic phrasing)"
+                    ),
+                },
+                {
+                    "skill": "__FILL_SKILL__",
+                    "relevance": (
+                        "__FILL__ (specific evidence + role-task mapping + impact; "
+                        "min 14 words, no generic phrasing)"
+                    ),
+                },
             ],
             "gap_skills": r.gap_skills[:5],
             "transition_difficulty": "__FILL__",
             "estimated_transition_time": "__FILL__",
-            "first_step": f"__FILL__ (specific action to become {r.role_name}, NOT generic)",
+            "first_step": (
+                f"__FILL__ (specific 1-2 week action to become {r.role_name}; "
+                f"must mention one gap skill such as {r.gap_skills[0] if r.gap_skills else 'a key gap skill'})"
+            ),
         }
         for r in retrieved_roles
     ]
@@ -230,8 +252,20 @@ def _build_single_shot_prompt(
         ],
         "strongest_transferable_skills": ["__FILL__", "__FILL__", "__FILL__"],
         "suggested_certifications": [
-            {"name": "__FILL__", "relevance": "__FILL_WHY_THIS_CERT__"},
-            {"name": "__FILL__", "relevance": "__FILL_WHY_THIS_CERT__"},
+            {
+                "name": "__FILL__",
+                "relevance": (
+                    "__FILL__ (tie to candidate background + role gap + expected outcome; "
+                    "min 14 words)"
+                ),
+            },
+            {
+                "name": "__FILL__",
+                "relevance": (
+                    "__FILL__ (tie to candidate background + role gap + expected outcome; "
+                    "min 14 words)"
+                ),
+            },
         ],
         "universal_advice": "__FILL__",
     }
@@ -263,6 +297,18 @@ def _build_single_shot_prompt(
         "- transferable_skills must be role-specific — DO NOT copy the same list to every role.\n"
         "- first_step must be different and specific for each role.\n"
         "- relevance fields must NOT be empty.\n"
+        "- Each skill relevance must include 3 parts in one sentence: "
+        "(1) profile evidence, (2) role-task mapping, (3) practical impact.\n"
+        "- Each skill relevance must be at least 14 words and role-specific.\n"
+        "- Avoid repetitive sentence openings across roles.\n"
+        "- Do NOT use boilerplate phrases such as 'demonstrates his ability', "
+        "'is a key aspect of', or 'take online courses to learn'.\n"
+        "- Do NOT start relevance with: '{{candidate_name}} has experience with ...'.\n"
+        "- Do NOT use generic endings like: 'which is a fundamental skill' or "
+        "'which is a popular framework/language'.\n"
+        "- why_good_fit should reference concrete evidence from work history (project, company, responsibility).\n"
+        "- Keep each why_good_fit to 1-2 sentences and avoid near-duplicate wording between roles.\n"
+        "- first_step must be immediately actionable within 1-2 weeks (build, ship, practice, or portfolio task).\n"
         "- Do not change any numeric values (readiness_score, sbert_match_score, skill_overlap_pct).\n\n"
         "## OUTPUT\n"
         "Return ONLY the completed JSON. Replace every __FILL__ token with real content.\n"
