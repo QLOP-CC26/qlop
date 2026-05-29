@@ -63,6 +63,15 @@ class RetrievedRole:
             "gap_skills": self.gap_skills,
         }
 
+    def to_prompt_dict(self) -> dict[str, Any]:
+        """Minimal payload for the LLM prompt — omits matched_skills to save tokens."""
+        return {
+            "role_name": self.role_name,
+            "sbert_match_score": round(self.sbert_score, 4),
+            "skill_overlap_pct": round(self.skill_overlap_pct, 2),
+            "gap_skills": self.gap_skills[:3],
+        }
+
 
 # ──────────────────────────────────────────────────────────────────────
 # Stage A — RAG Retrieval (pure Python, no LLM)
@@ -141,10 +150,11 @@ def retrieve_alternative_roles(
 # ──────────────────────────────────────────────────────────────────────
 
 _SYSTEM_INSTRUCTION = (
-    "You are an IT career coach for 2026. "
-    "Analyse the candidate profile thoroughly using work history as primary signal, not just the skills list. "
-    "Respond ONLY with valid JSON — no markdown, no extra text. "
-    "Write concise, concrete, and non-generic career guidance."
+    "IT career coach, 2026. Use work history as primary signal. "
+    "JSON only. Be specific, concise, non-generic. "
+    "Each skill relevance: evidence + role task + impact (≥12 words). "
+    "No boilerplate like 'has experience with' or 'fundamental skill'. "
+    "first_step = actionable within 1-2 weeks, unique per role."
 )
 
 
@@ -171,9 +181,9 @@ def _build_single_shot_prompt(
     usage by ~60 % and eliminates the 429s caused by growing accumulated context.
     """
     skills_flat = flatten_skills(profile.skills)
-    work_entries = [w for w in profile.work_experience if w.company]
+    work_entries = [w for w in profile.work_experience if w.company][:4]
     work_str = "; ".join(
-        f"{w.designation} @ {w.company} ({w.duration})" for w in work_entries
+        f"{w.designation} @ {w.company}" for w in work_entries
     ) or "not available"
     edu_str = "; ".join(
         f"{e.degree} — {e.institution}" for e in profile.education if e.institution
@@ -181,49 +191,26 @@ def _build_single_shot_prompt(
     designations = [w.designation for w in work_entries if w.designation]
     traj_hint = " → ".join(designations[-3:]) if designations else "unknown"
 
-    missing_str = ", ".join(m.skill for m in skill_gap.missing_skills[:5]) or "none"
+    missing_str = ", ".join(m.skill for m in skill_gap.missing_skills[:4]) or "none"
     layer1_names = [r.role_name for r in retrieved_roles]
     roles_compact = json.dumps(
-        [r.to_dict() for r in retrieved_roles], ensure_ascii=False, separators=(",", ":")
+        [r.to_prompt_dict() for r in retrieved_roles], ensure_ascii=False, separators=(",", ":")
     )
 
-    # Build transferable_skills objects so the LLM fills relevance per role
     alt_role_template = [
         {
             "role_name": r.role_name,
             "sbert_match_score": round(r.sbert_score, 4),
             "skill_overlap_pct": round(r.skill_overlap_pct, 2),
-            "why_good_fit": "__FILL__ (cite specific work history, not generic)",
+            "why_good_fit": "__FILL__",
             "transferable_skills": [
-                {
-                    "skill": "__FILL_SKILL__",
-                    "relevance": (
-                        "__FILL__ (specific evidence + role-task mapping + impact; "
-                        "min 14 words, no generic phrasing)"
-                    ),
-                },
-                {
-                    "skill": "__FILL_SKILL__",
-                    "relevance": (
-                        "__FILL__ (specific evidence + role-task mapping + impact; "
-                        "min 14 words, no generic phrasing)"
-                    ),
-                },
-                {
-                    "skill": "__FILL_SKILL__",
-                    "relevance": (
-                        "__FILL__ (specific evidence + role-task mapping + impact; "
-                        "min 14 words, no generic phrasing)"
-                    ),
-                },
+                {"skill": "__FILL__", "relevance": "__FILL__"},
+                {"skill": "__FILL__", "relevance": "__FILL__"},
             ],
-            "gap_skills": r.gap_skills[:5],
+            "gap_skills": r.gap_skills[:3],
             "transition_difficulty": "__FILL__",
             "estimated_transition_time": "__FILL__",
-            "first_step": (
-                f"__FILL__ (specific 1-2 week action to become {r.role_name}; "
-                f"must mention one gap skill such as {r.gap_skills[0] if r.gap_skills else 'a key gap skill'})"
-            ),
+            "first_step": "__FILL__",
         }
         for r in retrieved_roles
     ]
@@ -235,83 +222,43 @@ def _build_single_shot_prompt(
             "readiness_level": _readiness_level(readiness.score),
             "verdict": "__FILL__",
         },
+        "strongest_transferable_skills": ["__FILL__", "__FILL__", "__FILL__"],
+        "suggested_certifications": [
+            {"name": "__FILL__", "relevance": "__FILL__"},
+            {"name": "__FILL__", "relevance": "__FILL__"},
+        ],
+        "universal_advice": "__FILL__",
         "alternative_roles": alt_role_template,
         "ai_discovered_roles": [
             {
                 "role_name": "__FILL__",
                 "category": "__FILL__",
-                "why_good_fit": "__FILL__ (cite work history)",
+                "why_good_fit": "__FILL__",
                 "transferable_skills": ["__FILL__", "__FILL__"],
                 "skills_to_develop": ["__FILL__", "__FILL__"],
                 "transition_difficulty": "__FILL__",
                 "estimated_transition_months": 0,
                 "skill_readiness_pct": 0.0,
-                "first_step": "__FILL__ (specific, actionable)",
+                "first_step": "__FILL__",
                 "market_demand": "__FILL__",
             }
         ],
-        "strongest_transferable_skills": ["__FILL__", "__FILL__", "__FILL__"],
-        "suggested_certifications": [
-            {
-                "name": "__FILL__",
-                "relevance": (
-                    "__FILL__ (tie to candidate background + role gap + expected outcome; "
-                    "min 14 words)"
-                ),
-            },
-            {
-                "name": "__FILL__",
-                "relevance": (
-                    "__FILL__ (tie to candidate background + role gap + expected outcome; "
-                    "min 14 words)"
-                ),
-            },
-        ],
-        "universal_advice": "__FILL__",
     }
 
     return (
-        "## CANDIDATE PROFILE\n"
-        f"Name: {profile.name} | Experience: {profile.total_experience_years} yrs | Location: {profile.location}\n"
-        f"Skills ({len(skills_flat)}): {', '.join(skills_flat[:18])}\n"
-        f"Career trajectory: {traj_hint}\n"
-        f"Work history: {work_str}\n"
+        f"CANDIDATE: {profile.name} | {profile.total_experience_years}y | {profile.location}\n"
+        f"Skills: {', '.join(skills_flat[:12])}\n"
+        f"Trajectory: {traj_hint}\n"
+        f"Work: {work_str}\n"
         f"Education: {edu_str}\n"
-        f"Target role: {target_role} | Readiness: {readiness.score:.2f} ({_readiness_level(readiness.score)})\n"
-        f"Skill gap (top missing): {missing_str}\n\n"
-        "## LAYER 1 — Roles from IT database (SBERT-matched, do NOT change numeric scores)\n"
-        f"{roles_compact}\n\n"
-        "## TASK\n"
-        "Step 1 — Analyse work history: primary domain, career pattern, unique strengths.\n"
-        "Step 2 — For each Layer 1 role, fill all __FILL__ fields:\n"
-        "  - why_good_fit: cite SPECIFIC work experience, not generic phrases.\n"
-        "  - transferable_skills: pick 3-5 skills from the candidate's profile that are MOST relevant "
-        "    to THIS specific role. Each must have a relevance explaining why that skill applies to THIS role.\n"
-        "  - first_step: a concrete, role-specific action (different for each role).\n"
-        "  - transition_difficulty: easy|moderate|challenging\n"
-        f"Step 3 — Identify 3 roles DIFFERENT from {layer1_names} (from work history analysis). "
-        "category: specialization|adjacent|leadership|pivot. market_demand: high|medium|low.\n"
-        "Step 4 — suggested_certifications: 2-4 specific certs with relevance explaining why each cert helps.\n"
-        "Step 5 — skill_readiness_pct = len(transferable_skills)/(len(transferable_skills)+len(skills_to_develop))*100.\n\n"
-        "## CRITICAL RULES\n"
-        "- transferable_skills must be role-specific — DO NOT copy the same list to every role.\n"
-        "- first_step must be different and specific for each role.\n"
-        "- relevance fields must NOT be empty.\n"
-        "- Each skill relevance must include 3 parts in one sentence: "
-        "(1) profile evidence, (2) role-task mapping, (3) practical impact.\n"
-        "- Each skill relevance must be at least 14 words and role-specific.\n"
-        "- Avoid repetitive sentence openings across roles.\n"
-        "- Do NOT use boilerplate phrases such as 'demonstrates his ability', "
-        "'is a key aspect of', or 'take online courses to learn'.\n"
-        "- Do NOT start relevance with: '{{candidate_name}} has experience with ...'.\n"
-        "- Do NOT use generic endings like: 'which is a fundamental skill' or "
-        "'which is a popular framework/language'.\n"
-        "- why_good_fit should reference concrete evidence from work history (project, company, responsibility).\n"
-        "- Keep each why_good_fit to 1-2 sentences and avoid near-duplicate wording between roles.\n"
-        "- first_step must be immediately actionable within 1-2 weeks (build, ship, practice, or portfolio task).\n"
-        "- Do not change any numeric values (readiness_score, sbert_match_score, skill_overlap_pct).\n\n"
-        "## OUTPUT\n"
-        "Return ONLY the completed JSON. Replace every __FILL__ token with real content.\n"
+        f"Target: {target_role} | Readiness: {readiness.score:.2f} | Gap: {missing_str}\n\n"
+        f"LAYER1_ROLES (keep numeric scores): {roles_compact}\n\n"
+        "TASK: Fill JSON template. Replace __FILL__ with real content.\n"
+        "- alternative_roles: role-specific skills (2 each) + unique first_step per role\n"
+        "- ai_discovered_roles: 3 roles NOT in Layer1, category=specialization|adjacent|leadership|pivot\n"
+        "- transition_difficulty: easy|moderate|challenging | estimated_transition_time: string e.g. '6 months'\n"
+        "- skill_readiness_pct = transferable/(transferable+skills_to_develop)*100\n"
+        f"- ai_discovered_roles must differ from: {layer1_names}\n\n"
         f"{json.dumps(pre_filled, ensure_ascii=False, separators=(',', ':'))}"
     )
 
@@ -328,13 +275,14 @@ def _groq_call(
     model: str,
     messages: list[dict],
     temperature: float,
+    max_tokens: int,
 ) -> str:
     """Synchronous Groq call (json_object mode always on) — run in executor."""
     response = client.chat.completions.create(
         model=model,
         messages=messages,
         temperature=temperature,
-        max_tokens=2500,
+        max_tokens=max_tokens,
         timeout=_GROQ_CALL_TIMEOUT,
         response_format={"type": "json_object"},
     )
@@ -373,30 +321,61 @@ async def generate_career_pivot(
     ]
 
     raw_json = await loop.run_in_executor(
-        None, lambda: _groq_call(client, model, messages, temperature=0.15)
+        None,
+        lambda: _groq_call(client, model, messages, temperature=0.15, max_tokens=settings.groq_max_tokens),
     )
     logger.debug("Single-shot response received (%d chars)", len(raw_json))
 
-    # Parse into Pydantic with fallback
+    # ── Parse pipeline: 3 layers of increasing tolerance ─────────────────
+    #
+    # Layer 1 — strict: model_validate_json on raw output (fast path, no overhead)
+    # Layer 2 — lenient: extract first {...} block (handles leading/trailing text)
+    # Layer 3 — repair: json_repair reconstructs truncated / malformed JSON
+    #           (handles truncated strings, missing closing brackets, trailing
+    #           commas, unquoted keys — the most common LLM failure modes)
+    #
     parsed: CareerPivotOutput | None = None
+    repair_used = False
+
+    # Layer 1 — strict
     try:
         parsed = CareerPivotOutput.model_validate_json(raw_json)
     except Exception as primary_exc:
-        logger.warning("Strict JSON parse failed (%s), trying lenient fallback", primary_exc)
+        logger.debug("Layer 1 (strict) failed: %s", primary_exc)
+
+    # Layer 2 — extract JSON block first, then validate
+    if parsed is None:
         try:
             start_idx = raw_json.find("{")
             end_idx = raw_json.rfind("}") + 1
             if start_idx != -1 and end_idx > start_idx:
                 parsed = CareerPivotOutput.model_validate_json(raw_json[start_idx:end_idx])
-        except Exception as fallback_exc:
-            logger.warning("Lenient JSON parse also failed (%s)", fallback_exc)
+        except Exception as lenient_exc:
+            logger.debug("Layer 2 (lenient extract) failed: %s", lenient_exc)
+
+    # Layer 3 — json_repair reconstructs malformed / truncated output
+    if parsed is None:
+        try:
+            from json_repair import repair_json
+            repaired = repair_json(raw_json, return_objects=False, ensure_ascii=False)
+            parsed = CareerPivotOutput.model_validate_json(repaired)
+            repair_used = True
+            logger.info("Layer 3 (json_repair) recovered the LLM response (%d chars)", len(raw_json))
+        except Exception as repair_exc:
+            logger.warning("All 3 parse layers failed. Raw (%d chars): %s", len(raw_json), raw_json[:300])
             raise RuntimeError(
-                f"LLM returned malformed JSON. Primary: {primary_exc}. "
-                f"Fallback: {fallback_exc}. Raw ({len(raw_json)} chars): {raw_json[:400]}"
-            ) from fallback_exc
+                f"LLM returned unrecoverable output after json_repair. "
+                f"Error: {repair_exc}. Raw ({len(raw_json)} chars): {raw_json[:400]}"
+            ) from repair_exc
 
     if parsed is None:
         raise RuntimeError(f"No valid JSON found in LLM response: {raw_json[:400]}")
+
+    if repair_used:
+        logger.warning(
+            "json_repair was needed — LLM output was malformed. "
+            "Consider increasing max_tokens if this happens frequently."
+        )
 
     # Post-process: recompute skill_readiness_pct server-side
     for ai_role in parsed.ai_discovered_roles:

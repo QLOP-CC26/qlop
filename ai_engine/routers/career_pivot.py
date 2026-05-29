@@ -54,7 +54,7 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
 
     # Stage A — RAG retrieval (synchronous SBERT, offloaded to executor)
     retrieved_roles = await loop.run_in_executor(
-        None, retrieve_alternative_roles, cv_skills, target_role, 5,
+        None, retrieve_alternative_roles, cv_skills, target_role, settings.career_pivot_top_k,
     )
 
     if not retrieved_roles:
@@ -80,14 +80,20 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
         # API key / auth / quota → 503
         if any(k in err_str for k in (
             "GROQ_API_KEY", "api_key", "invalid_api_key",
-            "rate_limit_exceeded", "429", "401", "403",
+            "rate_limit_exceeded", "429", "401", "403", "413",
+            "Request too large", "Payload Too Large",
             "model_not_found", "404",
         )):
             logger.error("Groq API error: %s", exc)
-            raise HTTPException(
-                status_code=503,
-                detail=f"Groq API is unreachable. Check GROQ_API_KEY in .env: {exc}",
-            ) from exc
+            if "413" in err_str or "Request too large" in err_str or "Payload Too Large" in err_str:
+                detail = (
+                    "Groq request exceeds model token limit (prompt + max_tokens). "
+                    "Reduce GROQ_MAX_TOKENS in .env, switch to llama-4-scout-17b-16e-instruct, "
+                    "or lower CAREER_PIVOT_TOP_K."
+                )
+            else:
+                detail = f"Groq API is unreachable. Check GROQ_API_KEY in .env: {exc}"
+            raise HTTPException(status_code=503, detail=detail) from exc
         # JSON parse failure → 503 (LLM output issue, retry)
         if any(k in err_str for k in ("malformed JSON", "validation error", "JSON", "parse")):
             logger.error("LLM returned invalid structured output: %s", exc)

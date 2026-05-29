@@ -215,14 +215,30 @@ class CareerPivotOutput(BaseModel):
     current_role_assessment: CurrentRoleAssessment
     alternative_roles: list[AlternativeRole]
     ai_discovered_roles: list[AIDiscoveredRole]
-    strongest_transferable_skills: list[str]
-    suggested_certifications: list[SuggestedCertification]
-    universal_advice: str
+    # These three fields appear at the END of the JSON template; when max_tokens is
+    # exhausted mid-response the LLM omits them. Defaults let the response succeed
+    # gracefully instead of returning a 503 to the user.
+    strongest_transferable_skills: list[str] = Field(default_factory=list)
+    suggested_certifications: list[SuggestedCertification] = Field(default_factory=list)
+    universal_advice: str = ""
 
     @field_validator("strongest_transferable_skills", mode="before")
     @classmethod
     def clean_strongest_skills(cls, v: Any) -> Any:
-        return _clean_list(v)
+        """Accept list[str] or list[dict] — extract skill name from dicts."""
+        if isinstance(v, list):
+            result = []
+            for item in v:
+                if isinstance(item, str):
+                    val = _strip_hint(item)
+                    if val and val.lower() not in _SENTINELS:
+                        result.append(val)
+                elif isinstance(item, dict):
+                    val = _strip_hint(item.get("skill", item.get("name", "")))
+                    if val and val.lower() not in _SENTINELS:
+                        result.append(val)
+            return result
+        return v
 
     @field_validator("suggested_certifications", mode="before")
     @classmethod
