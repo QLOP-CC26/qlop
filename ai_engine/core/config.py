@@ -38,10 +38,14 @@ class Settings(BaseSettings):
 
     # --- Groq (OpenAI-compatible, free tier) ---
     groq_api_key: str = ""
-    # llama-3.1-8b-instant  → faster, 20k TPM free tier  (recommended for demo)
-    # llama-3.3-70b-versatile → better quality, 6k TPM free tier (hits 429 more often)
+    # llama-3.1-8b-instant → fast; free tier ~6k TPM per request (input + max_tokens combined)
+    # meta-llama/llama-4-scout-17b-16e-instruct → higher TPM headroom (~30k), better quality
     groq_model: str = "llama-3.1-8b-instant"
     groq_base_url: str = "https://api.groq.com/openai/v1"
+    # Groq rejects a request when prompt_tokens + max_tokens exceeds the model TPM cap.
+    # Keep this ≤ 2048 on 8b free tier; raise only if you switch to Scout/70B.
+    groq_max_tokens: int = 2048
+    career_pivot_top_k: int = 4
 
     model_config = {"env_file": str(_BASE_DIR / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
