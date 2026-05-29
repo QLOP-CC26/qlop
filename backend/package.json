@@ -1,7 +1,7 @@
 {
   "name": "qlop-api",
-  "version": "1.0.0",
-  "description": "QLOP API Backend",
+  "version": "2.0.0",
+  "description": "QLOP (Platform Analisis Kesenjangan Keahlian) - Backend API",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -10,14 +10,19 @@
     "migrate:down": "node-pg-migrate down -m migrations",
     "test": "jest --runInBand"
   },
-  "keywords": [],
+  "keywords": ["qlop", "skill-gap", "cv-analysis", "ai"],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.0.0",
     "amqplib": "^0.10.9",
+    "axios": "^1.7.0",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.5.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "google-auth-library": "^9.0.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.0",
