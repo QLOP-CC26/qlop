@@ -9,6 +9,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
+.venv/
 env/
 .env
 
@@ -18,6 +19,9 @@ env/
 *.pb
 *.tf
 saved_model/
+
+# HuggingFace model cache (DeBERTa ~750 MB + SBERT ~90 MB — downloaded on first startup)
+ai_engine/model_assets/hf_cache/
 
 .cursor/
 
