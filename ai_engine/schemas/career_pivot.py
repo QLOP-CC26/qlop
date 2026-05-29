@@ -21,7 +21,7 @@ class CareerPivotRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Structured Output — Pydantic-locked via Gemini response_schema
+# Structured Output — Pydantic-locked JSON from Groq json_object mode
 # ---------------------------------------------------------------------------
 
 class TransferableSkill(BaseModel):
@@ -43,7 +43,7 @@ class AlternativeRole(BaseModel):
 
 
 class AIDiscoveredRole(BaseModel):
-    """Layer 2 — Roles discovered by Gemini from the full CV context (not limited to dataset).
+    """Layer 2 — Roles discovered by Groq LLM from the full CV context (not limited to dataset).
 
     Metrics:
     - skill_readiness_pct: computed server-side as transferable / (transferable + to_develop) * 100

@@ -9,7 +9,7 @@ LLM Stack: openai SDK → Groq endpoint (llama-3.3-70b-versatile, free tier)
   Turn 3 : structured JSON output via json_object mode (temperature 0.1)
 
 Multi-turn is simulated by accumulating the messages list manually,
-since the openai SDK is stateless (unlike Gemini's chat sessions).
+since the openai SDK is stateless (multi-turn is simulated by accumulating the messages list).
 """
 
 from __future__ import annotations
@@ -99,8 +99,11 @@ def retrieve_alternative_roles(
     if not normalised:
         return []
 
+    if not r.sbert_model:
+        return []
+
     user_text = " ".join(normalised)
-    user_emb = r.sbert_model.encode([user_text], convert_to_tensor=False)[0].astype(np.float32)
+    user_emb = np.array(r.sbert_model.encode([user_text], convert_to_tensor=False)[0]).astype(np.float32)
     user_norm = user_emb / (np.linalg.norm(user_emb) + 1e-9)
 
     scored: list[tuple[str, float]] = []
@@ -164,7 +167,7 @@ def _build_profile_prompt(profile: CVProfile, target_role: str, readiness: Readi
         f"{e.degree} — {e.institution}" for e in profile.education if e.institution
     ) or "tidak tersedia"
 
-    # Derive career trajectory hint for Gemini
+    # Derive career trajectory hint for LLM context
     designations = [w.designation for w in work_entries if w.designation]
     traj_hint = " → ".join(designations[-3:]) if designations else "tidak diketahui"
 

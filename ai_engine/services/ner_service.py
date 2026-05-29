@@ -110,6 +110,9 @@ def decode_predictions_to_spans(
     tokenizer = registry.tokenizer
     id2label = registry.ner_id2label
 
+    if tokenizer is None:
+        return []
+
     probs = tf.nn.softmax(logits, axis=-1).numpy()
     preds = np.argmax(probs, axis=-1)
     confidences = np.max(probs, axis=-1)
@@ -164,11 +167,22 @@ def _run_ner_on_chunk(text: str) -> list[dict]:
     if not text.strip():
         return []
 
+    if registry.tokenizer is None:
+        raise RuntimeError("Tokenizer is not initialized")
+    if registry.ner_model is None:
+        raise RuntimeError("NER model is not initialized")
+
     encoded = registry.tokenizer(
-        text, truncation=True, padding="max_length",
-        max_length=settings.ner_max_length, return_tensors="tf",
+        text,
+        truncation=True,
+        padding="max_length",
+        max_length=settings.ner_max_length,
+        return_tensors="tf",
     )
-    inputs = {"input_ids": encoded["input_ids"], "attention_mask": encoded["attention_mask"]}
+    inputs = {
+        "input_ids": encoded["input_ids"],
+        "attention_mask": encoded["attention_mask"],
+    }
     logits = registry.ner_model(inputs, training=False)
 
     if hasattr(logits, "logits"):

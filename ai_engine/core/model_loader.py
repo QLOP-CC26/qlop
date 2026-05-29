@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,11 @@ logger = logging.getLogger("qlop.model_loader")
 
 def _safe_role_filename(role_name: str) -> str:
     return re.sub(r"[\\/]", "_", role_name)
+
+
+def _h5_array(group: Any, path: str) -> np.ndarray:
+    ds = cast(Any, group[path])
+    return np.asarray(ds[()])
 
 
 class ModelRegistry:
@@ -96,7 +102,7 @@ class ModelRegistry:
                 def build(self, input_shape):
                     super().build(input_shape)
 
-                def call(self, hidden_states, base_logits, training=False):
+                def call(self, hidden_states, base_logits, training=None):
                     heads = []
                     for head in ("skill", "career", "general"):
                         h = getattr(self, f"{head}_proj")(hidden_states)
@@ -122,11 +128,11 @@ class ModelRegistry:
                     self.multi_head = ITSkillMultiHeadProjection(n_labels, dropout_rate=dropout_rate)
                     self.num_labels = n_labels
 
-                def call(self, inputs, training=False):
+                def call(self, inputs, training=None, mask=None):
                     outputs = self.deberta(
                         input_ids=inputs["input_ids"],
                         attention_mask=inputs["attention_mask"],
-                        training=training,
+                        training=None,
                         output_hidden_states=True,
                     )
                     base_logits = outputs.logits
@@ -156,23 +162,23 @@ class ModelRegistry:
             import h5py as _h5
             with _h5.File(str(settings.ner_weights_path), "r") as hf:
                 mh = model.multi_head
-                lg = hf["layers/it_skill_multi_head_projection"]
+                lg = cast(Any, hf["layers/it_skill_multi_head_projection"])
 
                 for head in ("skill", "career", "general"):
                     getattr(mh, f"{head}_proj").set_weights([
-                        lg[f"{head}_proj/vars/0"][()],
-                        lg[f"{head}_proj/vars/1"][()],
+                        _h5_array(lg, f"{head}_proj/vars/0"),
+                        _h5_array(lg, f"{head}_proj/vars/1"),
                     ])
                     getattr(mh, f"{head}_out").set_weights([
-                        lg[f"{head}_out/vars/0"][()],
-                        lg[f"{head}_out/vars/1"][()],
+                        _h5_array(lg, f"{head}_out/vars/0"),
+                        _h5_array(lg, f"{head}_out/vars/1"),
                     ])
 
                 mh.gate_dense.set_weights([
-                    lg["gate_dense/vars/0"][()],
-                    lg["gate_dense/vars/1"][()],
+                    _h5_array(lg, "gate_dense/vars/0"),
+                    _h5_array(lg, "gate_dense/vars/1"),
                 ])
-                mh.residual_weight.assign(lg["vars/0"][()])
+                mh.residual_weight.assign(_h5_array(lg, "vars/0"))
 
             self.ner_model = model
             self.ner_available = True
@@ -248,8 +254,9 @@ class ModelRegistry:
             self.df_coursera = pd.DataFrame()
 
         npz = np.load(str(data_dir / "synthetic_demand_course_model4.npz"))
-        self.course_vectors = npz["course_vectors"]
-        self.num_courses = len(self.course_vectors)
+        course_vectors = np.asarray(npz["course_vectors"])
+        self.course_vectors = course_vectors
+        self.num_courses = int(course_vectors.shape[0])
 
         with open(data_dir / "role_freq.json", "r", encoding="utf-8") as f:
             self.role_freq = json.load(f)
