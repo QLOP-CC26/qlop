@@ -21,7 +21,7 @@ class CareerPivotRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Structured Output — Pydantic-locked for OpenAI response_format
+# Structured Output — Pydantic-locked via Gemini response_schema
 # ---------------------------------------------------------------------------
 
 class TransferableSkill(BaseModel):
@@ -76,11 +76,16 @@ class CurrentRoleAssessment(BaseModel):
 
 
 class CareerPivotOutput(BaseModel):
+    """
+    Structured career pivot analysis output.
+
+    alternative_roles  — Layer 1: data-backed roles from the 27-role dataset with SBERT + skill overlap metrics.
+    ai_discovered_roles — Layer 2: AI-generated roles beyond the dataset, based on full CV analysis.
+    """
+
     current_role_assessment: CurrentRoleAssessment
     alternative_roles: list[AlternativeRole]
-    """Layer 1: data-backed roles from the 27-role dataset with SBERT + skill overlap metrics."""
     ai_discovered_roles: list[AIDiscoveredRole]
-    """Layer 2: AI-generated roles beyond the dataset, based on full CV analysis."""
     strongest_transferable_skills: list[str]
     suggested_certifications: list[SuggestedCertification]
     universal_advice: str

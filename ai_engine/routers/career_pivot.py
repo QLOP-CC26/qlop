@@ -27,10 +27,10 @@ router = APIRouter(prefix="/api/v1/cv", tags=["career-pivot"])
 async def career_pivot_endpoint(body: CareerPivotRequest):
     start = time.perf_counter()
 
-    if not settings.google_api_key:
+    if not settings.groq_api_key:
         raise HTTPException(
             status_code=503,
-            detail="GOOGLE_API_KEY belum dikonfigurasi. Career Pivot Radar tidak tersedia.",
+            detail="GROQ_API_KEY belum dikonfigurasi. Career Pivot Radar tidak tersedia.",
         )
 
     target_role = body.target_role.strip()
@@ -59,26 +59,27 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
             retrieved_roles=retrieved_roles,
         )
     except ImportError as exc:
-        logger.error("google-genai not installed: %s", exc)
+        logger.error("openai package not installed: %s", exc)
         raise HTTPException(
             status_code=503,
-            detail="google-genai package tidak terinstall. Jalankan: pip install google-genai",
+            detail="openai package tidak terinstall. Jalankan: pip install openai>=1.30.0",
         ) from exc
     except Exception as exc:
         err_str = str(exc)
-        # API config / quota / auth → 503
+        # API key / auth / quota → 503
         if any(k in err_str for k in (
-            "API_KEY", "NOT_FOUND", "PERMISSION_DENIED", "UNAUTHENTICATED",
-            "RESOURCE_EXHAUSTED", "401", "403", "404", "429",
+            "GROQ_API_KEY", "api_key", "invalid_api_key",
+            "rate_limit_exceeded", "429", "401", "403",
+            "model_not_found", "404",
         )):
-            logger.error("Gemini API config error: %s", exc)
+            logger.error("Groq API error: %s", exc)
             raise HTTPException(
                 status_code=503,
-                detail=f"Gemini API tidak dapat diakses. Periksa GOOGLE_API_KEY dan GEMINI_MODEL di .env: {exc}",
+                detail=f"Groq API tidak dapat diakses. Periksa GROQ_API_KEY di .env: {exc}",
             ) from exc
-        # Pydantic/JSON parse failure after Gemini call → 503 (not our bug, LLM output problem)
-        if any(k in err_str for k in ("validation error", "malformed JSON", "JSON", "parse")):
-            logger.error("Gemini returned invalid structured output: %s", exc)
+        # JSON parse failure → 503 (LLM output issue, retry)
+        if any(k in err_str for k in ("malformed JSON", "validation error", "JSON", "parse")):
+            logger.error("LLM returned invalid structured output: %s", exc)
             raise HTTPException(
                 status_code=503,
                 detail=f"Model AI mengembalikan output yang tidak valid. Coba lagi: {exc}",
@@ -94,7 +95,7 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
             "retrieval_method": "sbert_role_centroid_cosine",
             "roles_evaluated": len(registry.role_centroids),
             "roles_returned": len(retrieved_roles),
-            "llm_model": settings.gemini_model,
+            "llm_model": settings.groq_model,
             "llm_turns": 3,
             "processing_time_ms": elapsed,
         },
