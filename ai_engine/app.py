@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="QLOP AI Engine",
-    version="2.0.0",
+    version="2.1.0",
     description="Unified CV analysis API with NER, skill gap, course recommendations, readiness scoring, and career pivot radar.",
     lifespan=lifespan,
 )
@@ -59,7 +59,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # must be False when allow_origins=["*"]; set specific origins when auth is added (v2.2)
     allow_methods=["*"],
     allow_headers=["*"],
 )
