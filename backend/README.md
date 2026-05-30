@@ -302,29 +302,27 @@ Content-Type: application/json
 
 ---
 
-#### Get Gemini Role Recommendations
+#### Get Career Pivot Recommendation
 ```http
-POST /api/cv/gemini-roles/:id
+POST /api/cv/career-pivot/:id
 ```
 
 **Flow:**
-1. Ambil `top_skills` atau `extracted_skills` dari database
-2. Kirim ke AI Engineer `POST /gemini-roles`
-3. Simpan hasil ke kolom `gemini_roles`
+1. Ambil data analisis dari database
+2. Kirim ke AI Engineer `POST /api/v1/cv/career-pivot`
+3. Simpan hasil ke kolom `career_pivot` dan `pivot_metadata`
 
 **Response `200`:**
 ```json
 {
   "status": "success",
-  "message": "Rekomendasi role dari Gemini berhasil dibuat.",
+  "message": "Analisis career pivot berhasil.",
   "data": {
-    "recommended_roles": [
-      {
-        "role_name": "Machine Learning Engineer",
-        "match_explanation": "Cocok karena kandidat menguasai TensorFlow dan Python.",
-        "compatibility_percentage": 85
-      }
-    ]
+    "alternative_roles": [],
+    "ai_discovered_roles": [],
+    "current_role_assessment": {},
+    "suggested_certifications": [],
+    "universal_advice": ""
   }
 }
 ```
@@ -364,7 +362,7 @@ GET /api/cv/history/:id
     "target_role": "Machine Learning Engineer",
     "top_skills": [],
     "recommended_courses": [],
-    "gemini_roles": {},
+    "career_pivot": {},
     "created_at": "...",
     "updated_at": "..."
   }
@@ -399,7 +397,10 @@ GET /api/cv/history/:id
 | `target_role` | VARCHAR | Role yang dipilih user |
 | `top_skills` | JSONB | Array skill prioritas dari AI `/recommend` |
 | `recommended_courses` | JSONB | Array kursus rekomendasi dari AI `/recommend` |
-| `gemini_roles` | JSONB | Array 5 role karier dari AI `/gemini-roles` |
+| `career_pivot` | JSONB | Output hasil career pivot dari AI `/career-pivot` |
+| `extract_metadata` | JSONB | Metadata hasil ekstraksi CV |
+| `analyze_metadata` | JSONB | Metadata hasil analisis skill gap |
+| `pivot_metadata` | JSONB | Metadata hasil career pivot |
 | `created_at` | TIMESTAMP | Waktu dibuat |
 | `updated_at` | TIMESTAMP | Waktu diperbarui |
 
@@ -413,7 +414,7 @@ Backend berfungsi sebagai **orchestrator** — semua logika AI didelegasikan ke 
 |---|---|---|
 | `POST /api/cv/analyze` | `POST {AI_API_URL}/extract` | `{ url }` |
 | `PUT /api/cv/recommend/:id` | `POST {AI_API_URL}/recommend` | `{ target_role, skills }` |
-| `POST /api/cv/gemini-roles/:id` | `POST {AI_API_URL}/gemini-roles` | `{ skills }` |
+| `POST /api/cv/career-pivot/:id` | `POST {AI_API_URL}/api/v1/cv/career-pivot` | `{ profile, target_role, skill_gap, ... }` |
 
 ---
 

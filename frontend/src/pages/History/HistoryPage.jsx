@@ -4,7 +4,6 @@ import { Calendar, ArrowRight, Trash2, History, Sparkles, ArrowUpDown } from 'lu
 import AppNavbar from '../../components/AppNavbar/AppNavbar';
 import Footer from '../../components/Footer/Footer';
 
-/* ── Helpers ── */
 const formatDate = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -19,7 +18,7 @@ const getSkillCount = (analysis) => {
 };
 
 const getCompatibility = (analysis) => {
-  const gemini = analysis.gemini_roles;
+  const gemini = analysis.career_pivot;
   if (!gemini) return null;
   const roles = gemini.recommended_roles || gemini;
   if (Array.isArray(roles) && roles.length > 0) return roles[0].compatibility_percentage;

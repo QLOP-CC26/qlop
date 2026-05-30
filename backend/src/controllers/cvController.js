@@ -1,32 +1,9 @@
-/**
- * cvController.js — QLOP Backend
- * Aligned with AI Engine API_CONTRACT.md v2.1
- *
- *  Phase 1 – POST /api/cv/analyze
- *    → Upload PDF ke Cloudinary
- *    → AI Engine: POST /api/v1/cv/extract { cloudinary_url }
- *    → Response: CVProfile + metadata (page_count, extraction_mode, ner_model_version)
- *    → DB: profile_entities, extracted_skills, extract_metadata
- *
- *  Phase 2 – PUT /api/cv/recommend/:id
- *    → AI Engine: POST /api/v1/cv/analyze { profile: CVProfile, target_role }
- *    → Response: { profile, target_role, skill_gap, course_recommendations, readiness_score }
- *    → DB: target_role, top_skills ({ skill_gap, readiness_score }), recommended_courses, analyze_metadata
- *    → Simpan full analyze_data untuk dikirim as-is ke Phase 3
- *
- *  Phase 3 – POST /api/cv/career-pivot/:id
- *    → AI Engine: POST /api/v1/cv/career-pivot (body = analyze data as-is dari Phase 2)
- *    → Response: CareerPivotOutput + metadata (llm_model, roles_evaluated, processing_time_ms)
- *    → DB: gemini_roles, pivot_metadata
- */
-
 const axios = require('axios');
 const cloudinary = require('../config/cloudinary');
 const { query } = require('../config/db');
 
 const AI_BASE = process.env.AI_API_URL || 'http://localhost:8000';
 
-// 27 roles persis dari API_CONTRACT.md — dipakai sebagai fallback getRoles
 const SUPPORTED_ROLES = [
   'AI Engineer', 'Backend Developer', 'Business Analyst',
   'Business Intelligence Analyst', 'Cloud Engineer', 'Cyber Security Analyst',
@@ -39,10 +16,6 @@ const SUPPORTED_ROLES = [
   'Site Reliability Engineer', 'Software Engineer', 'Solutions Architect',
 ];
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const uploadToCloudinary = (buffer, originalname) =>
   new Promise((resolve, reject) => {
     const safeName = originalname
@@ -54,8 +27,6 @@ const uploadToCloudinary = (buffer, originalname) =>
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: 'raw',
-        // Folder encoded in public_id (no separate `folder` param) to avoid signature mismatch.
-        // .pdf suffix required so AI Engine can validate the file as a PDF.
         public_id: `qlop/cv/cv_${Date.now()}_${safeName}.pdf`,
       },
       (error, result) => {
@@ -66,16 +37,12 @@ const uploadToCloudinary = (buffer, originalname) =>
     uploadStream.end(buffer);
   });
 
-// ---------------------------------------------------------------------------
-// Phase 1 – analyzeCV
-// POST /api/cv/analyze   (multipart/form-data, field: cv_file)
-// ---------------------------------------------------------------------------
 const analyzeCV = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         status: 'fail',
-        message: 'File CV tidak ditemukan. Pastikan field name adalah "cv_file".',
+        message: 'CV file not found. Ensure the field name is "cv_file".',
       });
     }
 
@@ -87,7 +54,7 @@ const analyzeCV = async (req, res) => {
       console.error('[cvController.analyzeCV] Gagal upload ke Cloudinary:', uploadError.message);
       return res.status(502).json({
         status: 'error',
-        message: 'Gagal mengupload file ke Cloudinary. Coba lagi.',
+        message: 'Failed to upload file to Cloudinary. Please try again.',
       });
     }
 
@@ -108,7 +75,7 @@ const analyzeCV = async (req, res) => {
       console.error('[cvController.analyzeCV] AI Engine error:', detail);
       return res.status(502).json({
         status: 'error',
-        message: `AI Engine gagal mengekstrak CV: ${detail}`,
+        message: `AI Engine failed to extract CV: ${detail}`,
       });
     }
 
@@ -137,7 +104,7 @@ const analyzeCV = async (req, res) => {
 
     return res.status(201).json({
       status: 'success',
-      message: 'CV berhasil diekstrak.',
+      message: 'CV successfully extracted.',
       data: {
         id: row.id,
         cv_url: row.cv_url,
@@ -151,15 +118,11 @@ const analyzeCV = async (req, res) => {
     console.error('[cvController.analyzeCV]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat menganalisis CV.',
+      message: 'An error occurred while analyzing the CV.',
     });
   }
 };
 
-// ---------------------------------------------------------------------------
-// Phase 2 – getRecommendations
-// PUT /api/cv/recommend/:id   (JSON body: { target_role, profile? })
-// ---------------------------------------------------------------------------
 const getRecommendations = async (req, res) => {
   try {
     const { id } = req.params;
@@ -168,7 +131,7 @@ const getRecommendations = async (req, res) => {
     if (!target_role || typeof target_role !== 'string' || !target_role.trim()) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Field target_role wajib diisi.',
+        message: 'The target_role field is required.',
       });
     }
 
@@ -182,7 +145,7 @@ const getRecommendations = async (req, res) => {
     if (cvResult.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Data CV tidak ditemukan atau bukan milik Anda.',
+        message: 'CV data not found or does not belong to you.',
       });
     }
 
@@ -219,19 +182,12 @@ const getRecommendations = async (req, res) => {
       console.error('[cvController.getRecommendations] AI Engine error:', detail);
       return res.status(502).json({
         status: 'error',
-        message: `AI Engine gagal menganalisis skill gap: ${detail}`,
+        message: `AI Engine failed to analyze skill gap: ${detail}`,
       });
     }
 
     const { skill_gap, course_recommendations, readiness_score } = analyzeData;
 
-    // Simpan ke DB:
-    // - top_skills: { skill_gap, readiness_score } (dipakai Phase 3)
-    // - analyze_metadata: cv_skills_count, processing_time_ms, dll
-    // - analyze_data: full response dari AI (dikirim as-is ke Phase 3)
-    // - Jika user mengedit profile di frontend (profileOverride), simpan juga
-    //   profile_entities dan extracted_skills yang sudah diedit ke DB
-    //   agar history menampilkan data yang benar (bukan data awal extract).
     const skillsToSave = Array.isArray(cvProfile.skills)
       ? cvProfile.skills.filter((s) => typeof s === 'string')
       : [];
@@ -268,7 +224,7 @@ const getRecommendations = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Analisis skill gap berhasil.',
+      message: 'Skill gap analysis successful.',
       data: {
         id: updatedRow.id,
         target_role: updatedRow.target_role,
@@ -283,15 +239,11 @@ const getRecommendations = async (req, res) => {
     console.error('[cvController.getRecommendations]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat menganalisis skill gap.',
+      message: 'An error occurred while analyzing the skill gap.',
     });
   }
 };
 
-// ---------------------------------------------------------------------------
-// Phase 3 – getCareerPivot
-// POST /api/cv/career-pivot/:id
-// ---------------------------------------------------------------------------
 const getCareerPivot = async (req, res) => {
   try {
     const { id } = req.params;
@@ -306,7 +258,7 @@ const getCareerPivot = async (req, res) => {
     if (cvResult.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Data CV tidak ditemukan atau bukan milik Anda.',
+        message: 'CV data not found or does not belong to you.',
       });
     }
 
@@ -315,7 +267,7 @@ const getCareerPivot = async (req, res) => {
     if (!row.target_role || !row.top_skills) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Jalankan analisis skill gap terlebih dahulu (PUT /api/cv/recommend/:id).',
+        message: 'Please run the skill gap analysis first (PUT /api/cv/recommend/:id).',
       });
     }
 
@@ -354,14 +306,14 @@ const getCareerPivot = async (req, res) => {
       console.error('[cvController.getCareerPivot] AI Engine error:', detail);
       return res.status(502).json({
         status: 'error',
-        message: `AI Engine gagal menganalisis career pivot: ${detail}`,
+        message: `AI Engine failed to analyze career pivot: ${detail}`,
       });
     }
 
     // Simpan hasil ke DB
     await query(
       `UPDATE cv_analyses
-       SET gemini_roles  = $1,
+       SET career_pivot  = $1,
            pivot_metadata = $2,
            updated_at    = NOW()
        WHERE id = $3 AND user_id = $4`,
@@ -375,7 +327,7 @@ const getCareerPivot = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Analisis career pivot berhasil.',
+      message: 'Career pivot analysis successful.',
       data: careerPivotData,
       metadata: pivotMetadata,
     });
@@ -383,14 +335,11 @@ const getCareerPivot = async (req, res) => {
     console.error('[cvController.getCareerPivot]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat menganalisis career pivot.',
+      message: 'An error occurred while analyzing the career pivot.',
     });
   }
 };
 
-// ---------------------------------------------------------------------------
-// GET /api/cv/roles — proxy ke AI Engine, fallback ke 27 role dari contract
-// ---------------------------------------------------------------------------
 const getRoles = async (req, res) => {
   try {
     const aiRes = await axios.get(`${AI_BASE}/api/v1/roles`, { timeout: 10000 });
@@ -407,15 +356,12 @@ const getRoles = async (req, res) => {
   }
 };
 
-// ---------------------------------------------------------------------------
-// History endpoints
-// ---------------------------------------------------------------------------
 const getCVHistory = async (req, res) => {
   try {
     const result = await query(
       `SELECT id, cv_url, profile_entities, extracted_skills,
               target_role, top_skills, recommended_courses,
-              gemini_roles, extract_metadata, analyze_metadata, pivot_metadata,
+              career_pivot, extract_metadata, analyze_metadata, pivot_metadata,
               created_at, updated_at
        FROM cv_analyses
        WHERE user_id = $1
@@ -428,7 +374,7 @@ const getCVHistory = async (req, res) => {
     });
   } catch (error) {
     console.error('[cvController.getCVHistory]', error);
-    return res.status(500).json({ status: 'error', message: 'Gagal mengambil riwayat CV.' });
+    return res.status(500).json({ status: 'error', message: 'Failed to retrieve CV history.' });
   }
 };
 
@@ -438,19 +384,19 @@ const getCVHistoryById = async (req, res) => {
     const result = await query(
       `SELECT id, cv_url, profile_entities, extracted_skills,
               target_role, top_skills, recommended_courses,
-              gemini_roles, extract_metadata, analyze_metadata, pivot_metadata,
+              career_pivot, extract_metadata, analyze_metadata, pivot_metadata,
               created_at, updated_at
        FROM cv_analyses
        WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ status: 'fail', message: 'Data analisis CV tidak ditemukan.' });
+      return res.status(404).json({ status: 'fail', message: 'CV analysis data not found.' });
     }
     return res.status(200).json({ status: 'success', data: result.rows[0] });
   } catch (error) {
     console.error('[cvController.getCVHistoryById]', error);
-    return res.status(500).json({ status: 'error', message: 'Gagal mengambil detail CV.' });
+    return res.status(500).json({ status: 'error', message: 'Failed to retrieve CV details.' });
   }
 };
 
@@ -468,7 +414,7 @@ const deleteCVHistory = async (req, res) => {
     if (checkRes.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Riwayat analisis tidak ditemukan atau Anda tidak memiliki akses.',
+        message: 'Analysis history not found or you do not have access.',
       });
     }
 
@@ -480,13 +426,13 @@ const deleteCVHistory = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Riwayat analisis berhasil dihapus.',
+      message: 'Analysis history successfully deleted.',
     });
   } catch (error) {
     console.error('[cvController.deleteCVHistory]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat menghapus riwayat analisis.',
+      message: 'An error occurred while deleting the analysis history.',
     });
   }
 };

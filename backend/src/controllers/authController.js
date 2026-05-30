@@ -17,7 +17,7 @@ const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Field name, email, dan password wajib diisi.',
+        message: 'Name, email, and password fields are required.',
       });
     }
 
@@ -25,7 +25,7 @@ const register = async (req, res) => {
     if (existingUser.rows.length > 0) {
       return res.status(409).json({
         status: 'fail',
-        message: 'Email sudah terdaftar. Silakan gunakan email lain.',
+        message: 'Email is already registered. Please use another email.',
       });
     }
 
@@ -43,7 +43,7 @@ const register = async (req, res) => {
 
     return res.status(201).json({
       status: 'success',
-      message: 'Registrasi berhasil.',
+      message: 'Registration successful.',
       data: {
         token,
         user: { id: newUser.id, name: newUser.name, email: newUser.email },
@@ -53,7 +53,7 @@ const register = async (req, res) => {
     console.error('[authController.register]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan pada server saat registrasi.',
+      message: 'Internal server error occurred during registration.',
     });
   }
 };
@@ -65,7 +65,7 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Email dan password wajib diisi.',
+        message: 'Email and password fields are required.',
       });
     }
 
@@ -77,7 +77,7 @@ const login = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Email atau password yang Anda masukkan salah.',
+        message: 'Incorrect email or password.',
       });
     }
 
@@ -86,7 +86,7 @@ const login = async (req, res) => {
     if (!user.password) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Akun ini terdaftar via Google. Gunakan login Google.',
+        message: 'This account is registered via Google. Please use Google Login.',
       });
     }
 
@@ -94,7 +94,7 @@ const login = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Email atau password yang Anda masukkan salah.',
+        message: 'Incorrect email or password.',
       });
     }
 
@@ -102,7 +102,7 @@ const login = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Login berhasil.',
+      message: 'Login successful.',
       data: {
         token,
         user: { id: user.id, name: user.name, email: user.email },
@@ -112,7 +112,7 @@ const login = async (req, res) => {
     console.error('[authController.login]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan pada server saat login.',
+      message: 'Internal server error occurred during login.',
     });
   }
 };
@@ -124,7 +124,7 @@ const googleAuth = async (req, res) => {
     if (!id_token) {
       return res.status(400).json({
         status: 'fail',
-        message: 'id_token wajib disertakan.',
+        message: 'id_token is required.',
       });
     }
 
@@ -164,7 +164,7 @@ const googleAuth = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Login dengan Google berhasil.',
+      message: 'Google login successful.',
       data: {
         token,
         user: { id: user.id, name: user.name, email: user.email },
@@ -176,13 +176,13 @@ const googleAuth = async (req, res) => {
     if (error.message && error.message.includes('Token used too late')) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Google token sudah kadaluarsa.',
+        message: 'Google token has expired.',
       });
     }
 
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat verifikasi token Google.',
+      message: 'Internal server error occurred during Google token verification.',
     });
   }
 };

@@ -10,7 +10,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung. Hanya PDF yang diizinkan.'), false);
+    cb(new Error('Unsupported file format. Only PDF is allowed.'), false);
   }
 };
 
