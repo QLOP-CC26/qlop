@@ -26,9 +26,9 @@ ai_engine/model_assets/hf_cache/
 .cursor/
 
 # Data Science Large Datasets
-*.csv
+# *.csv
 *.xlsx
-*.parquet
+# *.parquet
 !sample_data.csv
 
 # OS Generated Files
