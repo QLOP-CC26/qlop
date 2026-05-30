@@ -178,9 +178,13 @@ os.makedirs(EMBEDDING_DIR, exist_ok=True)
 with open("data/role_job_skills.json", "r") as f:
     role_job_skills = json.load(f)
 
+def safe_filename(role_name):
+    return re.sub(r'[\\/]', '_', role_name)
+
 embedding_ready = True
 for role in role_job_skills.keys():
-    emb_path = os.path.join(EMBEDDING_DIR, f"{role}_job_embeddings.npy")
+    safe_role = safe_filename(role)
+    emb_path = os.path.join(EMBEDDING_DIR, f"{safe_role}_job_embeddings.npy")
     if not os.path.exists(emb_path):
         embedding_ready = False
         break
@@ -189,15 +193,12 @@ skills_list_path = os.path.join(EMBEDDING_DIR, "job_skills_list_all.json")
 if not os.path.exists(skills_list_path):
     embedding_ready = False
 
-def safe_filename(role_name):
-    return re.sub(r'[\\/]', '_', role_name)
-
-
 if embedding_ready:
     print("Pre-computed embeddings found. Loading from files.")
     job_embeddings = {}
     for role in role_job_skills.keys():
-        emb_path = os.path.join(EMBEDDING_DIR, f"{role}_job_embeddings.npy")
+        safe_role = safe_filename(role)
+        emb_path = os.path.join(EMBEDDING_DIR, f"{safe_role}_job_embeddings.npy")
         job_embeddings[role] = np.load(emb_path)
 
     with open(skills_list_path, 'r') as f:
