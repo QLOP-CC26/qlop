@@ -8,7 +8,6 @@ const ChevronIcon = ({ open }) => (
   open ? <ChevronUp className="w-4 h-4 text-[#75777D]" /> : <ChevronDown className="w-4 h-4 text-[#75777D]" />
 );
 
-/* ── Progress step msg (UX hint from API_CONTRACT.md) ── */
 const ANALYZE_STEPS = [
   'Processing your CV profile…',
   'AI model is analyzing the skill gap for this role…',
@@ -16,7 +15,6 @@ const ANALYZE_STEPS = [
   'Calculating your readiness score…',
 ];
 
-/* ── Helpers ── */
 const normaliseSkillsList = (skills) =>
   (skills || []).map((s) => (typeof s === 'string' ? s : s.surface || s.normalized_guess || '')).filter(Boolean);
 
