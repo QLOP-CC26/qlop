@@ -123,7 +123,7 @@ def decode_predictions_to_spans(
     current_tokens: list[str] = []
     current_conf: list[float] = []
 
-    for token, pred_id, conf in zip(tokens, preds, confidences, strict=False):
+    for token, pred_id, conf in zip(tokens, preds, confidences):
         if token in tokenizer.all_special_tokens:
             continue
         label = id2label.get(int(pred_id), "O")
