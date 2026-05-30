@@ -6,15 +6,6 @@ import InputField from '../../components/InputField/InputField';
 import Button from '../../components/Button/Button';
 import Divider from '../../components/Divider/Divider';
 
-const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"/>
-    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.8 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.4 35.4 26.8 36 24 36c-5.2 0-9.7-3.3-11.4-8H6.2C9.5 35.5 16.3 44 24 44z"/>
-    <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.2C41 35.8 44 30.4 44 24c0-1.3-.1-2.7-.4-3.9z"/>
-  </svg>
-);
-
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -34,14 +25,14 @@ const RegisterPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || 'Registrasi Google gagal. Coba lagi.');
+        setError(data.message || 'Google registration failed. Please try again.');
         return;
       }
 
       localStorage.setItem('token', data.data.token);
       navigate('/analyze');
     } catch {
-      setError('Tidak dapat terhubung ke server.');
+      setError('Unable to connect to the server.');
     } finally {
       setLoading(false);
     }
@@ -49,14 +40,36 @@ const RegisterPage = () => {
 
   useEffect(() => {
     if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: '248938643014-g9kuq5abhqt6vk2mu4pak9qrr1cbnnp3.apps.googleusercontent.com',
-        callback: handleGoogleCallback,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-btn'),
-        { theme: 'outline', size: 'large', width: 396 }
-      );
+      const renderGoogleBtn = () => {
+        const btnContainer = document.getElementById('google-signin-btn');
+        if (!btnContainer) return;
+        
+        // Google GSI button width constraint: min 200, max 400
+        const containerWidth = btnContainer.offsetWidth || 396;
+        const targetWidth = Math.max(200, Math.min(396, containerWidth));
+        
+        btnContainer.innerHTML = '';
+        
+        window.google.accounts.id.initialize({
+          client_id: '248938643014-g9kuq5abhqt6vk2mu4pak9qrr1cbnnp3.apps.googleusercontent.com',
+          callback: handleGoogleCallback,
+        });
+        window.google.accounts.id.renderButton(
+          btnContainer,
+          { theme: 'outline', size: 'large', width: targetWidth }
+        );
+      };
+
+      renderGoogleBtn();
+
+      let resizeTimeout;
+      const handleResize = () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(renderGoogleBtn, 150);
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
 
@@ -70,12 +83,12 @@ const RegisterPage = () => {
     setError('');
 
     if (!form.name || !form.email || !form.password) {
-      setError('Semua field wajib diisi.');
+      setError('All fields are required.');
       return;
     }
 
     if (form.password.length < 8) {
-      setError('Password minimal 8 karakter.');
+      setError('Password must be at least 8 characters.');
       return;
     }
 
@@ -90,14 +103,14 @@ const RegisterPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || 'Registrasi gagal. Coba lagi.');
+        setError(data.message || 'Registration failed. Please try again.');
         return;
       }
 
       localStorage.setItem('token', data.data.token);
       navigate('/analyze');
     } catch {
-      setError('Tidak dapat terhubung ke server.');
+      setError('Unable to connect to the server.');
     } finally {
       setLoading(false);
     }

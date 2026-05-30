@@ -5,14 +5,12 @@ const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung. Hanya PDF dan DOCX yang diizinkan.'), false);
+    cb(new Error('Format file tidak didukung. Hanya PDF yang diizinkan.'), false);
   }
 };
 

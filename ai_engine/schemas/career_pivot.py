@@ -34,6 +34,30 @@ def _lower(v: Any) -> Any:
     return v
 
 
+def _clean_literal(v: Any, allowed: list[str], default: str) -> str:
+    if not isinstance(v, str):
+        return default
+    v_clean = _lower(v)
+    # Check if exact match is in the clean string
+    for val in allowed:
+        if val in v_clean:
+            return val
+    # Check for synonyms or partials
+    if "difficult" in v_clean or "hard" in v_clean:
+        if "challenging" in allowed:
+            return "challenging"
+    if "moderate" in v_clean or "average" in v_clean:
+        if "medium" in allowed:
+            return "medium"
+        if "moderate" in allowed:
+            return "moderate"
+    if "weak" in v_clean or "slow" in v_clean or "less" in v_clean:
+        if "low" in allowed:
+            return "low"
+    # Fallback to default
+    return default
+
+
 def _strip_hint(v: Any) -> Any:
     """Strip trailing parenthetical hints from free-text string fields.
 
@@ -97,7 +121,7 @@ class AlternativeRole(BaseModel):
     @field_validator("transition_difficulty", mode="before")
     @classmethod
     def normalize_difficulty(cls, v: Any) -> Any:
-        return _lower(v)
+        return _clean_literal(v, ["easy", "moderate", "challenging"], "moderate")
 
     @field_validator("estimated_transition_time", mode="before")
     @classmethod
@@ -157,10 +181,20 @@ class AIDiscoveredRole(BaseModel):
     first_step: str
     market_demand: Literal["high", "medium", "low"]
 
-    @field_validator("transition_difficulty", "category", "market_demand", mode="before")
+    @field_validator("transition_difficulty", mode="before")
     @classmethod
-    def normalize_literals(cls, v: Any) -> Any:
-        return _lower(v)
+    def normalize_difficulty(cls, v: Any) -> Any:
+        return _clean_literal(v, ["easy", "moderate", "challenging"], "moderate")
+
+    @field_validator("market_demand", mode="before")
+    @classmethod
+    def normalize_market_demand(cls, v: Any) -> Any:
+        return _clean_literal(v, ["high", "medium", "low"], "medium")
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def normalize_category(cls, v: Any) -> Any:
+        return _clean_literal(v, ["specialization", "adjacent", "leadership", "pivot"], "adjacent")
 
     @field_validator("role_name", "why_good_fit", mode="before")
     @classmethod
@@ -201,7 +235,7 @@ class CurrentRoleAssessment(BaseModel):
     @field_validator("readiness_level", mode="before")
     @classmethod
     def normalize_readiness_level(cls, v: Any) -> Any:
-        return _lower(v)
+        return _clean_literal(v, ["low", "moderate", "high", "excellent"], "moderate")
 
 
 class CareerPivotOutput(BaseModel):
