@@ -1,0 +1,65 @@
+{
+  "model_name": "QLOP NER v2 IT Skill Extractor",
+  "base_model": "microsoft/deberta-v3-base",
+  "version": "2.0",
+  "created_at": "2026-05-28T15:04:26.596037",
+  "performance": {
+    "test_f1": 0.9943258707058237,
+    "test_precision": 0.9942550564998576,
+    "test_recall": 0.9943966949997626,
+    "test_accuracy": 0.9978343606202119,
+    "skill_f1_avg": 0.9914829563858774
+  },
+  "label_schema": {
+    "0": "O",
+    "1": "B-Name",
+    "2": "I-Name",
+    "3": "B-Email",
+    "4": "I-Email",
+    "5": "B-Phone",
+    "6": "I-Phone",
+    "7": "B-Location",
+    "8": "I-Location",
+    "9": "B-Skill",
+    "10": "I-Skill",
+    "11": "B-Designation",
+    "12": "I-Designation",
+    "13": "B-Company",
+    "14": "I-Company",
+    "15": "B-YearsExperience",
+    "16": "I-YearsExperience",
+    "17": "B-Degree",
+    "18": "I-Degree",
+    "19": "B-Institution",
+    "20": "I-Institution",
+    "21": "B-GraduationYear",
+    "22": "I-GraduationYear"
+  },
+  "max_length": 256,
+  "confidence_threshold": 0.5,
+  "entity_types": [
+    "Name",
+    "Email",
+    "Phone",
+    "Location",
+    "Skill",
+    "Designation",
+    "Company",
+    "YearsExperience",
+    "Degree",
+    "Institution",
+    "GraduationYear"
+  ],
+  "it_skill_types": [
+    "Skill"
+  ],
+  "num_labels": 23,
+  "training_config": {
+    "epochs_trained": 15,
+    "best_epoch": 13,
+    "batch_size": 16,
+    "learning_rate": 2e-05,
+    "focal_gamma": 1.5,
+    "skill_upweight": 2.0
+  }
+}
