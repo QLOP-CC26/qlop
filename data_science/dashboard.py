@@ -13,6 +13,7 @@ from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MultiLabelBinarizer
 import warnings
+import os
 
 warnings.filterwarnings("ignore")
 
