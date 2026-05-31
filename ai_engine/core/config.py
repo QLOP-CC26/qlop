@@ -16,8 +16,8 @@ class Settings(BaseSettings):
 
     # --- Recommendation paths ---
     rec_data_dir: Path = _BASE_DIR / "model_assets" / "recommendation"
-    rec_model3_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "model3_savedmodel"
-    rec_model4_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "model4_savedmodel"
+    rec_model3_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "skill_priority_scorer_savedmodel"
+    rec_model4_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "two_tower_course_model_savedmodel"
 
     # --- NER model config ---
     ner_base_model: str = "microsoft/deberta-v3-base"
