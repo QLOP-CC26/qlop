@@ -362,8 +362,9 @@ def page_header(title, description):
 # ─────────────────────────────────────────────────────────────────
 # CONSTANTS
 # ─────────────────────────────────────────────────────────────────
-JOBS_PATH     = "data/processed/MASTERED_DATA_FINAL_MODELING.csv"
-COURSERA_PATH = "data/raw/Coursera (1).csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+JOBS_PATH     = os.path.join(BASE_DIR, "data", "processed", "MASTERED_DATA_FINAL_MODELING.csv")
+COURSERA_PATH = os.path.join(BASE_DIR, "data", "raw", "Coursera (1).csv")
 SEN_ORDER     = ["Entry level", "Associate", "Mid-Senior level", "Director", "Executive"]
 
 # ─────────────────────────────────────────────────────────────────
