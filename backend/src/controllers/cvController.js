@@ -2,16 +2,32 @@ const axios = require('axios');
 const cloudinary = require('../config/cloudinary');
 const { query } = require('../config/db');
 
-const uploadToCloudinary = (buffer, originalname) => {
-  return new Promise((resolve, reject) => {
-    const cleanName = originalname
-      .replace(/[^a-zA-Z0-9.]/g, '_')
-      .replace(/__+/g, '_');
+const AI_BASE = process.env.AI_API_URL || 'http://localhost:8000';
+
+const SUPPORTED_ROLES = [
+  'AI Engineer', 'Backend Developer', 'Business Analyst',
+  'Business Intelligence Analyst', 'Cloud Engineer', 'Cyber Security Analyst',
+  'Data Analyst', 'Data Engineer', 'Data Scientist',
+  'Database Administrator', 'DevOps Engineer', 'ERP Consultant',
+  'Embedded/IoT Engineer', 'Frontend Developer', 'Full Stack Developer',
+  'General IT Specialist', 'IT Consultant', 'Machine Learning Engineer',
+  'Mobile Developer', 'Network Engineer', 'Product Manager',
+  'QA Engineer', 'Robotics Engineer', 'Security Engineer',
+  'Site Reliability Engineer', 'Software Engineer', 'Solutions Architect',
+];
+
+const uploadToCloudinary = (buffer, originalname) =>
+  new Promise((resolve, reject) => {
+    const safeName = originalname
+      .replace(/\.[^/.]+$/, '')         // strip extension
+      .replace(/[^a-zA-Z0-9]/g, '_')    // only alphanumeric + underscore
+      .replace(/__+/g, '_')             // collapse multiple underscores
+      .slice(0, 80);
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: 'raw',
-        folder: 'qlop/cv',
-        public_id: `cv_${Date.now()}_${cleanName}`,
+        public_id: `qlop/cv/cv_${Date.now()}_${safeName}.pdf`,
       },
       (error, result) => {
         if (error) return reject(error);
@@ -20,87 +36,89 @@ const uploadToCloudinary = (buffer, originalname) => {
     );
     uploadStream.end(buffer);
   });
-};
 
 const analyzeCV = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         status: 'fail',
-        message: 'File CV tidak ditemukan. Pastikan field name adalah "cv_file".',
+        message: 'CV file not found. Ensure the field name is "cv_file".',
       });
     }
 
+    // 1. Upload ke Cloudinary
     let cvUrl;
     try {
       cvUrl = await uploadToCloudinary(req.file.buffer, req.file.originalname);
     } catch (uploadError) {
-      console.warn('[cvController.analyzeCV] Gagal upload ke Cloudinary, menggunakan URL mock:', uploadError.message);
-      cvUrl = 'https://res.cloudinary.com/demo/image/upload/sample.pdf';
+      console.error('[cvController.analyzeCV] Gagal upload ke Cloudinary:', uploadError.message);
+      return res.status(502).json({
+        status: 'error',
+        message: 'Failed to upload file to Cloudinary. Please try again.',
+      });
     }
 
-    let profileEntities = {
-      name: 'John Doe',
-      email_address: 'john.doe@example.com',
-      phone: '+628123456789',
-      location: 'Jakarta, Indonesia'
-    };
-    let extractedSkills = [
-      { surface: 'Python', normalized_guess: 'python', confidence: 0.95, risk_level: 'low' },
-      { surface: 'React', normalized_guess: 'react', confidence: 0.90, risk_level: 'low' },
-      { surface: 'Node.js', normalized_guess: 'node.js', confidence: 0.85, risk_level: 'medium' },
-      { surface: 'PostgreSQL', normalized_guess: 'postgresql', confidence: 0.80, risk_level: 'low' },
-      { surface: 'Git', normalized_guess: 'git', confidence: 0.95, risk_level: 'low' }
-    ];
-
+    // 2. AI Engine Phase 1 — extract CVProfile
+    let cvProfile, extractMetadata;
     try {
-      const aiResponse = await axios.post(
-        `${process.env.AI_API_URL}/extract`,
-        { url: cvUrl },
-        { timeout: 10000 }
+      const aiRes = await axios.post(
+        `${AI_BASE}/api/v1/cv/extract`,
+        { cloudinary_url: cvUrl },
+        { timeout: 30000 }
       );
-      const aiData = aiResponse.data.data;
-      if (aiData) {
-        if (aiData.profile_entities) profileEntities = aiData.profile_entities;
-        if (aiData.skills) extractedSkills = aiData.skills;
-      }
+      // AI envelope: { status, code, data: CVProfile, metadata }
+      cvProfile = aiRes.data?.data;
+      extractMetadata = aiRes.data?.metadata || {};
+      if (!cvProfile) throw new Error('AI Engine mengembalikan response kosong.');
     } catch (err) {
-      console.warn('[cvController.analyzeCV] Gagal menghubungi AI API, menggunakan data dummy:', err.message);
+      const detail = err.response?.data?.detail || err.message;
+      console.error('[cvController.analyzeCV] AI Engine error:', detail);
+      return res.status(502).json({
+        status: 'error',
+        message: `AI Engine failed to extract CV: ${detail}`,
+      });
     }
 
+    // Ensure skills selalu flat string[]
+    const skillsArray = Array.isArray(cvProfile.skills)
+      ? cvProfile.skills.filter((s) => typeof s === 'string')
+      : [];
+
+    // 3. Simpan ke DB (termasuk extract_metadata)
     const insertResult = await query(
-      `INSERT INTO cv_analyses (user_id, cv_url, profile_entities, extracted_skills)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, user_id, cv_url, profile_entities, extracted_skills, created_at`,
-      [req.user.id, cvUrl, JSON.stringify(profileEntities), JSON.stringify(extractedSkills)]
+      `INSERT INTO cv_analyses
+         (user_id, cv_url, profile_entities, extracted_skills, extract_metadata)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, user_id, cv_url, profile_entities, extracted_skills,
+                 extract_metadata, created_at`,
+      [
+        req.user.id,
+        cvUrl,
+        JSON.stringify(cvProfile),
+        JSON.stringify(skillsArray),
+        JSON.stringify(extractMetadata),
+      ]
     );
 
-    const insertedRow = insertResult.rows[0];
+    const row = insertResult.rows[0];
 
     return res.status(201).json({
       status: 'success',
-      message: 'CV berhasil dianalisis.',
+      message: 'CV successfully extracted.',
       data: {
-        id: insertedRow.id,
-        cv_url: insertedRow.cv_url,
-        profile_entities: insertedRow.profile_entities,
-        extracted_skills: insertedRow.extracted_skills,
-        created_at: insertedRow.created_at,
+        id: row.id,
+        cv_url: row.cv_url,
+        profile_entities: row.profile_entities,   // full CVProfile
+        extracted_skills: row.extracted_skills,   // string[]
+        extract_metadata: row.extract_metadata,   // page_count, extraction_mode, dll
+        created_at: row.created_at,
       },
     });
   } catch (error) {
     console.error('[cvController.analyzeCV]', error);
-
-    if (error.response) {
-      return res.status(502).json({
-        status: 'error',
-        message: `AI API Error: ${error.response.data?.message || 'Gagal menghubungi AI service.'}`,
-      });
-    }
-
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat menganalisis CV.',
+      message: 'An error occurred while analyzing the CV.',
     });
   }
 };
@@ -108,167 +126,232 @@ const analyzeCV = async (req, res) => {
 const getRecommendations = async (req, res) => {
   try {
     const { id } = req.params;
-    const { target_role, skills } = req.body;
+    const { target_role, profile: profileOverride } = req.body;
 
-    if (!target_role || !skills || !Array.isArray(skills)) {
+    if (!target_role || typeof target_role !== 'string' || !target_role.trim()) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Field target_role dan skills (array) wajib diisi.',
+        message: 'The target_role field is required.',
       });
     }
 
-    const ownerCheck = await query(
-      'SELECT id FROM cv_analyses WHERE id = $1 AND user_id = $2',
+    // Ambil CVProfile dari DB
+    const cvResult = await query(
+      `SELECT id, profile_entities, extracted_skills
+       FROM cv_analyses
+       WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
-    if (ownerCheck.rows.length === 0) {
+    if (cvResult.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Data CV tidak ditemukan atau bukan milik Anda.',
+        message: 'CV data not found or does not belong to you.',
       });
     }
 
-    let topSkills = [
-      { skill_linkedin: 'Python', priority_score: 0.95 },
-      { skill_linkedin: 'React', priority_score: 0.90 },
-      { skill_linkedin: 'Node.js', priority_score: 0.85 },
-      { skill_linkedin: 'PostgreSQL', priority_score: 0.80 },
-      { skill_linkedin: 'Tailwind CSS', priority_score: 0.75 }
-    ];
-    let recommendedCourses = [
-      { name: 'Complete Python Bootcamp', url: 'https://www.udemy.com/course/complete-python-bootcamp/', match_score: 0.95, difficulty: 'BEGINNER', duration: '20_HOURS' },
-      { name: 'React - The Complete Guide', url: 'https://www.udemy.com/course/react-the-complete-guide-incarnation/', match_score: 0.90, difficulty: 'INTERMEDIATE', duration: '40_HOURS' },
-      { name: 'Node.js, Express, MongoDB & More', url: 'https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/', match_score: 0.85, difficulty: 'ADVANCED', duration: '35_HOURS' }
-    ];
+    const cvRow = cvResult.rows[0];
+    // Gunakan profile override dari frontend (user mungkin edit) atau fallback ke DB
+    const cvProfile = profileOverride || cvRow.profile_entities || {};
 
-    try {
-      const aiResponse = await axios.post(
-        `${process.env.AI_API_URL}/recommend`,
-        { target_role, skills },
-        { timeout: 10000 }
-      );
-      const recommendData = aiResponse.data;
-      if (recommendData) {
-        if (recommendData.top_skills) topSkills = recommendData.top_skills;
-        if (recommendData.recommended_courses) recommendedCourses = recommendData.recommended_courses;
-      }
-    } catch (err) {
-      console.warn('[cvController.getRecommendations] Gagal menghubungi AI API, menggunakan data dummy:', err.message);
+    // Normalise skills → flat string[]
+    if (cvProfile.skills && Array.isArray(cvProfile.skills)) {
+      cvProfile.skills = cvProfile.skills
+        .map((s) => (typeof s === 'string' ? s : s.surface || s.normalized_guess || ''))
+        .filter(Boolean);
+    } else {
+      const stored = cvRow.extracted_skills;
+      cvProfile.skills = Array.isArray(stored) ? stored : [];
     }
+
+    const trimmedRole = target_role.trim();
+
+    // AI Engine Phase 2 — analyze
+    let analyzeData, analyzeMetadata;
+    try {
+      const aiRes = await axios.post(
+        `${AI_BASE}/api/v1/cv/analyze`,
+        { profile: cvProfile, target_role: trimmedRole },
+        { timeout: 60000 }
+      );
+      // AI envelope data: { profile, target_role, skill_gap, course_recommendations, readiness_score }
+      analyzeData = aiRes.data?.data;
+      analyzeMetadata = aiRes.data?.metadata || {};
+      if (!analyzeData) throw new Error('AI Engine mengembalikan response kosong.');
+    } catch (err) {
+      const detail = err.response?.data?.detail || err.message;
+      console.error('[cvController.getRecommendations] AI Engine error:', detail);
+      return res.status(502).json({
+        status: 'error',
+        message: `AI Engine failed to analyze skill gap: ${detail}`,
+      });
+    }
+
+    const { skill_gap, course_recommendations, readiness_score } = analyzeData;
+
+    const skillsToSave = Array.isArray(cvProfile.skills)
+      ? cvProfile.skills.filter((s) => typeof s === 'string')
+      : [];
 
     const updateResult = await query(
       `UPDATE cv_analyses
-       SET target_role = $1,
-           top_skills = $2,
+       SET target_role         = $1,
+           top_skills          = $2,
            recommended_courses = $3,
-           updated_at = NOW()
-       WHERE id = $4 AND user_id = $5
-       RETURNING id, target_role, top_skills, recommended_courses, updated_at`,
-      [target_role, JSON.stringify(topSkills), JSON.stringify(recommendedCourses), id, req.user.id]
+           analyze_metadata    = $4,
+           profile_entities    = $5,
+           extracted_skills    = $6,
+           updated_at          = NOW()
+       WHERE id = $7 AND user_id = $8
+       RETURNING id, target_role, top_skills, recommended_courses,
+                 analyze_metadata, updated_at`,
+      [
+        trimmedRole,
+        JSON.stringify({ skill_gap, readiness_score }),
+        JSON.stringify(course_recommendations || []),
+        JSON.stringify({
+          ...analyzeMetadata,
+          // Simpan juga full analyze_data untuk Phase 3
+          _analyze_payload: analyzeData,
+        }),
+        JSON.stringify(cvProfile),
+        JSON.stringify(skillsToSave),
+        id,
+        req.user.id,
+      ]
     );
 
     const updatedRow = updateResult.rows[0];
 
     return res.status(200).json({
       status: 'success',
-      message: 'Rekomendasi berhasil diambil dan disimpan.',
+      message: 'Skill gap analysis successful.',
       data: {
         id: updatedRow.id,
         target_role: updatedRow.target_role,
-        top_skills: updatedRow.top_skills,
-        recommended_courses: updatedRow.recommended_courses,
+        skill_gap,
+        readiness_score,
+        course_recommendations: course_recommendations || [],
+        analyze_metadata: analyzeMetadata,
         updated_at: updatedRow.updated_at,
       },
     });
   } catch (error) {
     console.error('[cvController.getRecommendations]', error);
-
-    if (error.response) {
-      return res.status(502).json({
-        status: 'error',
-        message: `AI API Error: ${error.response.data?.message || 'Gagal menghubungi AI service.'}`,
-      });
-    }
-
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat mengambil rekomendasi.',
+      message: 'An error occurred while analyzing the skill gap.',
     });
   }
 };
 
-const getGeminiRoles = async (req, res) => {
+const getCareerPivot = async (req, res) => {
   try {
     const { id } = req.params;
 
     const cvResult = await query(
-      `SELECT id, extracted_skills, top_skills
+      `SELECT id, profile_entities, target_role, top_skills,
+              recommended_courses, analyze_metadata
        FROM cv_analyses
        WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
-
     if (cvResult.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Data CV tidak ditemukan atau bukan milik Anda.',
+        message: 'CV data not found or does not belong to you.',
       });
     }
 
-    const cvData = cvResult.rows[0];
-    const skills = cvData.top_skills || cvData.extracted_skills || [];
+    const row = cvResult.rows[0];
 
-    if (!skills.length) {
+    if (!row.target_role || !row.top_skills) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Tidak ada data skills yang ditemukan. Jalankan /analyze terlebih dahulu.',
+        message: 'Please run the skill gap analysis first (PUT /api/cv/recommend/:id).',
       });
     }
 
-    let geminiResult = {
-      recommended_roles: [
-        { role_name: 'Full Stack Developer', match_explanation: 'Your skills are highly suitable for full stack development.', compatibility_percentage: 92 },
-        { role_name: 'Backend Engineer', match_explanation: 'You have a solid foundation in backend languages and database interactions.', compatibility_percentage: 88 },
-        { role_name: 'Frontend Engineer', match_explanation: 'Your frontend skills make you a good candidate for frontend positions.', compatibility_percentage: 85 }
-      ]
-    };
+    // Cek apakah ada full analyze_payload tersimpan (contract: kirim as-is ke career-pivot)
+    const savedAnalyzePayload = row.analyze_metadata?._analyze_payload;
 
-    try {
-      const aiResponse = await axios.post(
-        `${process.env.AI_API_URL}/gemini-roles`,
-        { skills },
-        { timeout: 10000 }
-      );
-      if (aiResponse.data) {
-        geminiResult = aiResponse.data;
-      }
-    } catch (err) {
-      console.warn('[cvController.getGeminiRoles] Gagal menghubungi AI API, menggunakan data dummy:', err.message);
+    let careerPivotBody;
+    if (savedAnalyzePayload) {
+      // Gunakan full analyze data as-is (seperti yang disarankan contract)
+      careerPivotBody = savedAnalyzePayload;
+    } else {
+      // Fallback: construct manual dari kolom terpisah
+      const { skill_gap, readiness_score } = row.top_skills;
+      careerPivotBody = {
+        profile: row.profile_entities || {},
+        target_role: row.target_role,
+        skill_gap: skill_gap || { matched_skills: [], missing_skills: [] },
+        course_recommendations: row.recommended_courses || [],
+        readiness_score: readiness_score || { score: 0, matched_skills: [], interpretation: '' },
+      };
     }
 
+    // AI Engine Phase 3 — career pivot
+    let careerPivotData, pivotMetadata;
+    try {
+      const aiRes = await axios.post(
+        `${AI_BASE}/api/v1/cv/career-pivot`,
+        careerPivotBody,
+        { timeout: 120000 } // LLM bisa lambat
+      );
+      careerPivotData = aiRes.data?.data;
+      pivotMetadata = aiRes.data?.metadata || {};
+      if (!careerPivotData) throw new Error('AI Engine mengembalikan response kosong.');
+    } catch (err) {
+      const detail = err.response?.data?.detail || err.message;
+      console.error('[cvController.getCareerPivot] AI Engine error:', detail);
+      return res.status(502).json({
+        status: 'error',
+        message: `AI Engine failed to analyze career pivot: ${detail}`,
+      });
+    }
+
+    // Simpan hasil ke DB
     await query(
-      `UPDATE cv_analyses SET gemini_roles = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`,
-      [JSON.stringify(geminiResult), id, req.user.id]
+      `UPDATE cv_analyses
+       SET career_pivot  = $1,
+           pivot_metadata = $2,
+           updated_at    = NOW()
+       WHERE id = $3 AND user_id = $4`,
+      [
+        JSON.stringify(careerPivotData),
+        JSON.stringify(pivotMetadata),
+        id,
+        req.user.id,
+      ]
     );
 
     return res.status(200).json({
       status: 'success',
-      message: 'Rekomendasi role dari Gemini berhasil dibuat.',
-      data: geminiResult,
+      message: 'Career pivot analysis successful.',
+      data: careerPivotData,
+      metadata: pivotMetadata,
     });
   } catch (error) {
-    console.error('[cvController.getGeminiRoles]', error);
-
-    if (error.response) {
-      return res.status(502).json({
-        status: 'error',
-        message: `AI API Error: ${error.response.data?.message || 'Gagal menghubungi AI service.'}`,
-      });
-    }
-
+    console.error('[cvController.getCareerPivot]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat mengambil rekomendasi role dari Gemini.',
+      message: 'An error occurred while analyzing the career pivot.',
+    });
+  }
+};
+
+const getRoles = async (req, res) => {
+  try {
+    const aiRes = await axios.get(`${AI_BASE}/api/v1/roles`, { timeout: 10000 });
+    const roles = aiRes.data?.data?.roles || SUPPORTED_ROLES;
+    const count = aiRes.data?.data?.count || roles.length;
+    return res.status(200).json({ status: 'success', data: { roles, count } });
+  } catch (err) {
+    console.warn('[cvController.getRoles] AI Engine tidak tersedia, pakai fallback:', err.message);
+    // Fallback ke 27 role hardcoded dari contract (tidak return error — dropdown harus tetap muncul)
+    return res.status(200).json({
+      status: 'success',
+      data: { roles: SUPPORTED_ROLES, count: SUPPORTED_ROLES.length },
     });
   }
 };
@@ -278,58 +361,78 @@ const getCVHistory = async (req, res) => {
     const result = await query(
       `SELECT id, cv_url, profile_entities, extracted_skills,
               target_role, top_skills, recommended_courses,
-              gemini_roles, created_at, updated_at
+              career_pivot, extract_metadata, analyze_metadata, pivot_metadata,
+              created_at, updated_at
        FROM cv_analyses
        WHERE user_id = $1
        ORDER BY created_at DESC`,
       [req.user.id]
     );
-
     return res.status(200).json({
       status: 'success',
-      data: {
-        count: result.rows.length,
-        analyses: result.rows,
-      },
+      data: { count: result.rows.length, analyses: result.rows },
     });
   } catch (error) {
     console.error('[cvController.getCVHistory]', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Terjadi kesalahan saat mengambil riwayat CV.',
-    });
+    return res.status(500).json({ status: 'error', message: 'Failed to retrieve CV history.' });
   }
 };
 
 const getCVHistoryById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const result = await query(
       `SELECT id, cv_url, profile_entities, extracted_skills,
               target_role, top_skills, recommended_courses,
-              gemini_roles, created_at, updated_at
+              career_pivot, extract_metadata, analyze_metadata, pivot_metadata,
+              created_at, updated_at
        FROM cv_analyses
        WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
-
     if (result.rows.length === 0) {
+      return res.status(404).json({ status: 'fail', message: 'CV analysis data not found.' });
+    }
+    return res.status(200).json({ status: 'success', data: result.rows[0] });
+  } catch (error) {
+    console.error('[cvController.getCVHistoryById]', error);
+    return res.status(500).json({ status: 'error', message: 'Failed to retrieve CV details.' });
+  }
+};
+
+const deleteCVHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if it exists and belongs to the user
+    const checkRes = await query(
+      'SELECT id FROM cv_analyses WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+
+    if (checkRes.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Data analisis CV tidak ditemukan.',
+        message: 'Analysis history not found or you do not have access.',
       });
     }
 
+    // Delete it
+    await query(
+      'DELETE FROM cv_analyses WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+
     return res.status(200).json({
       status: 'success',
-      data: result.rows[0],
+      message: 'Analysis history successfully deleted.',
     });
   } catch (error) {
-    console.error('[cvController.getCVHistoryById]', error);
+    console.error('[cvController.deleteCVHistory]', error);
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan saat mengambil detail CV.',
+      message: 'An error occurred while deleting the analysis history.',
     });
   }
 };
@@ -337,7 +440,9 @@ const getCVHistoryById = async (req, res) => {
 module.exports = {
   analyzeCV,
   getRecommendations,
-  getGeminiRoles,
+  getCareerPivot,
+  getRoles,
   getCVHistory,
   getCVHistoryById,
+  deleteCVHistory,
 };

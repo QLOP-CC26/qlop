@@ -1,54 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, ArrowRight, Trash2, History, Sparkles, ArrowUpDown } from 'lucide-react';
 import AppNavbar from '../../components/AppNavbar/AppNavbar';
 import Footer from '../../components/Footer/Footer';
 
-/* ── Icons ── */
-const CalendarIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-    <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
-    <line x1="3" y1="10" x2="21" y2="10" />
-  </svg>
-);
-
-const ArrowRightIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-    <path d="M10 11v6" /><path d="M14 11v6" />
-    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-  </svg>
-);
-
-const HistoryClockIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-    <path d="M12 7v5l4 2" />
-  </svg>
-);
-
-const SparkleIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z" />
-    <path d="M5 3v3" /><path d="M3 5h3" /><path d="M19 15v3" /><path d="M17 17h3" />
-  </svg>
-);
-
-const SortIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="15" y2="12" /><line x1="3" y1="18" x2="9" y2="18" />
-  </svg>
-);
-
-/* ── Helpers ── */
 const formatDate = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -63,7 +18,7 @@ const getSkillCount = (analysis) => {
 };
 
 const getCompatibility = (analysis) => {
-  const gemini = analysis.gemini_roles;
+  const gemini = analysis.career_pivot;
   if (!gemini) return null;
   const roles = gemini.recommended_roles || gemini;
   if (Array.isArray(roles) && roles.length > 0) return roles[0].compatibility_percentage;
@@ -71,12 +26,12 @@ const getCompatibility = (analysis) => {
 };
 
 /* ── History List Item ── */
-const HistoryItem = ({ analysis, onView }) => {
+const HistoryItem = ({ analysis, onView, onDelete }) => {
   const skillCount = getSkillCount(analysis);
   const compat = getCompatibility(analysis);
 
   return (
-    <div className="bg-white border border-black/[0.06] rounded-xl px-6 py-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+    <div className="bg-white border border-black/[0.06] rounded-xl px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
       <div className="flex flex-col gap-1.5 flex-1 min-w-0">
         <p className="text-lg font-bold text-[#0D1C2D] truncate">
           {analysis.target_role || 'Untitled Analysis'}
@@ -95,25 +50,27 @@ const HistoryItem = ({ analysis, onView }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 text-sm text-[#75777D] flex-shrink-0">
-        <CalendarIcon />
-        <span>{formatDate(analysis.created_at)}</span>
-      </div>
+      <div className="flex items-center justify-between sm:justify-end gap-4 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 text-sm text-[#75777D] flex-shrink-0">
+          <Calendar className="w-4 h-4" />
+          <span>{formatDate(analysis.created_at)}</span>
+        </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={() => onView(analysis.id)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] text-white text-sm font-semibold rounded-lg hover:bg-[#1D4ED8] transition-colors active:scale-[0.98]"
-        >
-          View Analysis <ArrowRightIcon />
-        </button>
-        <button
-          className="p-2 text-[#75777D] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-          title="Delete"
-          disabled
-        >
-          <TrashIcon />
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => onView(analysis.id)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] text-white text-sm font-semibold rounded-lg hover:bg-[#1D4ED8] transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.97] shadow-[0_2px_4px_rgba(37,99,235,0.15)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.25)]"
+          >
+            View Analysis <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDelete(analysis.id)}
+            className="p-2 text-[#75777D] hover:text-red-500 transition-all duration-200 ease-out hover:scale-[1.05] active:scale-[0.95] rounded-lg hover:bg-red-50"
+            title="Delete"
+          >
+            <Trash2 className="w-4.5 h-4.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -123,7 +80,7 @@ const HistoryItem = ({ analysis, onView }) => {
 const EmptyState = ({ onAnalyze }) => (
   <div className="bg-white border border-black/[0.06] rounded-xl flex flex-col items-center justify-center py-20 gap-5">
     <div className="w-24 h-24 rounded-full bg-[#EFF6FF] flex items-center justify-center">
-      <HistoryClockIcon />
+      <History className="w-12 h-12 text-[#2563EB]" />
     </div>
     <div className="flex flex-col items-center gap-1">
       <p className="text-xl font-bold text-[#0D1C2D]">Your analysis history is empty.</p>
@@ -131,9 +88,9 @@ const EmptyState = ({ onAnalyze }) => (
     </div>
     <button
       onClick={onAnalyze}
-      className="flex items-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white text-sm font-semibold rounded-lg hover:bg-[#1D4ED8] transition-colors"
+      className="flex items-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white text-sm font-semibold rounded-lg hover:bg-[#1D4ED8] transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.97] shadow-[0_2px_4px_rgba(37,99,235,0.15)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.25)]"
     >
-      <SparkleIcon /> Analyze CV
+      <Sparkles className="w-4 h-4" /> Analyze CV
     </button>
   </div>
 );
@@ -145,6 +102,9 @@ const HistoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortDesc, setSortDesc] = useState(true);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     fetchHistory();
@@ -163,12 +123,41 @@ const HistoryPage = () => {
         navigate('/login');
         return;
       }
-      if (!res.ok) { setError(data.message || 'Gagal memuat riwayat.'); return; }
+      if (!res.ok) { setError(data.message || 'Failed to load history.'); return; }
       setAnalyses(data.data.analyses || []);
     } catch {
-      setError('Tidak dapat terhubung ke server.');
+      setError('Cannot connect to the server.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = (id) => {
+    setDeleteTargetId(id);
+    setDeleteError('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cv/history/${deleteTargetId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeleteError(data.message || 'Failed to delete history.');
+        return;
+      }
+      setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
+      setDeleteTargetId(null);
+    } catch {
+      setDeleteError('Cannot connect to the server.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -196,7 +185,7 @@ const HistoryPage = () => {
             onClick={() => setSortDesc((p) => !p)}
             className="flex items-center gap-2 px-4 py-2.5 bg-[#2563EB] text-white text-sm font-semibold rounded-lg hover:bg-[#1D4ED8] transition-colors"
           >
-            <SortIcon /> Sort {sortDesc ? '↓' : '↑'}
+            <ArrowUpDown className="w-4 h-4" /> Sort {sortDesc ? '↓' : '↑'}
           </button>
         </div>
 
@@ -214,13 +203,62 @@ const HistoryPage = () => {
         ) : (
           <div className="flex flex-col gap-3">
             {sorted.map((a) => (
-              <HistoryItem key={a.id} analysis={a} onView={(id) => navigate(`/history/${id}`)} />
+              <HistoryItem
+                key={a.id}
+                analysis={a}
+                onView={(id) => navigate(`/history/${id}`)}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
       </main>
 
       <Footer />
+
+      {/* Delete Confirmation Modal */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white border border-black/[0.08] shadow-[0_10px_25px_rgba(0,0,0,0.1)] rounded-xl max-w-md w-full p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-xl font-bold text-black">Delete Analysis History</h2>
+              <p className="text-sm text-[#75777D]">
+                Are you sure you want to delete this CV analysis history? This action cannot be undone.
+              </p>
+            </div>
+            {deleteError && (
+              <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+                {deleteError}
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-[#C5C6CD] text-[#45474C] text-sm font-semibold rounded-lg hover:bg-slate-50 transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.97] disabled:opacity-50 disabled:transform-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.97] shadow-[0_2px_4px_rgba(220,38,38,0.15)] hover:shadow-[0_4px_12px_rgba(220,38,38,0.25)] disabled:opacity-50 disabled:transform-none flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

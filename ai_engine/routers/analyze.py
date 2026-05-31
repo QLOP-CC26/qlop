@@ -35,11 +35,11 @@ async def analyze_endpoint(body: AnalyzeRequest):
             target_role = canonical
         else:
             valid = ", ".join(sorted(registry.role_to_idx.keys()))
-            raise HTTPException(status_code=400, detail=f"Role '{target_role}' tidak dikenali. Role yang valid: {valid}")
+            raise HTTPException(status_code=400, detail=f"Role '{target_role}' not recognized. Valid roles: {valid}")
 
     cv_skills = flatten_skills(body.profile.skills)
     if not cv_skills:
-        raise HTTPException(status_code=400, detail="Tidak ada skill yang terdeteksi dalam profil.")
+        raise HTTPException(status_code=400, detail="No skills detected in the profile.")
 
     loop = asyncio.get_running_loop()
 
@@ -62,7 +62,7 @@ async def analyze_endpoint(body: AnalyzeRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Analysis pipeline failed")
-        raise HTTPException(status_code=500, detail="Analisis gagal diproses.") from exc
+        raise HTTPException(status_code=500, detail="Analysis pipeline failed.") from exc
 
     elapsed = int((time.perf_counter() - start) * 1000)
 

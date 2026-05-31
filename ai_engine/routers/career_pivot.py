@@ -30,7 +30,7 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
     if not settings.groq_api_key:
         raise HTTPException(
             status_code=503,
-            detail="GROQ_API_KEY belum dikonfigurasi. Career Pivot Radar tidak tersedia.",
+            detail="GROQ_API_KEY is not configured. Career Pivot Radar is unavailable.",
         )
 
     target_role = body.target_role.strip()
@@ -43,22 +43,22 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
             target_role = canonical
         else:
             valid = ", ".join(sorted(registry.role_centroids.keys()))
-            raise HTTPException(status_code=400, detail=f"Role '{target_role}' tidak dikenali. Role yang valid: {valid}")
+            raise HTTPException(status_code=400, detail=f"Role '{target_role}' not recognized. Valid roles: {valid}")
 
     cv_skills = flatten_skills(body.profile.skills)
 
     if not cv_skills:
-        raise HTTPException(status_code=400, detail="Tidak ada skill yang terdeteksi dalam profil.")
+        raise HTTPException(status_code=400, detail="No skills detected in the profile.")
 
     loop = asyncio.get_running_loop()
 
     # Stage A — RAG retrieval (synchronous SBERT, offloaded to executor)
     retrieved_roles = await loop.run_in_executor(
-        None, retrieve_alternative_roles, cv_skills, target_role, 5,
+        None, retrieve_alternative_roles, cv_skills, target_role, settings.career_pivot_top_k,
     )
 
     if not retrieved_roles:
-        raise HTTPException(status_code=400, detail="Tidak dapat menemukan role alternatif berdasarkan skill Anda.")
+        raise HTTPException(status_code=400, detail="No alternative roles found based on your skills.")
 
     # Stage B — Multi-turn LLM conversation (async)
     try:
@@ -73,30 +73,36 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
         logger.error("openai package not installed: %s", exc)
         raise HTTPException(
             status_code=503,
-            detail="openai package tidak terinstall. Jalankan: pip install openai>=1.30.0",
+            detail="openai package is not installed. Run: pip install openai>=1.30.0",
         ) from exc
     except Exception as exc:
         err_str = str(exc)
         # API key / auth / quota → 503
         if any(k in err_str for k in (
             "GROQ_API_KEY", "api_key", "invalid_api_key",
-            "rate_limit_exceeded", "429", "401", "403",
+            "rate_limit_exceeded", "429", "401", "403", "413",
+            "Request too large", "Payload Too Large",
             "model_not_found", "404",
         )):
             logger.error("Groq API error: %s", exc)
-            raise HTTPException(
-                status_code=503,
-                detail=f"Groq API tidak dapat diakses. Periksa GROQ_API_KEY di .env: {exc}",
-            ) from exc
+            if "413" in err_str or "Request too large" in err_str or "Payload Too Large" in err_str:
+                detail = (
+                    "Groq request exceeds model token limit (prompt + max_tokens). "
+                    "Reduce GROQ_MAX_TOKENS in .env, switch to llama-4-scout-17b-16e-instruct, "
+                    "or lower CAREER_PIVOT_TOP_K."
+                )
+            else:
+                detail = f"Groq API is unreachable. Check GROQ_API_KEY in .env: {exc}"
+            raise HTTPException(status_code=503, detail=detail) from exc
         # JSON parse failure → 503 (LLM output issue, retry)
         if any(k in err_str for k in ("malformed JSON", "validation error", "JSON", "parse")):
             logger.error("LLM returned invalid structured output: %s", exc)
             raise HTTPException(
                 status_code=503,
-                detail=f"Model AI mengembalikan output yang tidak valid. Coba lagi: {exc}",
+                detail=f"AI model returned invalid output. Please try again: {exc}",
             ) from exc
         logger.exception("Career pivot LLM generation failed")
-        raise HTTPException(status_code=500, detail=f"Gagal menghasilkan analisis karier: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Failed to generate career analysis: {exc}") from exc
 
     elapsed = int((time.perf_counter() - start) * 1000)
 
@@ -107,7 +113,7 @@ async def career_pivot_endpoint(body: CareerPivotRequest):
             "roles_evaluated": len(registry.role_centroids),
             "roles_returned": len(retrieved_roles),
             "llm_model": settings.groq_model,
-            "llm_turns": 3,
+            "llm_turns": 1,
             "processing_time_ms": elapsed,
         },
     )

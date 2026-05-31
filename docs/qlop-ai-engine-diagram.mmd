@@ -1,0 +1,59 @@
+flowchart TB
+    subgraph STARTUP["Startup - load once"]
+        REG["ModelRegistry.load_all()"]
+        REG --> NER_M["DeBERTa NER\nmicrosoft/deberta-v3-base\n+ QLOPNERModelV2 head"]
+        REG --> M3_M["Model3\nTensorFlow SavedModel\nSkill Gap"]
+        REG --> M4_M["Model4\nTensorFlow SavedModel\nCourse Rec"]
+        REG --> SBERT_M["SBERT\nall-MiniLM-L6-v2"]
+        REG --> CENT["27 Role Centroids\ncomputed from job embeddings"]
+    end
+
+    subgraph P1["Phase 1 - POST /api/v1/cv/extract"]
+        IN1["Cloudinary PDF URL"]
+        IN1 --> DL["Download PDF"]
+        DL --> PDF["PyMuPDF - raw text"]
+        PDF --> NER["DeBERTa NER inference"]
+        NER --> PP1["Post-process\ndedup, blocklist, name fallback"]
+        PP1 --> OUT1["CVProfile JSON"]
+    end
+
+    subgraph P2["Phase 2 - POST /api/v1/cv/analyze"]
+        IN2["CVProfile + target_role"]
+        IN2 --> PAR{{"asyncio.gather\nparallel"}}
+        PAR --> M3["Model3\nskill_gap"]
+        PAR --> M4["Model4\ncourse_recommendations"]
+        PAR --> SBERT1["SBERT\nreadiness_score"]
+        M3 --> OUT2["AnalyzeData JSON"]
+        M4 --> OUT2
+        SBERT1 --> OUT2
+    end
+
+    subgraph P3["Phase 3 - POST /api/v1/cv/career-pivot"]
+        IN3["AnalyzeData\nprofile + gap + readiness"]
+
+        IN3 --> RAG["Stage A - SBERT RAG\nlocal, no Groq"]
+        RAG --> R1["Encode user skills"]
+        R1 --> R2["Cosine vs 27 role centroids"]
+        R2 --> R3["Top-4 roles + overlap + gaps"]
+
+        R3 --> LLM["Stage B - Groq Llama\n1 API call"]
+        LLM --> L1["Build prompt\nprofile + RAG + JSON template"]
+        L1 --> L2["Groq - raw JSON"]
+        L2 --> L3["Parse: Pydantic + json_repair"]
+        L3 --> OUT3["CareerPivotOutput JSON"]
+
+        OUT3 --> LAYER1["Layer 1: alternative_roles\ndata-backed, 27 roles"]
+        OUT3 --> LAYER2["Layer 2: ai_discovered_roles\nAI-generated"]
+    end
+
+    OUT1 -->|"user edits profile"| IN2
+    OUT2 --> IN3
+
+    NER_M -.-> NER
+    M3_M -.-> M3
+    M4_M -.-> M4
+    SBERT_M -.-> SBERT1
+    SBERT_M -.-> RAG
+    CENT -.-> R2
+
+    GROQ["Groq Llama\nllama-3.1-8b or Scout\non-demand via API"] -.-> L2

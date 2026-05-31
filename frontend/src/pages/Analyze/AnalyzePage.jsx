@@ -1,26 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CloudUpload, FileText, X } from 'lucide-react';
 import AppNavbar from '../../components/AppNavbar/AppNavbar';
 import Footer from '../../components/Footer/Footer';
-
-const CloudUploadIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2v14M19 9l-7-7-7 7M2 17a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5" />
-  </svg>
-);
-
-const FileIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#45474C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
 
 const AnalyzePage = () => {
   const navigate = useNavigate();
@@ -43,17 +25,17 @@ const AnalyzePage = () => {
     setError('');
     if (!selectedFile) return;
 
-    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const validTypes = ['application/pdf'];
     const nameLower = selectedFile.name.toLowerCase();
 
-    if (!validTypes.includes(selectedFile.type) && !nameLower.endsWith('.pdf') && !nameLower.endsWith('.docx')) {
-      setError('Format file tidak didukung. Harap upload file PDF atau DOCX.');
+    if (!validTypes.includes(selectedFile.type) && !nameLower.endsWith('.pdf')) {
+      setError('Unsupported file format. Please upload a PDF file.');
       setFile(null);
       return;
     }
 
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('Ukuran file terlalu besar. Maksimal ukuran file adalah 10 MB.');
+      setError('File size is too large. Maximum file size is 10 MB.');
       setFile(null);
       return;
     }
@@ -126,14 +108,14 @@ const AnalyzePage = () => {
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pdf,.docx"
+                accept=".pdf"
                 onChange={handleChange}
               />
 
               {!file ? (
                 <>
                   <div className="w-16 h-16 rounded-full bg-[#EFF6FF] flex items-center justify-center animate-pulse">
-                    <CloudUploadIcon />
+                    <CloudUpload className="w-10 h-10 text-[#2563EB]" />
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <p className="text-base font-semibold text-[#0D1C2D]">
@@ -144,13 +126,13 @@ const AnalyzePage = () => {
                     </p>
                   </div>
                   <p className="text-xs text-[#C5C6CD]">
-                    Supports PDF, DOCX up to 10 MB
+                    Supports PDF up to 10 MB
                   </p>
                 </>
               ) : (
                 <div className="flex items-center justify-between w-full p-4 bg-[#F8F9FF] border border-black/[0.05] rounded-lg">
                   <div className="flex items-center gap-3 min-w-0">
-                    <FileIcon />
+                    <FileText className="w-6 h-6 text-[#45474C]" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-semibold text-[#0D1C2D] truncate">
                         {file.name}
@@ -168,7 +150,7 @@ const AnalyzePage = () => {
                     }}
                     className="p-2 text-[#75777D] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
                   >
-                    <XIcon />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               )}
@@ -184,7 +166,7 @@ const AnalyzePage = () => {
               type="button"
               onClick={handleAnalyze}
               disabled={!file}
-              className="w-full h-11 bg-[#2563EB] text-white text-base font-semibold rounded-lg hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
+              className="w-full h-11 bg-[#2563EB] text-white text-base font-semibold rounded-lg hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.97] shadow-[0_2px_4px_rgba(37,99,235,0.15)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.25)] disabled:transform-none disabled:shadow-none"
             >
               Analyze CV
             </button>

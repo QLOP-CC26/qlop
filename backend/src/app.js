@@ -34,7 +34,7 @@ const createApp = () => {
   app.use((req, res) => {
     res.status(404).json({
       status: 'fail',
-      message: `Route ${req.method} ${req.originalUrl} tidak ditemukan.`,
+      message: `Route ${req.method} ${req.originalUrl} not found.`,
     });
   });
 
@@ -44,12 +44,12 @@ const createApp = () => {
       return res.status(400).json({ status: 'fail', message: `Upload error: ${err.message}` });
     }
 
-    if (err.message && err.message.includes('Format file tidak didukung')) {
+    if (err.message && err.message.includes('Unsupported file format')) {
       return res.status(400).json({ status: 'fail', message: err.message });
     }
 
     console.error('[Global Error Handler]', err);
-    return res.status(500).json({ status: 'error', message: 'Terjadi kesalahan internal pada server.' });
+    return res.status(500).json({ status: 'error', message: 'Internal server error occurred.' });
   });
 
   return app;

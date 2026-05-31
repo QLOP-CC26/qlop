@@ -7,7 +7,7 @@ const authMiddleware = (req, res, next) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Unauthorized: Token tidak ditemukan atau format tidak valid.',
+        message: 'Unauthorized: Token not found or invalid format.',
       });
     }
 
@@ -25,20 +25,20 @@ const authMiddleware = (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         status: 'fail',
-        message: 'Unauthorized: Token sudah kadaluarsa.',
+        message: 'Unauthorized: Token has expired.',
       });
     }
 
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         status: 'fail',
-        message: 'Unauthorized: Token tidak valid.',
+        message: 'Unauthorized: Token is invalid.',
       });
     }
 
     return res.status(500).json({
       status: 'error',
-      message: 'Terjadi kesalahan pada server.',
+      message: 'Internal server error.',
     });
   }
 };

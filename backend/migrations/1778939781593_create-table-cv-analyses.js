@@ -37,7 +37,19 @@ exports.up = (pgm) => {
       type: 'JSONB',
       notNull: false,
     },
-    gemini_roles: {
+    career_pivot: {
+      type: 'JSONB',
+      notNull: false,
+    },
+    extract_metadata: {
+      type: 'JSONB',
+      notNull: false,
+    },
+    analyze_metadata: {
+      type: 'JSONB',
+      notNull: false,
+    },
+    pivot_metadata: {
       type: 'JSONB',
       notNull: false,
     },
