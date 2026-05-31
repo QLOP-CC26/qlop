@@ -1,5 +1,5 @@
 """
-app.py — QLOP Market Insight Dashboard
+dashboard.py — QLOP Market Insight Dashboard
 =======================================
 Enhanced with modern premium UI/UX design, interactive elements, and sidebar filters.
 """
