@@ -40,7 +40,7 @@ PDF (Cloudinary URL)
            ▼
 ┌────────────────────────────┐
 │  Phase 3 — Career Pivot    │  POST /api/v1/cv/career-pivot
-│  SBERT RAG + Groq 3-turn   │
+│  SBERT RAG + Groq single-shot │
 └────────────────────────────┘
 ```
 
@@ -431,7 +431,7 @@ After response: display a **dashboard** with the skill gap, a course list, and t
 
 ### `POST /api/v1/cv/career-pivot`
 
-**Purpose:** Given the full Phase 2 analysis, use RAG (SBERT role centroid similarity) + Groq Llama 3.3 70B (3-turn chain-of-thought) to recommend alternative career paths.
+**Purpose:** Given the full Phase 2 analysis, use RAG (SBERT role centroid similarity) + Groq Llama 3.3 70B in a single-shot JSON call to recommend alternative career paths.
 
 The response contains **two layers** of recommendations:
 - **Layer 1 (`alternative_roles`)** — Data-backed roles from the 27-role dataset with real metrics (SBERT score, skill overlap %)

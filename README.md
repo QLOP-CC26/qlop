@@ -111,6 +111,19 @@ pip install -r requirements.txt
 
 > **Start order:** AI Engine → Backend → Frontend
 
+## Production Deployment
+
+Recommended split for production:
+
+| Service | Recommended host | Notes |
+|---------|------------------|-------|
+| AI Engine | Railway Docker service | Best for TensorFlow + Hugging Face model loading |
+| Backend | Railway or VPS | Must point `AI_API_URL` to the AI Engine public URL |
+| Frontend | Netlify / Vercel / static hosting | Set `VITE_API_URL` to the backend public URL |
+| Database | Managed PostgreSQL | Use a hosted Postgres for reliability |
+
+If you deploy AI Engine separately, the backend does not need private network access. It only needs the public `AI_API_URL` value. For a low-RAM VPS, do not host the AI Engine there unless you are willing to accept slow startup and possible memory pressure.
+
 ## Team Members (CC26-PSU101)
 
 | Name | Role |

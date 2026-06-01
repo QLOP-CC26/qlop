@@ -22,9 +22,9 @@ Express.js (main backend)
        │
        │    [User optionally clicks "Explore Career Pivot"]
        │
-       └─ Phase 3 ──► POST /api/v1/cv/career-pivot
-                       SBERT RAG retrieval + 3-turn Groq/Llama conversation
-                       ← Returns structured CareerPivotOutput (Pydantic-locked JSON)
+      └─ Phase 3 ──► POST /api/v1/cv/career-pivot
+            SBERT RAG retrieval + single-shot Groq/Llama JSON generation
+            ← Returns structured CareerPivotOutput (Pydantic-locked JSON)
 ```
 
 ---
@@ -37,7 +37,7 @@ Express.js (main backend)
 | 2 | Readiness Scoring | SBERT cosine similarity (`all-MiniLM-L6-v2`) |
 | 3 | Skill Gap Analysis | TensorFlow SavedModel (`model3_savedmodel`) |
 | 4 | Course Recommendation | TensorFlow SavedModel (`model4_savedmodel`) + `coursera_cleaned.csv` |
-| 5 | Career Pivot Radar | SBERT RAG + Groq Llama 3.3 70B via OpenAI-compatible SDK (3-turn, structured JSON) |
+| 5 | Career Pivot Radar | SBERT RAG + Groq Llama via OpenAI-compatible SDK (single-shot structured JSON) |
 
 ---
 
@@ -64,7 +64,7 @@ ai_engine/
 │   ├── ner_service.py        # PDF download, text extraction, NER inference
 │   ├── recommendation_service.py  # Skill gap + course recommendation (Model3/4)
 │   ├── readiness_service.py  # SBERT readiness scoring
-│   └── career_pivot_service.py    # RAG retrieval + Groq/Llama conversation
+│   └── career_pivot_service.py    # RAG retrieval + Groq/Llama single-shot generation
 │
 ├── schemas/
 │   ├── cv_profile.py         # CVProfile (skills = flat list[str])
@@ -160,6 +160,48 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --workers 1
 ```
 
 > **Note:** Use `--workers 1` because TensorFlow models are not fork-safe.
+
+---
+
+## Production Deployment
+
+### Option A — Docker locally
+
+Build the image from the `ai_engine/` directory:
+
+```bash
+cd ai_engine
+docker build -t qlop-ai-engine .
+```
+
+Run it with your production env file:
+
+```bash
+docker run --rm -p 8000:8000 --env-file .env qlop-ai-engine
+```
+
+### Option B — Railway
+
+Railway should deploy this service from `ai_engine/` as a Docker app.
+
+1. Create a new Railway service from this repository.
+2. Set the root directory to `ai_engine` so Railway picks up the Dockerfile.
+3. Add the following environment variables in Railway Variables:
+  - `GROQ_API_KEY`
+  - `GROQ_MODEL` (optional; default is `llama-3.1-8b-instant`)
+  - `GROQ_MAX_TOKENS` (optional; keep `2048` for the default model)
+  - `CAREER_PIVOT_TOP_K` (optional; default `4`)
+4. Do not set `PORT` manually unless Railway requires it. The Dockerfile already uses `PORT` when present.
+5. After deploy, verify `GET /health` and `GET /docs` on the Railway public URL.
+
+Recommended sizing: 2 GB RAM is borderline for this AI Engine because TensorFlow, SBERT, and the NER model are loaded at startup. If Railway lets you choose a larger instance, prefer 4 GB or higher.
+
+### Runtime Notes
+
+- The AI Engine is exposed publicly so the backend can reach it via `AI_API_URL`.
+- Keep `AI_API_URL` in the backend pointed at the Railway public URL, for example `https://your-ai-engine.up.railway.app`.
+- Use a single worker. Multiple workers can duplicate TensorFlow memory and cause crashes.
+- The image preloads Hugging Face models during build, so first boot is faster and does not depend on a writable cache volume.
 
 Open in browser:
 - **Interactive docs (Swagger UI):** http://127.0.0.1:8000/docs
