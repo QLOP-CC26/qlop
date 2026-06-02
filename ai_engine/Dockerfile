@@ -5,14 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     HF_HOME=/opt/hf-cache \
     TRANSFORMERS_CACHE=/opt/hf-cache \
-    SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache \
-    HF_CACHE_DIR=/opt/hf-cache \
-    CUDA_VISIBLE_DEVICES="" \
-    TF_CPP_MIN_LOG_LEVEL="3" \
-    TF_ENABLE_ONEDNN_OPTS="0" \
-    OMP_NUM_THREADS="1" \
-    TF_NUM_INTRAOP_THREADS="1" \
-    TF_NUM_INTEROP_THREADS="1"
+    SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 \
@@ -23,7 +16,7 @@ WORKDIR /app
 COPY requirements.txt ./
 
 RUN python -m pip install --upgrade pip \
-    && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.6.0+cpu" \
+    && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.3.1+cpu" \
     && pip install -r requirements.txt
 
 # Preload the Hugging Face models during image build so Railway does not need
@@ -42,14 +35,13 @@ AutoTokenizer.from_pretrained(
     cache_dir=str(cache_dir),
     use_fast=False,
 )
-base_model = TFAutoModelForTokenClassification.from_pretrained(
+TFAutoModelForTokenClassification.from_pretrained(
     'microsoft/deberta-v3-base',
     from_pt=True,
     num_labels=23,
     ignore_mismatched_sizes=True,
     cache_dir=str(cache_dir),
 )
-base_model.save_pretrained('/opt/deberta-tf-base')
 SentenceTransformer('all-MiniLM-L6-v2', cache_folder=str(cache_dir))
 PY
 
