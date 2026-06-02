@@ -19,42 +19,42 @@ const teamMembers = [
     name: 'Fauzan Arif Tricahya',
     role: 'Full-Stack Web Developer',
     github: 'fauzan-arift',
-    image: 'src/assets/Fauzan-qlop.png',
+    image: '/Fauzan-qlop.png',
   },
   {
     id: 2,
     name: 'Dinaranaya Putri Hutauruk',
     role: 'Data Scientist',
     github: 'Dnrany',
-    image: 'src/assets/Dinar-qlop.png',
+    image: '/Dinar-qlop.png',
   },
   {
     id: 3,
     name: 'Husni Abdillah',
     role: 'AI Engineer',
     github: 'HusniAbdillah',
-    image: 'src/assets/Husni-qlop.png',
+    image: '/Husni-qlop.png',
   },
   {
     id: 4,
     name: 'Wandy Chandra Wijaya',
     role: 'Full-Stack Web Developer',
     github: 'wandychandra',
-    image: 'src/assets/Wandy-qlop.png',
+    image: '/Wandy-qlop.png',
   },
   {
     id: 5,
     name: 'Diko Duwi Saputra',
     role: 'Data Scientist',
     github: 'dikosaputra1231',
-    image: 'src/assets/Diko-qlop.png',
+    image: '/Diko-qlop.png',
   },
   {
     id: 6,
     name: 'Gilang Agung Prakoso',
     role: 'AI Engineer',
     github: 'prakoso09',
-    image: 'src/assets/Gilang-qlop.png',
+    image: '/Gilang-qlop.png',
   },
 ];
 
@@ -66,7 +66,7 @@ const AboutUsPage = () => {
       <section 
         className="relative py-32 md:py-48 flex items-center justify-center bg-fixed bg-center bg-cover"
         style={{
-          backgroundImage: "url('src/assets/aboutqlop.jpeg')"
+          backgroundImage: "url('/aboutqlop.jpeg')"
         }}
       >
         <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]"></div>
