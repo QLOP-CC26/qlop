@@ -6,7 +6,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HF_HOME=/opt/hf-cache \
     TRANSFORMERS_CACHE=/opt/hf-cache \
     SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache \
-    HF_CACHE_DIR=/opt/hf-cache
+    HF_CACHE_DIR=/opt/hf-cache \
+    CUDA_VISIBLE_DEVICES="" \
+    TF_CPP_MIN_LOG_LEVEL="3" \
+    TF_ENABLE_ONEDNN_OPTS="0" \
+    OMP_NUM_THREADS="1" \
+    TF_NUM_INTRAOP_THREADS="1" \
+    TF_NUM_INTEROP_THREADS="1"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 \

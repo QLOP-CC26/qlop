@@ -203,6 +203,8 @@ class ModelRegistry:
             self.ner_model = model
             self.ner_available = True
             logger.info("NER model (QLOPNERModelV2) loaded successfully — %d labels", num_labels)
+            import gc
+            gc.collect()
 
         except ImportError as e:
             logger.error(
