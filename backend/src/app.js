@@ -10,8 +10,28 @@ const cvRoutes = require('./routes/cvRoutes');
 const createApp = () => {
   const app = express();
 
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((o) => o.trim().replace(/\/$/, ''))
+    : [];
+
   app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (origin, callback) => {
+      // Izinkan jika tidak ada origin (seperti API tester Postman, curl, dll)
+      if (!origin) return callback(null, true);
+
+      const cleanOrigin = origin.trim().replace(/\/$/, '');
+      const isAllowed =
+        allowedOrigins.length === 0 ||
+        allowedOrigins.includes(cleanOrigin) ||
+        process.env.FRONTEND_URL === '*';
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+
+      console.warn(`[CORS Blocked] Origin: ${origin}. Allowed Origins:`, allowedOrigins);
+      return callback(new Error('Not allowed by CORS'));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
