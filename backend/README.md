@@ -63,10 +63,26 @@ npm install
 
 **3. Konfigurasi environment variables**
 
-Salin `.env` dan isi dengan nilai yang sesuai:
-```bash
-cp .env .env.local
-```
+Salin file `.env.example` menjadi `.env` dengan salah satu cara berikut:
+
+* **Menggunakan Terminal / CLI (Direkomendasikan):**
+  * **Windows (PowerShell):**
+    ```powershell
+    Copy-Item .env.example .env
+    ```
+  * **Windows (CMD):**
+    ```cmd
+    copy .env.example .env
+    ```
+  * **Linux / macOS / Git Bash:**
+    ```bash
+    cp .env.example .env
+    ```
+* **Secara Manual di VS Code:**
+  * Klik kanan file `.env.example` ➔ Pilih **Copy** ➔ Klik kanan folder `backend` ➔ Pilih **Paste**. 
+  * Ganti nama file salinan tersebut menjadi **`.env`** (pastikan tanda titik di depannya ikut tertulis).
+
+Setelah disalin, buka file `.env` tersebut dan lengkapi nilainya (seperti password PostgreSQL, JWT secret, Cloudinary API, dll.).
 
 **4. Buat database PostgreSQL**
 ```bash

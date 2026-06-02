@@ -149,7 +149,7 @@ const RecommendPage = () => {
 
   if (fetching) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+      <div className="min-h-screen flex flex-col bg-slate-50">
         <AppNavbar activeTab="analyze" />
         <main className="flex-1 flex flex-col items-center justify-center p-8">
           <div className="w-12 h-12 border-4 border-[#2563EB]/25 border-t-[#2563EB] rounded-full animate-spin" />
@@ -160,7 +160,7 @@ const RecommendPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="analyze" />
 
       <main className="flex-1 flex flex-col gap-8 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto">
@@ -226,7 +226,7 @@ const RecommendPage = () => {
                 </div>
 
                 {rolesList.length > 0 && (
-                  <p className="text-xs text-[#75777D]">{rolesList.length} roles available — choose from the list</p>
+                  <p className="text-xs text-[#75777D]">{rolesList.length} roles available</p>
                 )}
               </div>
 

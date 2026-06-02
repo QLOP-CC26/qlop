@@ -167,10 +167,10 @@ const HistoryPage = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="history" />
 
-      <main className="flex-1 flex flex-col gap-6 px-8 py-8 pt-[104px] pb-[104px]">
+      <main className="flex-1 flex flex-col gap-6 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>

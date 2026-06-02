@@ -8,6 +8,7 @@ import CursorPdf from '../../assets/cursor-pdf.png';
 import HeroImg from '../../assets/hero-img.png';
 
 const LandingPage = () => {
+  const isLoggedIn = !!localStorage.getItem('token');
 
   const analyzeStates = [
     { score: 51, missing: 15, color: 'text-orange-500', bg: 'bg-orange-500' },
@@ -59,18 +60,37 @@ const LandingPage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-4">
-              <div className="w-full sm:w-48">
-                <Link to="/register">
-                  <Button variant="primary">
-                    Register Now <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="w-full sm:w-56">
-                <Link to="/login">
-                  <Button variant="outline">Login to Dashboard</Button>
-                </Link>
-              </div>
+              {isLoggedIn ? (
+                <>
+                  <div className="w-full sm:w-48">
+                    <Link to="/analyze">
+                      <Button variant="primary">
+                        Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="w-full sm:w-56">
+                    <Link to="/history">
+                      <Button variant="outline">View Analysis History</Button>
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-full sm:w-48">
+                    <Link to="/register">
+                      <Button variant="primary">
+                        Register Now <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="w-full sm:w-56">
+                    <Link to="/login">
+                      <Button variant="outline">Login to Dashboard</Button>
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

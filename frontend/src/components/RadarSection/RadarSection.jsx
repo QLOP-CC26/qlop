@@ -47,7 +47,7 @@ export const RadarSection = ({ alternativeRoles, aiDiscoveredRoles }) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-150
                 ${active
                   ? 'border-current shadow-sm scale-100'
-                  : 'border-black/[0.08] text-[#C5C6CD] bg-[#F8F9FF] scale-95 opacity-60'
+                  : 'border-black/[0.08] text-[#C5C6CD] bg-slate-50 scale-95 opacity-60'
                 }`}
               style={active ? { color: c.stroke, borderColor: c.stroke, backgroundColor: c.fill } : {}}
             >

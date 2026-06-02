@@ -130,6 +130,27 @@ const AnalyzingPage = () => {
   const [showAddInput, setShowAddInput] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const didRun = useRef(false);
+  const [extractSubStatus, setExtractSubStatus] = useState('AI model is extracting your CV information…');
+
+  useEffect(() => {
+    if (stepStatuses[2] !== 'active') return;
+
+    const messages = [
+      'AI model is extracting your CV information…',
+      'Identifying educational background and degrees…',
+      'Analyzing professional work experiences and timelines…',
+      'Mapping technical and soft skill sets…',
+      'Synthesizing data structures (almost ready)…'
+    ];
+
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      setExtractSubStatus(messages[idx]);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [stepStatuses[2]]);
 
   useEffect(() => {
     if (!file) { navigate('/analyze'); return; }
@@ -257,10 +278,10 @@ const AnalyzingPage = () => {
   const fileSize = file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : '';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="analyze" />
 
-      <main className="flex-1 flex flex-col gap-8 px-8 py-8 pt-[104px] pb-[104px]">
+      <main className="flex-1 flex flex-col gap-8 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto">
         {/* Page Header */}
         <div className="flex flex-col gap-1">
           <h1 className="text-[40px] font-bold leading-[48px] tracking-[-0.8px] text-black">
@@ -300,12 +321,16 @@ const AnalyzingPage = () => {
             <div className="bg-white border border-black/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl p-6 flex flex-col gap-3">
               {STEPS.map((step, i) => {
                 const status = stepStatuses[i];
+                let subtitle = status === 'done' ? step.done : status === 'active' ? step.active : step.pending;
+                if (i === 2 && status === 'active') {
+                  subtitle = extractSubStatus;
+                }
                 return (
                   <StepItem
                     key={i}
                     status={status}
                     title={step.title}
-                    subtitle={status === 'done' ? step.done : status === 'active' ? step.active : step.pending}
+                    subtitle={subtitle}
                     showLine={i < STEPS.length - 1}
                   />
                 );
@@ -337,7 +362,7 @@ const AnalyzingPage = () => {
                     <div className="w-5 h-5 bg-slate-200 rounded-full" />
                     <div className="w-36 h-5 bg-slate-200 rounded" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#F8F9FF] border border-black/[0.08] rounded-lg p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-black/[0.08] rounded-lg p-4">
                     <div className="flex flex-col gap-2">
                       <div className="w-16 h-3 bg-slate-200 rounded" />
                       <div className="w-full h-10 bg-slate-200 rounded" />
@@ -367,7 +392,7 @@ const AnalyzingPage = () => {
                     <div className="w-5 h-5 bg-slate-200 rounded" />
                     <div className="w-32 h-5 bg-slate-200 rounded" />
                   </div>
-                  <div className="bg-[#F8F9FF] border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
+                  <div className="bg-slate-50 border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
                     <div className="w-24 h-3 bg-slate-200 rounded" />
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="h-10 bg-slate-200 rounded" />
@@ -397,7 +422,7 @@ const AnalyzingPage = () => {
                 <div className="flex flex-col gap-3">
                   <SectionHeader icon={<User className="w-5 h-5" />} title="Personal Information" isExpanded={expanded.personal} onToggle={() => toggle('personal')} />
                   {expanded.personal && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#F8F9FF] border border-black/[0.08] rounded-lg p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-black/[0.08] rounded-lg p-4">
                       <EditableField label="Full Name" value={profile.name}
                         onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
                       <EditableField label="Email" value={profile.email}
@@ -420,7 +445,7 @@ const AnalyzingPage = () => {
                   {expanded.work && (
                     <div className="flex flex-col gap-3">
                       {(profile.work_experience || []).map((we, i) => (
-                        <div key={i} className="bg-[#F8F9FF] border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
+                        <div key={i} className="bg-slate-50 border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-[#75777D] uppercase tracking-widest">Experience #{i + 1}</span>
                             <button type="button" onClick={() => removeWorkExp(i)}
@@ -454,7 +479,7 @@ const AnalyzingPage = () => {
                   {expanded.education && (
                     <div className="flex flex-col gap-3">
                       {(profile.education || []).map((ed, i) => (
-                        <div key={i} className="bg-[#F8F9FF] border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
+                        <div key={i} className="bg-slate-50 border border-black/[0.08] rounded-lg p-4 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-[#75777D] uppercase tracking-widest">Education #{i + 1}</span>
                             <button type="button" onClick={() => removeEdu(i)}

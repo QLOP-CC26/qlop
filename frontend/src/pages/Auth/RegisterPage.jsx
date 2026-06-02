@@ -117,7 +117,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar actionLabel="Login" actionTo="/login" />
 
       <main className="flex-1 flex items-center justify-center px-4 py-[72px]">
@@ -141,7 +141,7 @@ const RegisterPage = () => {
               id="register-name"
               label="Full Name"
               type="text"
-              placeholder="John Doe"
+              placeholder="Muhammad Sumbul"
               icon="user"
               value={form.name}
               onChange={handleChange('name')}
