@@ -30,7 +30,7 @@ const createApp = () => {
       }
 
       console.warn(`[CORS Blocked] Origin: ${origin}. Allowed Origins:`, allowedOrigins);
-      return callback(new Error('Not allowed by CORS'));
+      return callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
