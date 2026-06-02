@@ -5,6 +5,7 @@ import Button from '../Button/Button';
 
 const LandingNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const isLoggedIn = !!localStorage.getItem('token');
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -39,14 +40,24 @@ const LandingNavbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-              Login
-            </Link>
-            <div className="w-24">
-              <Link to="/register">
-                <Button variant="primary">Register</Button>
-              </Link>
-            </div>
+            {isLoggedIn ? (
+              <div className="w-28">
+                <Link to="/analyze">
+                  <Button variant="primary">Dashboard</Button>
+                </Link>
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                  Login
+                </Link>
+                <div className="w-24">
+                  <Link to="/register">
+                    <Button variant="primary">Register</Button>
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -87,12 +98,20 @@ const LandingNavbar = () => {
           </Link>
           
           <div className="pt-4 mt-2 border-t border-gray-100 flex flex-col gap-3">
-            <Link to="/login" onClick={() => setIsOpen(false)}>
-              <Button variant="outline">Login to Dashboard</Button>
-            </Link>
-            <Link to="/register" onClick={() => setIsOpen(false)}>
-              <Button variant="primary">Register Now</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link to="/analyze" onClick={() => setIsOpen(false)}>
+                <Button variant="primary">Go to Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline">Login to Dashboard</Button>
+                </Link>
+                <Link to="/register" onClick={() => setIsOpen(false)}>
+                  <Button variant="primary">Register Now</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
