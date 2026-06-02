@@ -30,7 +30,11 @@ from transformers import AutoTokenizer, TFAutoModelForTokenClassification
 cache_dir = Path('/opt/hf-cache')
 cache_dir.mkdir(parents=True, exist_ok=True)
 
-AutoTokenizer.from_pretrained('microsoft/deberta-v3-base', cache_dir=str(cache_dir))
+AutoTokenizer.from_pretrained(
+    'microsoft/deberta-v3-base',
+    cache_dir=str(cache_dir),
+    use_fast=False,
+)
 TFAutoModelForTokenClassification.from_pretrained(
     'microsoft/deberta-v3-base',
     from_pt=True,
