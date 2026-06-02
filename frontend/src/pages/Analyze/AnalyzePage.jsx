@@ -77,7 +77,7 @@ const AnalyzePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="analyze" />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 pt-[104px] pb-[104px]">
@@ -101,7 +101,7 @@ const AnalyzePage = () => {
               className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer ${
                 file ? 'border-[#2563EB]/40 bg-[#EFF6FF]/10' :
                 isDragActive ? 'border-[#2563EB] bg-[#EFF6FF]/50 scale-[1.01]' :
-                'border-[#C5C6CD] hover:border-[#2563EB] bg-[#F8F9FF]'
+                'border-[#C5C6CD] hover:border-[#2563EB] bg-slate-50'
               }`}
             >
               <input
@@ -130,7 +130,7 @@ const AnalyzePage = () => {
                   </p>
                 </>
               ) : (
-                <div className="flex items-center justify-between w-full p-4 bg-[#F8F9FF] border border-black/[0.05] rounded-lg">
+                <div className="flex items-center justify-between w-full p-4 bg-slate-50 border border-black/[0.05] rounded-lg">
                   <div className="flex items-center gap-3 min-w-0">
                     <FileText className="w-6 h-6 text-[#45474C]" />
                     <div className="flex flex-col min-w-0">

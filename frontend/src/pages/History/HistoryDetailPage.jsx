@@ -109,7 +109,7 @@ const HistoryDetailPage = () => {
   const pivotMeta = data?.pivot_metadata || null;
 
   if (isLoading) return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="history" />
       <main className="flex-1 flex flex-col gap-6 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto animate-pulse">
         <div className="w-28 h-5 bg-[#C5C6CD]/30 rounded-md mb-2" />
@@ -167,9 +167,9 @@ const HistoryDetailPage = () => {
   );
 
   if (error) return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="history" />
-      <main className="flex-1 flex flex-col gap-5 px-8 pt-[104px] pb-[104px]">
+      <main className="flex-1 flex flex-col gap-5 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto">
         <button onClick={() => navigate('/history')} className="flex items-center gap-2 text-sm text-[#45474C] hover:text-[#2563EB] transition-all duration-200 hover:-translate-x-0.5 w-fit">
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
@@ -180,7 +180,7 @@ const HistoryDetailPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <AppNavbar activeTab="history" />
 
       <main className="flex-1 flex flex-col gap-6 px-8 py-8 pt-[104px] pb-[104px] max-w-[1280px] w-full mx-auto">
@@ -409,17 +409,17 @@ const HistoryDetailPage = () => {
                   </span>
                 )}
                 {pivotMeta.roles_evaluated && (
-                  <span className="text-xs px-2.5 py-1 bg-[#F8F9FF] text-[#75777D] rounded-full border border-black/[0.06]">
+                  <span className="text-xs px-2.5 py-1 bg-slate-50 text-[#75777D] rounded-full border border-black/[0.06]">
                     {pivotMeta.roles_evaluated} roles evaluated
                   </span>
                 )}
                 {pivotMeta.roles_returned && (
-                  <span className="text-xs px-2.5 py-1 bg-[#F8F9FF] text-[#75777D] rounded-full border border-black/[0.06]">
+                  <span className="text-xs px-2.5 py-1 bg-slate-50 text-[#75777D] rounded-full border border-black/[0.06]">
                     {pivotMeta.roles_returned} returned
                   </span>
                 )}
                 {pivotMeta.processing_time_ms && (
-                  <span className="text-xs px-2.5 py-1 bg-[#F8F9FF] text-[#75777D] rounded-full border border-black/[0.06]">
+                  <span className="text-xs px-2.5 py-1 bg-slate-50 text-[#75777D] rounded-full border border-black/[0.06]">
                     {(pivotMeta.processing_time_ms / 1000).toFixed(1)}s
                   </span>
                 )}

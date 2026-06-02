@@ -112,7 +112,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar actionLabel="Register" actionTo="/register" />
 
       <main className="flex-1 flex items-center justify-center px-4 py-[72px]">
