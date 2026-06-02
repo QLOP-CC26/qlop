@@ -143,16 +143,28 @@ class ModelRegistry:
             settings.hf_cache_dir.mkdir(parents=True, exist_ok=True)
 
             cache_str = str(settings.hf_cache_dir)
-            logger.info(
-                "Loading DeBERTa-v3-base (from_pt=True) — cache: %s", cache_str
-            )
-            deberta_base = TFAutoModelForTokenClassification.from_pretrained(
-                settings.ner_base_model,
-                from_pt=True,
-                num_labels=num_labels,
-                ignore_mismatched_sizes=True,
-                cache_dir=cache_str,
-            )
+            tf_base_path = Path("/opt/deberta-tf-base")
+            if tf_base_path.exists():
+                logger.info(
+                    "Loading pre-converted DeBERTa-v3-base from TF weights at %s",
+                    tf_base_path,
+                )
+                deberta_base = TFAutoModelForTokenClassification.from_pretrained(
+                    str(tf_base_path),
+                    num_labels=num_labels,
+                    ignore_mismatched_sizes=True,
+                )
+            else:
+                logger.info(
+                    "Loading DeBERTa-v3-base (from_pt=True) — cache: %s", cache_str
+                )
+                deberta_base = TFAutoModelForTokenClassification.from_pretrained(
+                    settings.ner_base_model,
+                    from_pt=True,
+                    num_labels=num_labels,
+                    ignore_mismatched_sizes=True,
+                    cache_dir=cache_str,
+                )
 
             model = QLOPNERModelV2(deberta_base, n_labels=num_labels,
                                    dropout_rate=0.10)

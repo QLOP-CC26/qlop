@@ -36,13 +36,14 @@ AutoTokenizer.from_pretrained(
     cache_dir=str(cache_dir),
     use_fast=False,
 )
-TFAutoModelForTokenClassification.from_pretrained(
+base_model = TFAutoModelForTokenClassification.from_pretrained(
     'microsoft/deberta-v3-base',
     from_pt=True,
     num_labels=23,
     ignore_mismatched_sizes=True,
     cache_dir=str(cache_dir),
 )
+base_model.save_pretrained('/opt/deberta-tf-base')
 SentenceTransformer('all-MiniLM-L6-v2', cache_folder=str(cache_dir))
 PY
 
