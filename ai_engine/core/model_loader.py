@@ -83,7 +83,7 @@ class ModelRegistry:
             self.ner_id2label = {int(k): v for k, v in label_schema.items()}
             num_labels = model_cfg.get("num_labels", 23)
 
-            self.tokenizer = AutoTokenizer.from_pretrained(str(settings.ner_tokenizer_path))
+            self.tokenizer = AutoTokenizer.from_pretrained(str(settings.ner_tokenizer_path), use_fast=False)
 
             # ── Reconstruct QLOPNERModelV2 exactly as trained in the notebook ──
 
