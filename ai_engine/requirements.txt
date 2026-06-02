@@ -20,7 +20,7 @@ transformers>=4.42.0,<5.0.0
 sentencepiece>=0.2.0
 protobuf>=4.25.0
 sentence-transformers>=3.0.0
-torch>=2.3.0
+torch>=2.6.0
 
 # Numerical
 numpy>=1.26.0

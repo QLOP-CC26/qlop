@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     HF_HOME=/opt/hf-cache \
     TRANSFORMERS_CACHE=/opt/hf-cache \
-    SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache
+    SENTENCE_TRANSFORMERS_HOME=/opt/hf-cache \
+    HF_CACHE_DIR=/opt/hf-cache
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 \
@@ -16,7 +17,7 @@ WORKDIR /app
 COPY requirements.txt ./
 
 RUN python -m pip install --upgrade pip \
-    && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.3.1+cpu" \
+    && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.6.0+cpu" \
     && pip install -r requirements.txt
 
 # Preload the Hugging Face models during image build so Railway does not need
