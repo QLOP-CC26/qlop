@@ -26,32 +26,12 @@ RUN python -m pip install --upgrade pip \
     && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.6.0+cpu" \
     && pip install -r requirements.txt
 
-# Preload the Hugging Face models during image build so Railway does not need
-# to download them on every cold start.
-RUN python - <<'PY'
-from pathlib import Path
+# Copy only preload.py first to keep layer cache optimized
+COPY preload.py ./
 
-from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer, TFAutoModelForTokenClassification
-
-cache_dir = Path('/opt/hf-cache')
-cache_dir.mkdir(parents=True, exist_ok=True)
-
-AutoTokenizer.from_pretrained(
-    'microsoft/deberta-v3-base',
-    cache_dir=str(cache_dir),
-    use_fast=False,
-)
-base_model = TFAutoModelForTokenClassification.from_pretrained(
-    'microsoft/deberta-v3-base',
-    from_pt=True,
-    num_labels=23,
-    ignore_mismatched_sizes=True,
-    cache_dir=str(cache_dir),
-)
-base_model.save_pretrained('/opt/deberta-tf-base')
-SentenceTransformer('all-MiniLM-L6-v2', cache_folder=str(cache_dir))
-PY
+# Preload the Hugging Face models during image build so we don't download them on every cold start.
+# This runs as a separate clean python script, preventing any Dockerfile parser bugs!
+RUN python preload.py
 
 COPY . .
 
