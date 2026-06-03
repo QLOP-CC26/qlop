@@ -65,15 +65,15 @@ def extract_text_from_pdf(file_bytes: bytes) -> dict:
 
 _SECTION_PATTERNS = {
     "skills": re.compile(
-        r"(?:^|\n)\s*(?:technical\s+)?skills?\s*(?:&\s*competenc\w*)?[\s:]*\n",
+        r"(?:^|\n)\s*(?:technical|key|core|professional)?\s*skills?\s*(?:&\s*competenc\w*|&\s*expertise)?[\s:]*(?:\n|$)",
         re.IGNORECASE,
     ),
     "experience": re.compile(
-        r"(?:^|\n)\s*(?:work|professional|employment)?\s*experiences?\s*(?:history)?[\s:]*\n",
+        r"(?:^|\n)\s*(?:work|professional|employment|job|career)?\s*experiences?\s*(?:history|record)?[\s:]*(?:\n|$)",
         re.IGNORECASE,
     ),
     "education": re.compile(
-        r"(?:^|\n)\s*education\s*(?:&\s*qualif\w*|background)?[\s:]*\n",
+        r"(?:^|\n)\s*education(?:al)?\s*(?:level|background|history|&\s*qualif\w*)?[\s:]*(?:\n|$)",
         re.IGNORECASE,
     ),
 }
@@ -257,6 +257,101 @@ _COMPANY_BLOCKLIST: frozenset[str] = frozenset({
     "foundation", 
 })
 
+_VALID_DURATION_RE = re.compile(
+    r"\b(?:20[0-3]\d|19\d\d)\b|"
+    r"\b(?:present|now|current|today|aktif|sekarang|tahun|bulan|years?|months?)\b",
+    re.IGNORECASE
+)
+
+def _is_valid_duration(text: str) -> bool:
+    s = text.strip()
+    if not s:
+        return False
+    return bool(_VALID_DURATION_RE.search(s))
+
+
+def _group_entities_by_proximity(ents: list[dict], text: str, max_dist: int = 120) -> list[dict]:
+    """Group sequential entities into job/education blocks based on text proximity.
+    
+    A new block is started if:
+    1. The distance between the current entity and the previous entity is > max_dist characters.
+    2. The current entity label is already present in the current block (duplicate field).
+    """
+    blocks = []
+    current_block = {}
+    last_end = 0
+    
+    ents_with_pos = []
+    search_start = 0
+    for ent in ents:
+        ent_text = ent["text"]
+        pos = text.find(ent_text, search_start)
+        if pos == -1:
+            pos = text.find(ent_text)
+        if pos != -1:
+            ents_with_pos.append({
+                "label": ent["label"],
+                "text": ent_text,
+                "start": pos,
+                "end": pos + len(ent_text)
+            })
+            search_start = pos + len(ent_text)
+        else:
+            ents_with_pos.append({
+                "label": ent["label"],
+                "text": ent_text,
+                "start": last_end + 1,
+                "end": last_end + 1 + len(ent_text)
+            })
+            search_start = last_end + 1 + len(ent_text)
+        last_end = ents_with_pos[-1]["end"]
+
+    for i, ent in enumerate(ents_with_pos):
+        label = ent["label"]
+        val = ent["text"]
+        
+        start_new = False
+        if i == 0:
+            start_new = True
+        else:
+            prev_ent = ents_with_pos[i - 1]
+            dist = ent["start"] - prev_ent["end"]
+            
+            key_map = {
+                "Company": "company",
+                "Designation": "designation",
+                "YearsExperience": "duration",
+                "Degree": "degree",
+                "Institution": "institution"
+            }
+            key = key_map.get(label)
+            
+            if key and key in current_block:
+                start_new = True
+            elif dist > max_dist:
+                start_new = True
+                
+        if start_new:
+            if current_block:
+                blocks.append(current_block)
+            current_block = {}
+            
+        key_map = {
+            "Company": "company",
+            "Designation": "designation",
+            "YearsExperience": "duration",
+            "Degree": "degree",
+            "Institution": "institution"
+        }
+        key = key_map.get(label)
+        if key:
+            current_block[key] = val
+            
+    if current_block:
+        blocks.append(current_block)
+        
+    return blocks
+
 
 def _is_valid_company(text: str) -> bool:
     """Reject obvious NER fragments, single-char abbreviations, and generic words."""
@@ -280,8 +375,33 @@ def _is_valid_company(text: str) -> bool:
             return False
     return True
 
+def _expand_to_full_words(ent_text: str, full_text: str) -> str:
+    ent_text = ent_text.strip()
+    if not ent_text:
+        return ent_text
+        
+    pos = full_text.find(ent_text)
+    if pos == -1:
+        pos = full_text.lower().find(ent_text.lower())
+        if pos == -1:
+            return ent_text
+            
+    start = pos
+    while start > 0 and full_text[start - 1].isalnum() and full_text[start - 1] not in "\n\r\t ":
+        start -= 1
+        
+    end = pos + len(ent_text)
+    while end < len(full_text) and full_text[end].isalnum() and full_text[end] not in "\n\r\t ":
+        end += 1
+        
+    expanded = full_text[start:end].strip()
+    if len(expanded) > len(ent_text) + 15:
+        return ent_text
+    return expanded
 
-def _structure_output(entities: list[dict], raw_text: str) -> dict:
+
+def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
+    """Run full NER pipeline on text (section-aware)."""
     output: dict = {
         "name": "", "email": "", "phone": "", "location": "",
         "total_experience_years": 0.0,
@@ -289,63 +409,46 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
         "work_experience": [], "education": [],
     }
 
-    companies: list[str] = []
-    designations: list[str] = []
-    degrees: list[str] = []
-    institutions: list[str] = []
-    duration_texts: list[str] = []
-    skills_seen: set[str] = set()
-
-    for ent in entities:
-        label, text, _ = ent["label"], ent["text"].strip(), ent["confidence"]
-
+    # 1. Name, Email, Phone, Location (run on header or first 15 lines)
+    header_text = "\n".join(raw_text.split("\n")[:15])
+    header_ents = _sliding_window_ner(header_text)
+    for ent in header_ents:
+        label, text = ent["label"], ent["text"].strip()
         if label == "Name" and not output["name"]:
             if len(text) >= 3 and not text.startswith(("http", "www")):
-                output["name"] = text
+                if text.lower() not in _NAME_BLOCKLIST:
+                    output["name"] = text
         elif label == "Location" and not output["location"]:
-            # Reject language names, proficiency levels, and section headers
-            # mis-tagged as Location (e.g. "Indonesian", "Relevant")
             if len(text) >= 3 and text.lower() not in _INVALID_LOCATION_WORDS:
                 output["location"] = text
-        elif label == "Company":
-            if _is_valid_company(text):
-                companies.append(text)
-        elif label == "Designation":
-            if len(text) >= 3:
-                designations.append(text)
-        elif label == "YearsExperience":
-            duration_texts.append(text)
-        elif label == "Degree":
-            # Require ≥2 words OR a known degree abbreviation (e.g. "S1", "B.Sc.")
-            # Single generic words like "Multi", "Camp", "Full" are training fragments.
-            words_in_degree = text.split()
-            if len(words_in_degree) >= 2 or (len(text) >= 3 and text[:2].upper() in {
-                "S1", "S2", "S3", "D3", "D4",
-            }):
-                degrees.append(text)
-        elif label == "Institution":
-            if len(text) >= 3:
-                institutions.append(text)
-        elif label == "Skill":
-            if _is_valid_skill(text):
-                normalized, _ = _normalize_skill(text)
-                key = normalized.lower()
-                if key not in skills_seen:
-                    skills_seen.add(key)
-                    output["skills"].append(normalized)
 
-    # ── Name: if NER returned a single token, try regex on the first 10 lines ──
-    # The DeBERTa model sometimes captures only the first token of a multi-word name
-    # capitalized multi-word name in the document header.
+    # Expand DeBERTa location to full words if it is a fragment
+    if output["location"]:
+        output["location"] = _expand_to_full_words(output["location"], raw_text)
+
+    # Location priority/fallback: unconditionally check first 5 lines (header) for a location regex match.
+    # The header location (home address) always overrides any location from the body/experience section.
+    header_lines = raw_text.split("\n")[:5]
+    for line in header_lines:
+        line = line.strip()
+        loc_match = _LOCATION_RE.search(line)
+        if loc_match:
+            city = loc_match.group(1).strip()
+            if city.lower() not in _NAME_BLOCKLIST:
+                output["location"] = line
+                break
+
+    # Name fallback: regex on the first 10 lines
     if not output["name"] or len(output["name"].split()) < 2:
         header_lines = raw_text.split("\n")[:10]
         for line in header_lines:
             line = line.strip()
             if _NAME_RE.match(line) and len(line.split()) >= 2:
-                output["name"] = line
-                break
+                if line.lower() not in _NAME_BLOCKLIST:
+                    output["name"] = line
+                    break
 
-    # ── Email & Phone: regex always wins (NER tags these unreliably) ──
+    # Email & Phone fallback (regex always wins)
     email_match = _EMAIL_RE.search(raw_text)
     if email_match:
         output["email"] = email_match.group(0)
@@ -353,65 +456,196 @@ def _structure_output(entities: list[dict], raw_text: str) -> dict:
     phone_match = _PHONE_RE.search(raw_text)
     if phone_match:
         candidate = phone_match.group(0).strip()
-        # Must have at least 7 digits to be a real phone number
         if len(re.sub(r"\D", "", candidate)) >= 7:
             output["phone"] = candidate
 
-    # ── Work experience: pair companies with designations positionally ──
-    for i in range(max(len(companies), len(designations))):
-        output["work_experience"].append({
-            "company": companies[i] if i < len(companies) else "",
-            "designation": designations[i] if i < len(designations) else "",
-            "duration": duration_texts[i] if i < len(duration_texts) else "",
+    # 2. Skills (run on the skills section or the full text)
+    skills_text = sections.get("skills", raw_text)
+    skills_ents = _sliding_window_ner(skills_text)
+    skills_seen = set()
+    for ent in skills_ents:
+        if ent["label"] == "Skill" and _is_valid_skill(ent["text"]):
+            normalized, _ = _normalize_skill(ent["text"])
+            key = normalized.lower()
+            if key not in skills_seen:
+                skills_seen.add(key)
+                output["skills"].append(normalized)
+
+    # 3. Work Experience (run ONLY on experience section if found)
+    exp_text = sections.get("experience", "")
+    if exp_text:
+        exp_ents = _sliding_window_ner(exp_text)
+    else:
+        exp_text = raw_text
+        exp_ents = _sliding_window_ner(raw_text)
+
+    relevant_exp_ents = []
+    for ent in exp_ents:
+        label, text = ent["label"], ent["text"].strip()
+        if label == "Company" and _is_valid_company(text):
+            relevant_exp_ents.append(ent)
+        elif label == "Designation" and len(text) >= 3:
+            if text.lower() not in {"work", "job", "per", "member", "staff", "him"}:
+                relevant_exp_ents.append(ent)
+        elif label == "YearsExperience" and len(text) >= 3:
+            if _is_valid_duration(text):
+                relevant_exp_ents.append(ent)
+
+    grouped_jobs = _group_entities_by_proximity(relevant_exp_ents, exp_text, max_dist=120)
+    ner_jobs = []
+    for job in grouped_jobs:
+        company = job.get("company", "").strip()
+        designation = job.get("designation", "").strip()
+        duration = job.get("duration", "").strip()
+        if company or designation:
+            ner_jobs.append({
+                "company": company,
+                "designation": designation,
+                "duration": duration
+            })
+
+    regex_jobs = _extract_experience_via_regex(exp_text)
+    final_jobs = []
+    for r_job in regex_jobs:
+        matched_idx = -1
+        for idx, n_job in enumerate(ner_jobs):
+            r_dur = r_job["duration"].lower()
+            n_dur = n_job["duration"].lower()
+            r_co = r_job["company"].lower()
+            n_co = n_job["company"].lower()
+            
+            dur_match = (r_dur in n_dur or n_dur in r_dur or (r_dur and n_dur and any(yr in n_dur for yr in re.findall(r"\b\d{4}\b", r_dur))))
+            co_match = (r_co and n_co and (r_co in n_co or n_co in r_co))
+            
+            if dur_match or co_match:
+                matched_idx = idx
+                break
+                
+        if matched_idx != -1:
+            n_job = ner_jobs.pop(matched_idx)
+            merged_company = r_job["company"] if len(r_job["company"]) >= len(n_job["company"]) else n_job["company"]
+            merged_designation = r_job["designation"] if len(r_job["designation"]) >= len(n_job["designation"]) else n_job["designation"]
+            merged_duration = r_job["duration"] if len(r_job["duration"]) >= len(n_job["duration"]) else n_job["duration"]
+            
+            final_jobs.append({
+                "company": merged_company,
+                "designation": merged_designation,
+                "duration": merged_duration
+            })
+        else:
+            final_jobs.append(r_job)
+            
+    for n_job in ner_jobs:
+        if not n_job["designation"] and len(n_job["company"]) < 8:
+            continue
+        final_jobs.append(n_job)
+        
+    cleaned_jobs = []
+    for job in final_jobs:
+        co = job["company"].strip()
+        de = job["designation"].strip()
+        du = job["duration"].strip()
+        
+        co = re.sub(r"^[-*•\s]+", "", co).strip(" ,.-")
+        de = re.sub(r"^[-*•\s]+", "", de).strip(" ,.-")
+        
+        if not co and not de:
+            continue
+        if not de and not du:
+            continue
+        if co.lower() in _COMPANY_BLOCKLIST or de.lower() in {"work", "job", "per", "member", "staff", "him"}:
+            continue
+            
+        cleaned_jobs.append({
+            "company": co,
+            "designation": de,
+            "duration": du
         })
+        
+    output["work_experience"] = cleaned_jobs
 
-    # Post-process: remove duplicate work entries and discard entries where
-    # the company has no designation AND is very short (leftover NER fragments).
-    seen_work: set[tuple[str, str]] = set()
-    clean_work: list[dict] = []
-    for entry in output["work_experience"]:
-        company = entry["company"].strip()
-        designation = entry["designation"].strip()
-        if not designation and len(company) < 6:
-            continue  # likely a fragment like "Camp", "Port", "ID"
-        key = (company.lower(), designation.lower())
-        if key not in seen_work:
-            seen_work.add(key)
-            clean_work.append(entry)
-    output["work_experience"] = clean_work
+    # 4. Education (run ONLY on education section if found)
+    edu_text = sections.get("education", "")
+    if edu_text:
+        edu_ents = _sliding_window_ner(edu_text)
+    else:
+        edu_ents = _sliding_window_ner(raw_text)
 
-    # ── Education ──
+    degrees = []
+    institutions = []
+    for ent in edu_ents:
+        label, text = ent["label"], ent["text"].strip()
+        if label == "Degree":
+            words = text.split()
+            if len(words) >= 2 or (len(text) >= 3 and text[:2].upper() in {"S1", "S2", "S3", "D3", "D4"}):
+                degrees.append(text)
+        elif label == "Institution" and len(text) >= 3:
+            institutions.append(text)
+
+    ner_edu = []
     for i in range(max(len(degrees), len(institutions))):
-        output["education"].append({
-            "degree": degrees[i] if i < len(degrees) else "",
-            "institution": institutions[i] if i < len(institutions) else "",
-            "year": "",
+        deg = degrees[i] if i < len(degrees) else ""
+        inst = institutions[i] if i < len(institutions) else ""
+        if deg or inst:
+            ner_edu.append({
+                "degree": deg,
+                "institution": inst,
+                "year": ""
+            })
+
+    regex_edu = _extract_education_via_regex(edu_text if edu_text else raw_text)
+    final_edu = []
+    for r_ed in regex_edu:
+        matched_idx = -1
+        for idx, n_ed in enumerate(ner_edu):
+            r_inst = r_ed["institution"].lower()
+            n_inst = n_ed["institution"].lower()
+            
+            if r_inst and n_inst and (r_inst in n_inst or n_inst in r_inst):
+                matched_idx = idx
+                break
+                
+        if matched_idx != -1:
+            n_ed = ner_edu.pop(matched_idx)
+            merged_degree = r_ed["degree"] if len(r_ed["degree"]) >= len(n_ed["degree"]) else n_ed["degree"]
+            merged_inst = r_ed["institution"] if len(r_ed["institution"]) >= len(n_ed["institution"]) else n_ed["institution"]
+            merged_year = r_ed["year"] if r_ed["year"] else n_ed["year"]
+            
+            final_edu.append({
+                "degree": merged_degree,
+                "institution": merged_inst,
+                "year": merged_year
+            })
+        else:
+            final_edu.append(r_ed)
+            
+    for n_ed in ner_edu:
+        inst = n_ed["institution"].strip()
+        deg = n_ed["degree"].strip()
+        
+        has_univ_keyword = any(kw in inst.lower() for kw in ["university", "universitas", "institut", "institute", "college", "school", "politeknik", "academy", "sma", "smk"])
+        if has_univ_keyword or (deg and len(inst) >= 5):
+            final_edu.append(n_ed)
+            
+    cleaned_edu = []
+    for ed in final_edu:
+        inst = ed["institution"].strip(" ,.-")
+        deg = ed["degree"].strip(" ,.-")
+        yr = ed["year"].strip(" ,.-")
+        
+        if not inst and not deg:
+            continue
+            
+        cleaned_edu.append({
+            "degree": deg,
+            "institution": inst,
+            "year": yr
         })
+        
+    output["education"] = cleaned_edu
 
-    # ── total_experience_years: never use raw year numbers ──
     output["total_experience_years"] = _extract_experience_years_from_text(raw_text)
-
     return output
-
-
-def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
-    """Run full NER pipeline on text (section-aware + full-doc merge)."""
-    # Accumulate entities from section pass first, then full-doc pass.
-    # Deduplicate by (label, text.lower()), keeping the highest-confidence instance.
-    seen: dict[tuple[str, str], dict] = {}
-
-    if "skills" in sections:
-        for ent in _sliding_window_ner(sections["skills"]):
-            key = (ent["label"], ent["text"].lower())
-            if key not in seen or ent["confidence"] > seen[key]["confidence"]:
-                seen[key] = ent
-
-    for ent in _sliding_window_ner(raw_text):
-        key = (ent["label"], ent["text"].lower())
-        if key not in seen or ent["confidence"] > seen[key]["confidence"]:
-            seen[key] = ent
-
-    return _structure_output(list(seen.values()), raw_text)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -430,6 +664,19 @@ _DATE_RANGE_RE = re.compile(
     re.IGNORECASE,
 )
 _NAME_RE = re.compile(r"^[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3}$")
+
+# Reject common section headers from name extraction
+_NAME_BLOCKLIST = {
+    "education level", "education", "work experience", "work experiences",
+    "technical skills", "skills", "experience", "contact", "summary",
+    "about me", "projects", "certifications", "languages", "language",
+    "coursework", "awards", "honors", "activities", "publications", "interests"
+}
+
+# Regex to match location candidates (e.g. City, Country or City, Province) in the header
+_LOCATION_RE = re.compile(
+    r"\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})\s*,\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})\b"
+)
 
 # Words that should never be accepted as a Location entity.
 # Covers language names mis-tagged from the "Languages:" section,
@@ -482,6 +729,14 @@ _SKILL_BLOCKLIST: frozenset[str] = frozenset({
     "modern web development", "replica database", "disaster recovery",
     # other common false positives from Indonesian CV text
     "proffesion", "profession", "web applications",
+    # location false positives
+    "jawa barat", "jawa", "barat", "sumatera", "utara", "sumatera utara", "indonesia", "bogor", "jakarta", "bandung", "surabaya", "medan",
+    # institution/competition false positives
+    "mage", "its", "ipb", "university", "universitas", "institut", "pertanian", "institut pertanian bogor", "ipb university", "proton catalyst", "proton", "catalyst", "career development", "assessment",
+    # other noise
+    "fr", "competition", "functionality", "multimedia", "game event", "event", "category",
+    "student", "sixth-semester", "semester", "extensive", "new features", "system", "enhancements", "applications",
+    "expected", "present", "tutor", "programmer", "developer", "intern", "junior programmer"
 })
 
 # A skill token must pass all these checks
@@ -494,6 +749,9 @@ def _is_valid_skill(text: str) -> bool:
         return False
     # Reject single chars (even uppercase)
     if len(s) <= 1:
+        return False
+    # Reject if length is 2 and not in known 2-char skills list
+    if len(s) == 2 and s.lower() not in {"go", "c", "r", "js", "ts", "ip", "ui", "ux", "qt", "db"}:
         return False
     # Reject overly long phrases (>30 chars) — these are usually descriptions,
     # not skill names (e.g. "modern web development through academic projects")
@@ -516,6 +774,131 @@ def _is_valid_skill(text: str) -> bool:
     if re.match(r"^[\w.+-]+@|^https?://|^www\.", s, re.IGNORECASE):
         return False
     return True
+
+def _extract_experience_via_regex(text: str) -> list[dict]:
+    # Split text into lines
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    jobs = []
+    
+    # 1. Find all line indices that contain a date range
+    date_indices = []
+    for idx, line in enumerate(lines):
+        if _DATE_RANGE_RE.search(line) or _is_valid_duration(line):
+            # Make sure it's a date range, not just a random number
+            if any(month in line.lower() for month in ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "present", "now", "current"]):
+                date_indices.append(idx)
+            elif re.search(r"\b\d{4}\s*[-–]\s*(?:\d{4}|present|now)\b", line, re.IGNORECASE):
+                date_indices.append(idx)
+
+    # 2. For each date line, extract company and designation from context
+    for idx in date_indices:
+        duration = lines[idx]
+        company = ""
+        designation = ""
+        
+        # Look above the date line
+        if idx > 0:
+            prev_line = lines[idx - 1]
+            if " - " in prev_line or " – " in prev_line:
+                parts = re.split(r"\s*[-–]\s*", prev_line, maxsplit=1)
+                company = parts[0].strip()
+                # The rest of the line is location, e.g., "Bogor, Indonesia"
+            else:
+                # If there's no dash, check if the line is short (designation) or long (company/desc)
+                # Or check if line i-2 has dash
+                if idx > 1 and (" - " in lines[idx - 2] or " – " in lines[idx - 2]):
+                    parts = re.split(r"\s*[-–]\s*", lines[idx - 2], maxsplit=1)
+                    company = parts[0].strip()
+                    designation = prev_line
+                else:
+                    company = prev_line
+                    
+        # Look below the date line for designation if not found yet
+        if not designation and idx < len(lines) - 1:
+            next_line = lines[idx + 1]
+            # Designation should be relatively short (not a bullet point or description)
+            if len(next_line.split()) <= 5 and not next_line.startswith(("-", "*", "•")):
+                designation = next_line
+                
+        # Clean up company name if it contains location details or section names
+        if company:
+            company = re.split(r"\s*[-–]\s*", company)[0].strip()
+            company = re.sub(r"^[-*•\s]+", "", company)
+            
+        if designation:
+            designation = re.sub(r"^[-*•\s]+", "", designation)
+
+        # Validate that we have at least company or designation
+        if company or designation:
+            jobs.append({
+                "company": company,
+                "designation": designation,
+                "duration": duration
+            })
+            
+    return jobs
+
+
+def _extract_education_via_regex(text: str) -> list[dict]:
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    edu_list = []
+    
+    inst_keywords = ["university", "universitas", "institut", "institute", "college", "school", "politeknik", "academy", "sma", "smk"]
+    degree_keywords = ["computer science", "information systems", "bachelor", "diploma", "master", "s1", "d3", "d4", "s2", "s3", "undergraduate", "graduate", "major", "studying", "student"]
+    
+    for idx, line in enumerate(lines):
+        line_lower = line.lower()
+        # Check if this line is an institution
+        if any(keyword in line_lower for keyword in inst_keywords):
+            # Clean institution name (e.g. split by dash if it contains location)
+            inst_name = line
+            if " - " in line or " – " in line:
+                inst_name = re.split(r"\s*[-–]\s*", line)[0].strip()
+            
+            # Look for degree and year in surrounding lines (e.g. up to 3 lines below)
+            degree = ""
+            year = ""
+            
+            for offset in range(1, 4):
+                if idx + offset < len(lines):
+                    next_line = lines[idx + offset]
+                    next_line_lower = next_line.lower()
+                    
+                    # If we hit another institution, stop looking
+                    if any(keyword in next_line_lower for keyword in inst_keywords) and offset > 1:
+                        break
+                        
+                    # Check for year
+                    years = [int(y) for y in re.findall(r"\b(20[0-3]\d|19\d\d)\b", next_line)]
+                    if years and not year:
+                        year = str(max(years))
+                        
+                    # Check for degree keywords
+                    if any(keyword in next_line_lower for keyword in degree_keywords) and not degree:
+                        deg_candidate = next_line
+                        if "," in next_line:
+                            deg_candidate = next_line.split(",")[0].strip()
+                        degree = deg_candidate
+            
+            # If no degree found below, check line above
+            if not degree and idx > 0:
+                prev_line = lines[idx - 1]
+                if any(keyword in prev_line.lower() for keyword in degree_keywords):
+                    degree = prev_line
+                    
+            # Extract year from the institution line itself if present
+            if not year:
+                years = [int(y) for y in re.findall(r"\b(20[0-3]\d|19\d\d)\b", line)]
+                if years:
+                    year = str(max(years))
+                    
+            edu_list.append({
+                "institution": inst_name,
+                "degree": degree,
+                "year": year
+            })
+            
+    return edu_list
 
 
 def _extract_experience_years_from_text(raw_text: str) -> float:
@@ -574,6 +957,133 @@ def extract_with_heuristic(raw_text: str) -> dict:
 
 
 # ──────────────────────────────────────────────────────────────────────
+# LLM-based CV parsing
+# ──────────────────────────────────────────────────────────────────────
+
+def extract_with_llm(raw_text: str) -> dict | None:
+    """Extract profile using LLM (Gemini with Groq fallback)."""
+    import openai
+    import json
+    from json_repair import repair_json
+    from core.config import settings
+
+    use_gemini = (settings.llm_provider == "gemini")
+    client = None
+    model = ""
+    max_tokens = 2048
+
+    if use_gemini:
+        try:
+            import google.auth
+            import google.auth.transport.requests
+            
+            credentials, project_id = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            gcp_project = settings.vertex_project_id or project_id
+            if not gcp_project:
+                raise ValueError("Could not determine Google Cloud project ID.")
+            auth_req = google.auth.transport.requests.Request()
+            credentials.refresh(auth_req)
+            
+            region = settings.vertex_region
+            client = openai.OpenAI(
+                api_key=credentials.token,
+                base_url=f"https://{region}-aiplatform.googleapis.com/v1/projects/{gcp_project}/locations/{region}/endpoints/openapi",
+            )
+            model = settings.gemini_model
+            if not model.startswith("google/"):
+                model = f"google/{model}"
+        except Exception as exc:
+            logger.warning("Gemini initialization failed for CV extraction: %s. Falling back to Groq...", exc)
+            use_gemini = False
+
+    if not use_gemini:
+        if not settings.groq_api_key:
+            logger.warning("No Groq API key configured for fallback.")
+            return None
+        try:
+            client = openai.OpenAI(
+                api_key=settings.groq_api_key,
+                base_url=settings.groq_base_url,
+            )
+            model = settings.groq_model
+            max_tokens = settings.groq_max_tokens
+        except Exception as exc:
+            logger.warning("Groq initialization failed for CV extraction: %s", exc)
+            return None
+
+    if not client:
+        return None
+
+    system_instruction = (
+        "You are an expert ATS (Applicant Tracking System) parser. "
+        "Your task is to extract profile information from the raw CV text and format it strictly as JSON. "
+        "Do not invent any information. "
+        "Strictly filter out academic competitions, hackathons, medals (Gold/Silver/Bronze), "
+        "high school level groups, and student organizations from work_experience. Only include actual professional jobs, roles, or internships. "
+        "Ensure dates are clean and names are correct."
+    )
+
+    schema_format = {
+        "name": "Full Name",
+        "email": "email@example.com",
+        "phone": "+6281...",
+        "location": "City, Country",
+        "total_experience_years": 4.5,
+        "skills": ["Skill1", "Skill2"],
+        "work_experience": [
+            {
+                "company": "Company Name",
+                "designation": "Job Title / Role",
+                "duration": "Duration / Date Range (e.g. Feb 2026 - Present)"
+            }
+        ],
+        "education": [
+            {
+                "degree": "Degree (e.g. Bachelor of Computer Science)",
+                "institution": "University / Institution Name",
+                "year": "Graduation Year (e.g. 2027)"
+            }
+        ]
+    }
+
+    prompt = (
+        f"Extract the candidate's profile from the following CV text:\n\n"
+        f"--- START CV TEXT ---\n{raw_text}\n--- END CV TEXT ---\n\n"
+        f"Return the profile as a JSON object matching this schema:\n"
+        f"{json.dumps(schema_format, indent=2)}\n\n"
+        f"Rules:\n"
+        f"1. Only return the JSON object, do not wrap in markdown or backticks.\n"
+        f"2. Exclude student organizations (e.g., Himpunan, Him, BEM), school clubs, high school levels, hackathons, competitions (like Multimedia and Game Event), and medals (like Gold/Silver/Bronze) from work_experience. Only actual internships or jobs should go in work_experience.\n"
+        f"3. Make sure to extract actual skills."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=max_tokens,
+            response_format={"type": "json_object"},
+        )
+        content = response.choices[0].message.content or ""
+        
+        try:
+            parsed = json.loads(content)
+        except Exception:
+            repaired = repair_json(content, return_objects=False, ensure_ascii=False)
+            parsed = json.loads(repaired)
+        return parsed
+    except Exception as exc:
+        logger.error("LLM CV extraction execution failed: %s", exc)
+        return None
+
+
+# ──────────────────────────────────────────────────────────────────────
 # Public API
 # ──────────────────────────────────────────────────────────────────────
 
@@ -590,27 +1100,50 @@ def extract_cv(file_bytes: bytes) -> tuple[CVProfile, dict]:
     if not raw_text.strip():
         raise ValueError("No text could be extracted from the PDF.")
 
+    result = None
+    mode = "unknown"
+    
+    # 1. Primary Model: custom DeBERTa NER
     if registry.ner_available:
-        result = extract_with_ner(raw_text, sections)
-        mode = "ner_deberta"
-    else:
+        logger.info("Attempting NER-based CV extraction using: deberta")
+        try:
+            result = extract_with_ner(raw_text, sections)
+            mode = "ner_deberta"
+            logger.info("NER-based CV extraction succeeded.")
+        except Exception as exc:
+            logger.warning("NER-based CV extraction failed: %s. Falling back...", exc)
+
+    # 2. Secondary/Fallback Model: LLM
+    if not result and settings.llm_provider:
+        logger.info("Attempting LLM-based CV extraction fallback using: %s", settings.llm_provider)
+        try:
+            result = extract_with_llm(raw_text)
+            if result:
+                mode = f"llm_{settings.llm_provider}_fallback"
+                logger.info("LLM-based CV extraction fallback succeeded.")
+        except Exception as exc:
+            logger.warning("LLM-based CV extraction fallback failed: %s. Falling back to heuristic...", exc)
+
+    # 3. Tertiary/Heuristic Fallback
+    if not result:
+        logger.info("Attempting heuristic fallback CV extraction.")
         result = extract_with_heuristic(raw_text)
         mode = "heuristic_fallback"
 
     profile = CVProfile(
-        name=result.get("name", ""),
-        email=result.get("email", ""),
-        phone=result.get("phone", ""),
-        location=result.get("location", ""),
-        total_experience_years=result.get("total_experience_years", 0.0),
-        skills=result.get("skills", []),
-        work_experience=[WorkExperience(**we) for we in result.get("work_experience", [])],
-        education=[Education(**ed) for ed in result.get("education", [])],
+        name=result.get("name", "") or "",
+        email=result.get("email", "") or "",
+        phone=result.get("phone", "") or "",
+        location=result.get("location", "") or "",
+        total_experience_years=float(result.get("total_experience_years", 0.0) or 0.0),
+        skills=result.get("skills", []) or [],
+        work_experience=[WorkExperience(**we) for we in result.get("work_experience", []) if we] if result.get("work_experience") else [],
+        education=[Education(**ed) for ed in result.get("education", []) if ed] if result.get("education") else [],
     )
 
     meta = {
         "page_count": pages,
         "extraction_mode": mode,
-        "ner_model_version": "qlop_ner_v2" if mode == "ner_deberta" else "heuristic",
+        "ner_model_version": "llm" if "llm" in mode else ("qlop_ner_v2" if mode == "ner_deberta" else "heuristic"),
     }
     return profile, meta
