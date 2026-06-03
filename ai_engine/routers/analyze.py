@@ -10,7 +10,8 @@ import asyncio
 import logging
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from utils.rate_limiter import limiter
 
 from core.model_loader import registry
 from schemas.analyze import AnalyzeData, AnalyzeRequest
@@ -23,8 +24,10 @@ router = APIRouter(prefix="/api/v1/cv", tags=["analyze"])
 
 
 @router.post("/analyze")
-async def analyze_endpoint(body: AnalyzeRequest):
+@limiter.limit("60/minute")
+async def analyze_endpoint(request: Request, body: AnalyzeRequest):
     start = time.perf_counter()
+
 
     target_role = body.target_role.strip()
     if target_role not in registry.role_to_idx:

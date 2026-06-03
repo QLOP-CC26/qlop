@@ -12,7 +12,8 @@ import time
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from utils.rate_limiter import limiter
 
 from schemas.envelope import success_envelope
 from schemas.extract import ExtractRequest
@@ -23,8 +24,10 @@ router = APIRouter(prefix="/api/v1/cv", tags=["extract"])
 
 
 @router.post("/extract")
-async def extract_endpoint(body: ExtractRequest):
+@limiter.limit("60/minute")
+async def extract_endpoint(request: Request, body: ExtractRequest):
     start = time.perf_counter()
+
 
     parsed = urlparse(body.cloudinary_url)
     host = (parsed.hostname or "").lower()
