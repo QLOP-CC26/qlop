@@ -1185,15 +1185,40 @@ def extract_cv(file_bytes: bytes) -> tuple[CVProfile, dict]:
         result = extract_with_heuristic(raw_text)
         mode = "heuristic_fallback"
 
+    work_exp = []
+    for we in (result.get("work_experience") or []):
+        if we:
+            work_exp.append(WorkExperience(
+                company=str(we.get("company") or "")[:255].strip(),
+                designation=str(we.get("designation") or "")[:255].strip(),
+                duration=str(we.get("duration") or "")[:100].strip()
+            ))
+
+    education_blocks = []
+    for ed in (result.get("education") or []):
+        if ed:
+            education_blocks.append(Education(
+                degree=str(ed.get("degree") or "")[:255].strip(),
+                institution=str(ed.get("institution") or "")[:255].strip(),
+                year=str(ed.get("year") or "")[:50].strip()
+            ))
+
+    skills_cleaned = []
+    for s in (result.get("skills") or []):
+        if isinstance(s, str):
+            skills_cleaned.append(s[:100].strip())
+        elif isinstance(s, dict) and s.get("surface"):
+            skills_cleaned.append(str(s["surface"])[:100].strip())
+
     profile = CVProfile(
-        name=result.get("name", "") or "",
-        email=result.get("email", "") or "",
-        phone=result.get("phone", "") or "",
-        location=result.get("location", "") or "",
+        name=str(result.get("name") or "")[:255].strip(),
+        email=str(result.get("email") or "")[:255].strip(),
+        phone=str(result.get("phone") or "")[:50].strip(),
+        location=str(result.get("location") or "")[:255].strip(),
         total_experience_years=float(result.get("total_experience_years", 0.0) or 0.0),
-        skills=result.get("skills", []) or [],
-        work_experience=[WorkExperience(**we) for we in result.get("work_experience", []) if we] if result.get("work_experience") else [],
-        education=[Education(**ed) for ed in result.get("education", []) if ed] if result.get("education") else [],
+        skills=skills_cleaned,
+        work_experience=work_exp,
+        education=education_blocks,
     )
 
     meta = {
