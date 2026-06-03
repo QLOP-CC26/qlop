@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     vertex_region: str = Field(default="us-central1", validation_alias=AliasChoices("vertex_region", "VERTEX_REGION"))
     vertex_project_id: str = Field(default="", validation_alias=AliasChoices("vertex_project_id", "VERTEX_PROJECT_ID"))
     gemini_model: str = Field(default="gemini-2.5-flash-lite", validation_alias=AliasChoices("gemini_model", "GEMINI_MODEL"))
+    gemini_max_tokens: int = Field(default=4096, validation_alias=AliasChoices("gemini_max_tokens", "GEMINI_MAX_TOKENS"))
 
     career_pivot_top_k: int = 4
 
