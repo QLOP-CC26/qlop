@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.1-8b-instant"
     groq_base_url: str = "https://api.groq.com/openai/v1"
-    groq_max_tokens: int = 2048
+    groq_max_tokens: int = Field(default=8192, validation_alias=AliasChoices("groq_max_tokens", "GROQ_MAX_TOKENS"))
 
     # Gemini (Vertex AI with ADC)
     vertex_region: str = Field(default="us-central1", validation_alias=AliasChoices("vertex_region", "VERTEX_REGION"))

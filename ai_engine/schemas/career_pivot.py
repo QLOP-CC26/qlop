@@ -102,21 +102,45 @@ class CareerPivotRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 class TransferableSkill(BaseModel):
-    skill: str
+    skill: str = ""
     relevance: str = ""
 
 
 class AlternativeRole(BaseModel):
     """Layer 1 — Data-backed roles from the 27-role dataset (SBERT + skill overlap metrics)."""
-    role_name: str
-    sbert_match_score: float = Field(ge=0.0, le=1.0)
-    skill_overlap_pct: float = Field(ge=0.0, le=100.0)
-    why_good_fit: str
-    transferable_skills: list[TransferableSkill]
-    gap_skills: list[str]
-    transition_difficulty: Literal["easy", "moderate", "challenging"]
-    estimated_transition_time: str
-    first_step: str
+    role_name: str = ""
+    sbert_match_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    skill_overlap_pct: float = Field(default=0.0, ge=0.0, le=100.0)
+    why_good_fit: str = ""
+    transferable_skills: list[TransferableSkill] = Field(default_factory=list)
+    gap_skills: list[str] = Field(default_factory=list)
+    transition_difficulty: Literal["easy", "moderate", "challenging"] = "moderate"
+    estimated_transition_time: str = ""
+    first_step: str = ""
+
+    @field_validator("sbert_match_score", mode="before")
+    @classmethod
+    def coerce_sbert_score(cls, v: Any) -> float:
+        if isinstance(v, (int, float)):
+            return max(0.0, min(1.0, float(v)))
+        if isinstance(v, str):
+            try:
+                return max(0.0, min(1.0, float(v)))
+            except ValueError:
+                return 0.0
+        return 0.0
+
+    @field_validator("skill_overlap_pct", mode="before")
+    @classmethod
+    def coerce_skill_overlap(cls, v: Any) -> float:
+        if isinstance(v, (int, float)):
+            return max(0.0, min(100.0, float(v)))
+        if isinstance(v, str):
+            try:
+                return max(0.0, min(100.0, float(v.replace("%", "").strip())))
+            except ValueError:
+                return 0.0
+        return 0.0
 
     @field_validator("transition_difficulty", mode="before")
     @classmethod
@@ -158,6 +182,8 @@ class AlternativeRole(BaseModel):
                     if skill_val and skill_val.lower() not in _SENTINELS:
                         result.append({"skill": skill_val, "relevance": rel})
             return result
+        if v is None:
+            return []
         return v
 
 
@@ -170,16 +196,16 @@ class AIDiscoveredRole(BaseModel):
     - market_demand: AI knowledge of current job market
     - category: type of career move
     """
-    role_name: str
-    category: Literal["specialization", "adjacent", "leadership", "pivot"]
-    why_good_fit: str
-    transferable_skills: list[str]
-    skills_to_develop: list[str]
-    transition_difficulty: Literal["easy", "moderate", "challenging"]
-    estimated_transition_months: int = Field(ge=1, le=48)
-    skill_readiness_pct: float = Field(ge=0.0, le=100.0, default=0.0)
-    first_step: str
-    market_demand: Literal["high", "medium", "low"]
+    role_name: str = ""
+    category: Literal["specialization", "adjacent", "leadership", "pivot"] = "adjacent"
+    why_good_fit: str = ""
+    transferable_skills: list[str] = Field(default_factory=list)
+    skills_to_develop: list[str] = Field(default_factory=list)
+    transition_difficulty: Literal["easy", "moderate", "challenging"] = "moderate"
+    estimated_transition_months: int = Field(default=6, ge=1, le=48)
+    skill_readiness_pct: float = Field(default=0.0, ge=0.0, le=100.0)
+    first_step: str = ""
+    market_demand: Literal["high", "medium", "low"] = "medium"
 
     @model_validator(mode="before")
     @classmethod
@@ -197,7 +223,27 @@ class AIDiscoveredRole(BaseModel):
                         data["estimated_transition_months"] = 6
                 else:
                     data["estimated_transition_months"] = 6
-                    
+
+            # Ensure estimated_transition_months is within bounds
+            months = data.get("estimated_transition_months")
+            if months is not None:
+                try:
+                    data["estimated_transition_months"] = max(1, min(48, int(months)))
+                except (ValueError, TypeError):
+                    data["estimated_transition_months"] = 6
+            else:
+                data["estimated_transition_months"] = 6
+
+            # Ensure skill_readiness_pct is within bounds
+            pct = data.get("skill_readiness_pct")
+            if pct is not None:
+                try:
+                    data["skill_readiness_pct"] = max(0.0, min(100.0, float(pct)))
+                except (ValueError, TypeError):
+                    data["skill_readiness_pct"] = 0.0
+            else:
+                data["skill_readiness_pct"] = 0.0
+
             # Ensure skills_to_develop is present
             if "skills_to_develop" not in data or not data["skills_to_develop"]:
                 # Fallback to skills / missing_skills if returned
@@ -254,19 +300,37 @@ class AIDiscoveredRole(BaseModel):
                     if val and val.lower() not in _SENTINELS:
                         result.append(val)
             return result
+        if v is None:
+            return []
         return v
 
 
 class SuggestedCertification(BaseModel):
-    name: str
+    name: str = ""
     relevance: str = ""
 
 
 class CurrentRoleAssessment(BaseModel):
-    target_role: str
-    readiness_score: float
-    readiness_level: Literal["low", "moderate", "high", "excellent"]
-    verdict: str
+    target_role: str = ""
+    readiness_score: float = 0.0
+    readiness_level: Literal["low", "moderate", "high", "excellent"] = "moderate"
+    verdict: str = ""
+
+    @field_validator("readiness_score", mode="before")
+    @classmethod
+    def coerce_readiness_score(cls, v: Any) -> float:
+        if isinstance(v, (int, float)):
+            return max(0.0, min(1.0, float(v)))
+        if isinstance(v, str):
+            v_clean = v.replace("%", "").strip()
+            try:
+                val = float(v_clean)
+                if val > 1.0:
+                    val = val / 100.0
+                return max(0.0, min(1.0, val))
+            except ValueError:
+                return 0.0
+        return 0.0
 
     @field_validator("readiness_level", mode="before")
     @classmethod
@@ -283,9 +347,40 @@ class CareerPivotOutput(BaseModel):
     """
 
     thinking_process: str = ""
-    current_role_assessment: CurrentRoleAssessment
-    alternative_roles: list[AlternativeRole]
-    ai_discovered_roles: list[AIDiscoveredRole]
+    current_role_assessment: CurrentRoleAssessment = Field(default_factory=lambda: CurrentRoleAssessment())
+    alternative_roles: list[AlternativeRole] = Field(default_factory=list)
+    ai_discovered_roles: list[AIDiscoveredRole] = Field(default_factory=list)
+
+    @field_validator("thinking_process", mode="before")
+    @classmethod
+    def coerce_thinking_process(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return " | ".join(str(item) for item in v)
+        if v is None:
+            return ""
+        return str(v)
+
+    @field_validator("current_role_assessment", mode="before")
+    @classmethod
+    def coerce_current_role_assessment(cls, v: Any) -> Any:
+        if not isinstance(v, dict):
+            return {}
+        return v
+
+    @field_validator("alternative_roles", mode="before")
+    @classmethod
+    def coerce_alternative_roles(cls, v: Any) -> Any:
+        if not isinstance(v, list):
+            return []
+        return v
+
+    @field_validator("ai_discovered_roles", mode="before")
+    @classmethod
+    def coerce_ai_discovered_roles(cls, v: Any) -> Any:
+        if not isinstance(v, list):
+            return []
+        return v
+
     # These three fields appear at the END of the JSON template; when max_tokens is
     # exhausted mid-response the LLM omits them. Defaults let the response succeed
     # gracefully instead of returning a 503 to the user.
@@ -309,7 +404,7 @@ class CareerPivotOutput(BaseModel):
                     if val and val.lower() not in _SENTINELS:
                         result.append(val)
             return result
-        return v
+        return []
 
     @field_validator("suggested_certifications", mode="before")
     @classmethod
@@ -331,7 +426,14 @@ class CareerPivotOutput(BaseModel):
                     if name_val and name_val.lower() not in _SENTINELS:
                         result.append({"name": name_val, "relevance": rel})
             return result
-        return v
+        return []
+
+    @field_validator("universal_advice", mode="before")
+    @classmethod
+    def coerce_universal_advice(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        return str(v)
 
 
 class CareerPivotMetadata(BaseModel):

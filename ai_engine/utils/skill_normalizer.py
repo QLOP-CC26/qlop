@@ -66,3 +66,11 @@ def safe_float(value: object) -> float:
         return val
     except (ValueError, TypeError):
         return 0.0
+
+
+def is_garbage(s: str | None) -> bool:
+    if not s:
+        return True
+    s_clean = s.strip().lower()
+    bad_keywords = {"undefined", "null", "nan", "none", "placeholder", "-", "n/a", "na"}
+    return s_clean in bad_keywords
