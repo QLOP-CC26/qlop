@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from schemas.analyze import CourseRecommendation, ReadinessResult, SkillGap
 from schemas.cv_profile import CVProfile
@@ -181,6 +181,42 @@ class AIDiscoveredRole(BaseModel):
     first_step: str
     market_demand: Literal["high", "medium", "low"]
 
+    @model_validator(mode="before")
+    @classmethod
+    def clean_role_dict(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Map estimated_transition_time -> estimated_transition_months if missing
+            if "estimated_transition_months" not in data or data["estimated_transition_months"] is None:
+                val = data.get("estimated_transition_time")
+                if val:
+                    # extract digits
+                    match = re.search(r"\d+", str(val))
+                    if match:
+                        data["estimated_transition_months"] = int(match.group())
+                    else:
+                        data["estimated_transition_months"] = 6
+                else:
+                    data["estimated_transition_months"] = 6
+                    
+            # Ensure skills_to_develop is present
+            if "skills_to_develop" not in data or not data["skills_to_develop"]:
+                # Fallback to skills / missing_skills if returned
+                data["skills_to_develop"] = data.get("skills", data.get("missing_skills", []))
+
+            # Ensure transition_difficulty is present
+            if "transition_difficulty" not in data:
+                data["transition_difficulty"] = "moderate"
+
+            # Ensure first_step is present
+            if "first_step" not in data:
+                data["first_step"] = "Learn the essential skills for this role."
+
+            # Ensure market_demand is present
+            if "market_demand" not in data:
+                data["market_demand"] = "medium"
+
+        return data
+
     @field_validator("transition_difficulty", mode="before")
     @classmethod
     def normalize_difficulty(cls, v: Any) -> Any:
@@ -246,6 +282,7 @@ class CareerPivotOutput(BaseModel):
     ai_discovered_roles — Layer 2: AI-generated roles beyond the dataset, based on full CV analysis.
     """
 
+    thinking_process: str = ""
     current_role_assessment: CurrentRoleAssessment
     alternative_roles: list[AlternativeRole]
     ai_discovered_roles: list[AIDiscoveredRole]
