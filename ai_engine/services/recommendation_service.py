@@ -1,7 +1,7 @@
 """Skill Gap Analysis + Course Recommendation Service.
 
-Ported from api_recommendation/app.py — Model3 (skill gap scorer)
-and Model4 (two-tower course matcher).
+Uses the Skill Gap Priority Scorer (Model 3)
+and the Course Matching Two-Tower Model (Model 4).
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ logger = logging.getLogger("qlop.recommendation")
 
 def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[CourseRecommendation]]:
     """
-    Run Model3 (gap priority) + Model4 (course matching) and return
+    Run Skill Gap Priority Scorer + Course Matching Two-Tower Model and return
     structured results.
 
     Parameters
@@ -40,8 +40,8 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
     if target_role not in r.role_to_idx:
         raise ValueError(f"Role '{target_role}' not recognized.")
 
-    if r.infer3 is None:
-        raise RuntimeError("Model3 (skill gap) is not loaded — check model3_savedmodel path in settings.")
+    if r.infer_skill_gap_priority_scorer is None:
+        raise RuntimeError("Skill Gap Priority Scorer is not loaded — check skill_gap_priority_scorer_path in settings.")
 
     import tensorflow as tf  # lazy import — tensorflow loads at startup via registry
 
@@ -62,9 +62,9 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
                 user_vec[0, r.skill_to_idx_li[best]] = 1.0
                 recognised_skills.append(best)
 
-    # ── Model3: gap priority scorer ──
+    # ── Skill Gap Priority Scorer ──
     role_idx = np.array([[r.role_to_idx[target_role]]], dtype=np.int32)
-    out3 = r.infer3(
+    out3 = r.infer_skill_gap_priority_scorer(
         user_skills=tf.constant(user_vec),
         role_index=tf.constant(role_idx),
     )
@@ -94,7 +94,7 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
 
     skill_gap = SkillGap(matched_skills=matched_skills, missing_skills=missing_skills)
 
-    # ── Model4: course recommendation ──
+    # ── Course Matching Two-Tower Model (Model 4) ──
     courses = _recommend_courses(missing_skills)
 
     return skill_gap, courses
@@ -105,7 +105,7 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
 
     r = registry
 
-    if r.infer4 is None:
+    if r.infer_course_matching_two_tower_model is None:
         return []
     if r.df_coursera is None or r.df_coursera.empty:
         return []
@@ -125,7 +125,7 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
     demand_f16 = tf.cast(tf.constant(demand_batch), tf.float16)
     course_f16 = tf.cast(tf.constant(course_batch), tf.float16)
 
-    out4 = r.infer4(args_0=demand_f16, args_0_1=course_f16)
+    out4 = r.infer_course_matching_two_tower_model(args_0=demand_f16, args_0_1=course_f16)
     match_scores = next(iter(out4.values())).numpy().flatten()
 
     top_course_idx = np.argsort(match_scores)[::-1][:20]
