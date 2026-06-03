@@ -28,7 +28,7 @@ from core.model_loader import registry
 from schemas.analyze import ReadinessResult, SkillGap
 from schemas.career_pivot import CareerPivotOutput
 from schemas.cv_profile import CVProfile
-from utils.skill_normalizer import flatten_skills, fuzzy_match_skill
+from utils.skill_normalizer import flatten_skills, fuzzy_match_skill, is_garbage
 
 logger = logging.getLogger("qlop.career_pivot")
 
@@ -200,14 +200,40 @@ def _build_single_shot_prompt(
     usage by ~60 % and eliminates the 429s caused by growing accumulated context.
     """
     skills_flat = flatten_skills(profile.skills)
-    work_entries = [w for w in profile.work_experience if w.company][:4]
+    
+    # Filter out garbage work experience
+    work_entries = []
+    for w in profile.work_experience:
+        comp = w.company.strip() if w.company else ""
+        desg = w.designation.strip() if w.designation else ""
+        if not comp or is_garbage(comp):
+            continue
+        if is_garbage(desg):
+            desg = ""
+        work_entries.append((comp, desg))
+    work_entries = work_entries[:4]
+
     work_str = "; ".join(
-        f"{w.designation} @ {w.company}" for w in work_entries
+        f"{desg} @ {comp}" if desg else comp for comp, desg in work_entries
     ) or "not available"
+
+    # Filter out garbage education
+    edu_entries = []
+    for e in profile.education:
+        deg = e.degree.strip() if e.degree else ""
+        inst = e.institution.strip() if e.institution else ""
+        if not inst or is_garbage(inst):
+            continue
+        if is_garbage(deg):
+            deg = ""
+        edu_entries.append((inst, deg))
+    edu_entries = edu_entries[:4]
+
     edu_str = "; ".join(
-        f"{e.degree} — {e.institution}" for e in profile.education if e.institution
+        f"{deg} — {inst}" if deg else inst for inst, deg in edu_entries
     ) or "not available"
-    designations = [w.designation for w in work_entries if w.designation]
+
+    designations = [desg for comp, desg in work_entries if desg]
     traj_hint = " → ".join(designations[-3:]) if designations else "unknown"
 
     missing_str = ", ".join(m.skill for m in skill_gap.missing_skills[:4]) or "none"
@@ -360,7 +386,7 @@ async def generate_career_pivot(
             model = settings.gemini_model
             if not model.startswith("google/"):
                 model = f"google/{model}"
-            max_tokens = 4096
+            max_tokens = 8192
             used_model = model
 
             prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
