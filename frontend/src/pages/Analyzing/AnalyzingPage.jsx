@@ -160,6 +160,8 @@ const AnalyzingPage = () => {
   }, []);
 
   const runAnalysis = async () => {
+    setError('');
+    setIsLoading(true);
     setStepStatuses(['active', 'pending', 'pending', 'pending']);
     await sleep(700);
     setStepStatuses(['done', 'active', 'pending', 'pending']);
@@ -338,8 +340,17 @@ const AnalyzingPage = () => {
             </div>
 
             {error && (
-              <div className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-                {error}
+              <div className="flex flex-col gap-3 w-full">
+                <div className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                  {error}
+                </div>
+                <button
+                  type="button"
+                  onClick={runAnalysis}
+                  className="w-full h-10 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 active:scale-[0.99] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                >
+                  Retry Analysis
+                </button>
               </div>
             )}
           </div>

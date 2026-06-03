@@ -400,8 +400,61 @@ def _expand_to_full_words(ent_text: str, full_text: str) -> str:
     return expanded
 
 
+def _detect_sections_with_offsets(text: str) -> dict[str, tuple[int, int]]:
+    """Detect sections and return their start and end character offsets in the text."""
+    positions: list[tuple[int, str]] = []
+    for name, pattern in _SECTION_PATTERNS.items():
+        m = pattern.search(text)
+        if m:
+            positions.append((m.end(), name))
+    positions.sort()
+
+    offsets: dict[str, tuple[int, int]] = {}
+    for i, (start, name) in enumerate(positions):
+        end = positions[i + 1][0] if i + 1 < len(positions) else len(text)
+        offsets[name] = (start, end)
+    return offsets
+
+
+def _find_all_occurrences(sub: str, text: str) -> list[int]:
+    """Find all start character offsets of a substring in a text (case-insensitive)."""
+    if not sub:
+        return []
+    indices = []
+    start = 0
+    sub_lower = sub.lower()
+    text_lower = text.lower()
+    while True:
+        pos = text_lower.find(sub_lower, start)
+        if pos == -1:
+            break
+        indices.append(pos)
+        start = pos + len(sub)
+    return indices
+
+
+def _entity_in_section(
+    ent_text: str,
+    raw_text: str,
+    section_offsets: dict[str, tuple[int, int]],
+    section_name: str,
+) -> bool:
+    """Check if an entity falls within the start/end offsets of a given section.
+    
+    If the section is not detected/present, returns True as a fallback.
+    """
+    if section_name not in section_offsets:
+        return True
+    start, end = section_offsets[section_name]
+    occurrences = _find_all_occurrences(ent_text, raw_text)
+    for pos in occurrences:
+        if start <= pos < end:
+            return True
+    return False
+
+
 def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
-    """Run full NER pipeline on text (section-aware)."""
+    """Run full NER pipeline on text (section-aware, single-pass)."""
     output: dict = {
         "name": "", "email": "", "phone": "", "location": "",
         "total_experience_years": 0.0,
@@ -409,11 +462,21 @@ def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
         "work_experience": [], "education": [],
     }
 
-    # 1. Name, Email, Phone, Location (run on header or first 15 lines)
+    # Run the model exactly once on the raw text
+    all_ents = _sliding_window_ner(raw_text)
+    offsets = _detect_sections_with_offsets(raw_text)
+
+    # 1. Name, Email, Phone, Location (check header / first 15 lines of raw_text)
     header_text = "\n".join(raw_text.split("\n")[:15])
-    header_ents = _sliding_window_ner(header_text)
-    for ent in header_ents:
+    header_len = len(header_text)
+    for ent in all_ents:
         label, text = ent["label"], ent["text"].strip()
+        # Find if any occurrence of this entity falls within the header
+        occurrences = _find_all_occurrences(text, raw_text)
+        in_header = any(pos < header_len for pos in occurrences)
+        if not in_header:
+            continue
+
         if label == "Name" and not output["name"]:
             if len(text) >= 3 and not text.startswith(("http", "www")):
                 if text.lower() not in _NAME_BLOCKLIST:
@@ -459,37 +522,32 @@ def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
         if len(re.sub(r"\D", "", candidate)) >= 7:
             output["phone"] = candidate
 
-    # 2. Skills (run on the skills section or the full text)
-    skills_text = sections.get("skills", raw_text)
-    skills_ents = _sliding_window_ner(skills_text)
+    # 2. Skills (filter skill entities within the skills section/offsets)
     skills_seen = set()
-    for ent in skills_ents:
+    for ent in all_ents:
         if ent["label"] == "Skill" and _is_valid_skill(ent["text"]):
-            normalized, _ = _normalize_skill(ent["text"])
-            key = normalized.lower()
-            if key not in skills_seen:
-                skills_seen.add(key)
-                output["skills"].append(normalized)
+            if _entity_in_section(ent["text"], raw_text, offsets, "skills"):
+                normalized, _ = _normalize_skill(ent["text"])
+                key = normalized.lower()
+                if key not in skills_seen:
+                    skills_seen.add(key)
+                    output["skills"].append(normalized)
 
-    # 3. Work Experience (run ONLY on experience section if found)
-    exp_text = sections.get("experience", "")
-    if exp_text:
-        exp_ents = _sliding_window_ner(exp_text)
-    else:
-        exp_text = raw_text
-        exp_ents = _sliding_window_ner(raw_text)
-
+    # 3. Work Experience (filter experience entities within the experience section/offsets)
+    exp_text = sections.get("experience", raw_text)
     relevant_exp_ents = []
-    for ent in exp_ents:
+    for ent in all_ents:
         label, text = ent["label"], ent["text"].strip()
-        if label == "Company" and _is_valid_company(text):
-            relevant_exp_ents.append(ent)
-        elif label == "Designation" and len(text) >= 3:
-            if text.lower() not in {"work", "job", "per", "member", "staff", "him"}:
-                relevant_exp_ents.append(ent)
-        elif label == "YearsExperience" and len(text) >= 3:
-            if _is_valid_duration(text):
-                relevant_exp_ents.append(ent)
+        if label in {"Company", "Designation", "YearsExperience"}:
+            if _entity_in_section(ent["text"], raw_text, offsets, "experience"):
+                if label == "Company" and _is_valid_company(text):
+                    relevant_exp_ents.append(ent)
+                elif label == "Designation" and len(text) >= 3:
+                    if text.lower() not in {"work", "job", "per", "member", "staff", "him"}:
+                        relevant_exp_ents.append(ent)
+                elif label == "YearsExperience" and len(text) >= 3:
+                    if _is_valid_duration(text):
+                        relevant_exp_ents.append(ent)
 
     grouped_jobs = _group_entities_by_proximity(relevant_exp_ents, exp_text, max_dist=120)
     ner_jobs = []
@@ -564,23 +622,20 @@ def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
         
     output["work_experience"] = cleaned_jobs
 
-    # 4. Education (run ONLY on education section if found)
-    edu_text = sections.get("education", "")
-    if edu_text:
-        edu_ents = _sliding_window_ner(edu_text)
-    else:
-        edu_ents = _sliding_window_ner(raw_text)
-
+    # 4. Education (filter education entities within the education section/offsets)
+    edu_text = sections.get("education", raw_text)
     degrees = []
     institutions = []
-    for ent in edu_ents:
+    for ent in all_ents:
         label, text = ent["label"], ent["text"].strip()
-        if label == "Degree":
-            words = text.split()
-            if len(words) >= 2 or (len(text) >= 3 and text[:2].upper() in {"S1", "S2", "S3", "D3", "D4"}):
-                degrees.append(text)
-        elif label == "Institution" and len(text) >= 3:
-            institutions.append(text)
+        if label in {"Degree", "Institution"}:
+            if _entity_in_section(ent["text"], raw_text, offsets, "education"):
+                if label == "Degree":
+                    words = text.split()
+                    if len(words) >= 2 or (len(text) >= 3 and text[:2].upper() in {"S1", "S2", "S3", "D3", "D4"}):
+                        degrees.append(text)
+                elif label == "Institution" and len(text) >= 3:
+                    institutions.append(text)
 
     ner_edu = []
     for i in range(max(len(degrees), len(institutions))):
@@ -593,7 +648,7 @@ def extract_with_ner(raw_text: str, sections: dict[str, str]) -> dict:
                 "year": ""
             })
 
-    regex_edu = _extract_education_via_regex(edu_text if edu_text else raw_text)
+    regex_edu = _extract_education_via_regex(edu_text)
     final_edu = []
     for r_ed in regex_edu:
         matched_idx = -1
