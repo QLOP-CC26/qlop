@@ -81,10 +81,11 @@ def retrieve_alternative_roles(
     cv_skills: list[str],
     target_role: str,
     top_k: int = 5,
+    designations: list[str] | None = None,
 ) -> list[RetrievedRole]:
     """
-    Encode user skills with SBERT → cosine similarity against all precomputed
-    role centroids → return top-k alternative roles (excluding target_role).
+    Encode user skills and designations with SBERT → cosine similarity against all
+    precomputed role centroids → return top-k alternative roles (excluding target_role).
 
     role_centroids are computed once at startup in ModelRegistry.
     """
@@ -104,14 +105,31 @@ def retrieve_alternative_roles(
             if best:
                 normalised.append(best)
 
-    if not normalised:
+    if not normalised and not designations:
         return []
 
     if not r.sbert_model:
         return []
 
-    user_text = " ".join(normalised)
-    user_emb = np.array(r.sbert_model.encode([user_text], convert_to_tensor=False)[0]).astype(np.float32)
+    # Weighted Average embedding: 60% designations (experience), 40% skills
+    if normalised and designations:
+        skills_text = " ".join(normalised)
+        designations_text = " ".join(designations)
+        
+        skills_emb = np.array(r.sbert_model.encode([skills_text], convert_to_tensor=False)[0]).astype(np.float32)
+        designations_emb = np.array(r.sbert_model.encode([designations_text], convert_to_tensor=False)[0]).astype(np.float32)
+        
+        skills_norm = skills_emb / (np.linalg.norm(skills_emb) + 1e-9)
+        designations_norm = designations_emb / (np.linalg.norm(designations_emb) + 1e-9)
+        
+        user_emb = 0.4 * skills_norm + 0.6 * designations_norm
+    elif normalised:
+        skills_text = " ".join(normalised)
+        user_emb = np.array(r.sbert_model.encode([skills_text], convert_to_tensor=False)[0]).astype(np.float32)
+    else:
+        designations_text = " ".join(designations)
+        user_emb = np.array(r.sbert_model.encode([designations_text], convert_to_tensor=False)[0]).astype(np.float32)
+
     user_norm = user_emb / (np.linalg.norm(user_emb) + 1e-9)
 
     scored: list[tuple[str, float]] = []
@@ -152,6 +170,7 @@ def retrieve_alternative_roles(
 _SYSTEM_INSTRUCTION = (
     "IT career coach, 2026. Use work history as primary signal. "
     "JSON only. Be specific, concise, non-generic. "
+    "First perform step-by-step reasoning (under 100 words) in the 'thinking_process' field. "
     "Each skill relevance: evidence + role task + impact (≥12 words). "
     "No boilerplate like 'has experience with' or 'fundamental skill'. "
     "first_step = actionable within 1-2 weeks, unique per role."
@@ -216,6 +235,7 @@ def _build_single_shot_prompt(
     ]
 
     pre_filled = {
+        "thinking_process": "Write step-by-step reasoning details here (e.g. analyzing candidate's background, skill gap, and why target role makes sense).",
         "current_role_assessment": {
             "target_role": target_role,
             "readiness_score": readiness.score,
@@ -254,6 +274,7 @@ def _build_single_shot_prompt(
         f"Target: {target_role} | Readiness: {readiness.score:.2f} | Gap: {missing_str}\n\n"
         f"LAYER1_ROLES (keep numeric scores): {roles_compact}\n\n"
         "TASK: Fill JSON template. Replace __FILL__ with real content.\n"
+        "- thinking_process: Write step-by-step reasoning analysis first\n"
         "- alternative_roles: role-specific skills (2 each) + unique first_step per role\n"
         "- ai_discovered_roles: 3 roles NOT in Layer1, category=specialization|adjacent|leadership|pivot\n"
         "- transition_difficulty: easy|moderate|challenging | estimated_transition_time: string e.g. '6 months'\n"
@@ -295,8 +316,8 @@ async def generate_career_pivot(
     skill_gap: SkillGap,
     readiness: ReadinessResult,
     retrieved_roles: list[RetrievedRole],
-) -> CareerPivotOutput:
-    """Single-shot Groq call with chain-of-thought embedded in the prompt.
+) -> tuple[CareerPivotOutput, str]:
+    """Single-shot LLM call with chain-of-thought embedded in the prompt.
 
     Replaces the previous 3-turn approach. Token usage drops ~60% because
     accumulated assistant responses are no longer re-sent on every turn.
@@ -304,26 +325,86 @@ async def generate_career_pivot(
     """
     import openai  # lazy import — only needed when career pivot is called
 
-    if not settings.groq_api_key:
-        raise ValueError("GROQ_API_KEY not configured")
-
-    client = openai.OpenAI(
-        api_key=settings.groq_api_key,
-        base_url=settings.groq_base_url,
-    )
-    model = settings.groq_model
     loop = asyncio.get_running_loop()
 
-    prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
-    messages: list[dict] = [
-        {"role": "system", "content": _SYSTEM_INSTRUCTION},
-        {"role": "user", "content": prompt},
-    ]
+    use_gemini = (settings.llm_provider == "gemini")
+    raw_json = ""
+    used_model = ""
 
-    raw_json = await loop.run_in_executor(
-        None,
-        lambda: _groq_call(client, model, messages, temperature=0.15, max_tokens=settings.groq_max_tokens),
-    )
+    if use_gemini:
+        try:
+            import google.auth
+            import google.auth.transport.requests
+        except ImportError as exc:
+            logger.error("google-auth package not installed: %s", exc)
+            raise RuntimeError("google-auth package is not installed. Run: pip install google-auth") from exc
+
+        try:
+            def _get_vertex_client():
+                credentials, project_id = google.auth.default(
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                )
+                gcp_project = settings.vertex_project_id or project_id
+                if not gcp_project:
+                    raise ValueError("Could not determine Google Cloud project ID. Please set VERTEX_PROJECT_ID in .env")
+                auth_req = google.auth.transport.requests.Request()
+                credentials.refresh(auth_req)
+                
+                region = settings.vertex_region
+                return openai.OpenAI(
+                    api_key=credentials.token,
+                    base_url=f"https://{region}-aiplatform.googleapis.com/v1/projects/{gcp_project}/locations/{region}/endpoints/openapi",
+                )
+
+            client = await loop.run_in_executor(None, _get_vertex_client)
+            model = settings.gemini_model
+            if not model.startswith("google/"):
+                model = f"google/{model}"
+            max_tokens = 4096
+            used_model = model
+
+            prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
+            messages: list[dict] = [
+                {"role": "system", "content": _SYSTEM_INSTRUCTION},
+                {"role": "user", "content": prompt},
+            ]
+
+            raw_json = await loop.run_in_executor(
+                None,
+                lambda: _groq_call(client, model, messages, temperature=0.15, max_tokens=max_tokens),
+            )
+            logger.info("Successfully received response from Gemini API model: %s", model)
+        except Exception as exc:
+            logger.warning("Gemini/Vertex AI call failed with error: %s. Falling back to Groq...", exc)
+            if not settings.groq_api_key:
+                logger.error("No Groq API key available for fallback.")
+                raise exc
+            use_gemini = False  # Trigger fallback below
+
+    if not use_gemini:
+        if not settings.groq_api_key:
+            raise ValueError("GROQ_API_KEY not configured")
+
+        client = openai.OpenAI(
+            api_key=settings.groq_api_key,
+            base_url=settings.groq_base_url,
+        )
+        model = settings.groq_model
+        max_tokens = settings.groq_max_tokens
+        used_model = model
+
+        prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
+        messages: list[dict] = [
+            {"role": "system", "content": _SYSTEM_INSTRUCTION},
+            {"role": "user", "content": prompt},
+        ]
+
+        raw_json = await loop.run_in_executor(
+            None,
+            lambda: _groq_call(client, model, messages, temperature=0.15, max_tokens=max_tokens),
+        )
+        logger.info("Successfully received response from Groq API model: %s", model)
+
     logger.debug("Single-shot response received (%d chars)", len(raw_json))
 
     # ── Parse pipeline: 3 layers of increasing tolerance ─────────────────
@@ -384,4 +465,4 @@ async def generate_career_pivot(
         total = t + d
         ai_role.skill_readiness_pct = round(t / total * 100, 1) if total > 0 else 0.0
 
-    return parsed
+    return parsed, used_model

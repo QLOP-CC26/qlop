@@ -19,8 +19,8 @@ class Settings(BaseSettings):
 
     # --- Recommendation paths ---
     rec_data_dir: Path = _BASE_DIR / "model_assets" / "recommendation"
-    rec_model3_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "skill_priority_scorer_savedmodel"
-    rec_model4_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "two_tower_course_model_savedmodel"
+    rec_skill_gap_priority_scorer_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "skill_priority_scorer_savedmodel"
+    rec_course_matching_two_tower_model_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "two_tower_course_model_savedmodel"
 
     # --- NER model config ---
     ner_base_model: str = Field(default="microsoft/deberta-v3-base", validation_alias=AliasChoices("ner_base_model", "NER_BASE_MODEL"))
@@ -39,15 +39,20 @@ class Settings(BaseSettings):
     # SBERT model name — change to a larger model if readiness quality needs improvement
     sbert_model_name: str = Field(default="all-MiniLM-L6-v2", validation_alias=AliasChoices("sbert_model_name", "EMBEDDING_MODEL", "embedding_model"))
 
-    # --- Groq (OpenAI-compatible, free tier) ---
+    # --- LLM Provider Settings (Groq / Gemini) ---
+    llm_provider: str = Field(default="gemini", validation_alias=AliasChoices("llm_provider", "LLM_PROVIDER"))
+
+    # Groq (OpenAI-compatible, free tier)
     groq_api_key: str = ""
-    # llama-3.1-8b-instant → fast; free tier ~6k TPM per request (input + max_tokens combined)
-    # meta-llama/llama-4-scout-17b-16e-instruct → higher TPM headroom (~30k), better quality
     groq_model: str = "llama-3.1-8b-instant"
     groq_base_url: str = "https://api.groq.com/openai/v1"
-    # Groq rejects a request when prompt_tokens + max_tokens exceeds the model TPM cap.
-    # Keep this ≤ 2048 on 8b free tier; raise only if you switch to Scout/70B.
     groq_max_tokens: int = 2048
+
+    # Gemini (Vertex AI with ADC)
+    vertex_region: str = Field(default="us-central1", validation_alias=AliasChoices("vertex_region", "VERTEX_REGION"))
+    vertex_project_id: str = Field(default="", validation_alias=AliasChoices("vertex_project_id", "VERTEX_PROJECT_ID"))
+    gemini_model: str = Field(default="gemini-2.5-flash-lite", validation_alias=AliasChoices("gemini_model", "GEMINI_MODEL"))
+
     career_pivot_top_k: int = 4
 
     model_config = {"env_file": str(_BASE_DIR / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}

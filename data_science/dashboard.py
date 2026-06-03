@@ -20,9 +20,16 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────
+try:
+    from PIL import Image
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.png")
+    page_icon = Image.open(logo_path)
+except Exception:
+    page_icon = "📊"
+
 st.set_page_config(
     page_title="QLOP – Market Insight Dashboard",
-    page_icon="📊",
+    page_icon=page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
 )
