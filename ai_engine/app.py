@@ -180,8 +180,10 @@ async def health():
     return {
         "status": "ok",
         "ner_available": registry.ner_available,
-        "model3_available": registry.infer3 is not None,
-        "model4_available": registry.infer4 is not None,
+        "model3_available": registry.infer_skill_gap_priority_scorer is not None,
+        "model4_available": registry.infer_course_matching_two_tower_model is not None,
+        "skill_gap_priority_scorer_available": registry.infer_skill_gap_priority_scorer is not None,
+        "course_matching_two_tower_model_available": registry.infer_course_matching_two_tower_model is not None,
         "roles_loaded": len(registry.role_to_idx),
         "sbert_loaded": registry.sbert_model is not None,
         "role_centroids": len(registry.role_centroids),
