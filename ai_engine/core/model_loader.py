@@ -37,8 +37,8 @@ class ModelRegistry:
         self.skill_lookup: dict[str, str] = {}
 
         # Recommendation
-        self.infer3 = None
-        self.infer4 = None
+        self.infer_skill_gap_priority_scorer = None
+        self.infer_course_matching_two_tower_model = None
         self.skill_to_idx_li: dict[str, int] = {}
         self.idx_to_skill_li: dict[str, str] = {}
         self.n_skills_li: int = 0
@@ -234,23 +234,23 @@ class ModelRegistry:
 
         data_dir = settings.rec_data_dir
 
-        # ── Model3 (Skill Gap) ──
-        pb3 = settings.rec_model3_path / "saved_model.pb"
+        # ── Skill Gap Priority Scorer ──
+        pb3 = settings.rec_skill_gap_priority_scorer_path / "saved_model.pb"
         if pb3.exists():
-            loaded3 = tf.saved_model.load(str(settings.rec_model3_path))
-            self.infer3 = loaded3.signatures["serving_default"]
-            logger.info("Model3 (skill gap) loaded")
+            loaded3 = tf.saved_model.load(str(settings.rec_skill_gap_priority_scorer_path))
+            self.infer_skill_gap_priority_scorer = loaded3.signatures["serving_default"]
+            logger.info("Skill Gap Priority Scorer loaded")
         else:
-            logger.warning("Model3 saved_model.pb missing — skill gap will return empty results")
+            logger.warning("Skill Gap Priority Scorer saved_model.pb missing — skill gap will return empty results")
 
-        # ── Model4 (Course Recommendation) ──
-        pb4 = settings.rec_model4_path / "saved_model.pb"
+        # ── Course Matching Two-Tower Model ──
+        pb4 = settings.rec_course_matching_two_tower_model_path / "saved_model.pb"
         if pb4.exists():
-            loaded4 = tf.saved_model.load(str(settings.rec_model4_path))
-            self.infer4 = loaded4.signatures["serving_default"]
-            logger.info("Model4 (course rec) loaded")
+            loaded4 = tf.saved_model.load(str(settings.rec_course_matching_two_tower_model_path))
+            self.infer_course_matching_two_tower_model = loaded4.signatures["serving_default"]
+            logger.info("Course Matching Two-Tower Model loaded")
         else:
-            logger.warning("Model4 saved_model.pb missing — course recommendations will be empty. "
+            logger.warning("Course Matching Two-Tower Model saved_model.pb missing — course recommendations will be empty. "
                            "Run kaggle_train_model4.ipynb on Kaggle and copy the output here.")
 
         with open(data_dir / "skill_vocab_linkedin.json", "r", encoding="utf-8") as f:
@@ -285,7 +285,7 @@ class ModelRegistry:
         role_list = sorted(self.role_freq.keys())
         self.role_to_idx = {role: i for i, role in enumerate(role_list)}
 
-        logger.info("Recommendation models loaded (Model3 + Model4)")
+        logger.info("Recommendation models loaded (Skill Gap Priority Scorer + Course Matching Two-Tower Model)")
 
     # ------------------------------------------------------------------
     # Readiness (SBERT)
