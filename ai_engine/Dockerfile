@@ -26,12 +26,12 @@ RUN python -m pip install --upgrade pip \
     && pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.6.0+cpu" \
     && pip install -r requirements.txt
 
-# Copy only preload.py first to keep layer cache optimized
-COPY preload.py ./
+# Copy only preload_models.py first to keep layer cache optimized
+COPY preload_models.py ./
 
 # Preload the Hugging Face models during image build so we don't download them on every cold start.
 # This runs as a separate clean python script, preventing any Dockerfile parser bugs!
-RUN python preload.py
+RUN python preload_models.py
 
 COPY . .
 
