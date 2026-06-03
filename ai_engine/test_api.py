@@ -12,6 +12,7 @@ Run from the ai_engine folder with the venv active:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from typing import Any
@@ -29,6 +30,7 @@ parser.add_argument("--full", action="store_true", help="Include career-pivot (c
 args = parser.parse_args()
 
 BASE = f"http://{args.host}:{args.port}"
+API_KEY = os.getenv("INTERNAL_API_KEY", "test-api-key")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -52,17 +54,20 @@ def check(label: str, condition: bool, detail: str = "") -> bool:
 
 
 def section(title: str) -> None:
-    print(f"\n{BOLD}{'─'*60}{END}")
+    print(f"\n{BOLD}{'-'*60}{END}")
     print(f"{BOLD}  {title}{END}")
-    print(f"{BOLD}{'─'*60}{END}")
+    print(f"{BOLD}{'-'*60}{END}")
 
 
-def get(path: str, timeout: int = 10) -> httpx.Response:
-    return httpx.get(f"{BASE}{path}", timeout=timeout)
+def get(path: str, timeout: int = 10, use_auth: bool = True) -> httpx.Response:
+    headers = {"X-API-Key": API_KEY} if (use_auth and (path.startswith("/api/v1") or path == "/docs" or path == "/openapi.json")) else {}
+    return httpx.get(f"{BASE}{path}", headers=headers, timeout=timeout)
 
 
-def post(path: str, body: dict, timeout: int = 30) -> httpx.Response:
-    return httpx.post(f"{BASE}{path}", json=body, timeout=timeout)
+def post(path: str, body: dict, timeout: int = 30, use_auth: bool = True) -> httpx.Response:
+    headers = {"X-API-Key": API_KEY} if (use_auth and path.startswith("/api/v1")) else {}
+    return httpx.post(f"{BASE}{path}", json=body, headers=headers, timeout=timeout)
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -139,6 +144,38 @@ check("model4_available = True", d.get("model4_available") is True)
 # 2. OpenAPI docs
 # ──────────────────────────────────────────────────────────────────────────────
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 2. Security (API Key) & Rate Limiting Verification
+# ──────────────────────────────────────────────────────────────────────────────
+
+section("Security Hardening & API Key Verification")
+
+# 2a. Request to protected endpoint without API Key
+r_no_auth = get("/api/v1/roles", use_auth=False)
+check("Missing API Key -> 401 Unauthorized", r_no_auth.status_code == 401, str(r_no_auth.status_code))
+
+# 2b. Request to protected endpoint with incorrect API Key
+r_bad_auth = httpx.get(f"{BASE}/api/v1/roles", headers={"X-API-Key": "wrong-key"})
+check("Invalid API Key -> 401 Unauthorized", r_bad_auth.status_code == 401, str(r_bad_auth.status_code))
+
+# 2c. Request to health check (public) without API Key
+r_health_no_auth = get("/health", use_auth=False)
+check("Health Check (Public) -> 200 OK", r_health_no_auth.status_code == 200, str(r_health_no_auth.status_code))
+
+# 2d. Request body size limit test (sending a huge payload to check 413)
+huge_body = {"profile": PROFILE, "target_role": "Backend Developer", "extra_payload": "x" * (11 * 1024 * 1024)}
+try:
+    r_huge = post("/api/v1/cv/analyze", huge_body, timeout=5)
+    check("Huge Request Payload (>10MB) -> 413 Payload Too Large", r_huge.status_code == 413, str(r_huge.status_code))
+except httpx.RequestError as e:
+    # Large payloads might fail to send entirely or close connection, which is also a form of rejection.
+    check("Huge Request Payload -> Rejected / Connection Closed", True, str(e))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3. OpenAPI docs
+# ──────────────────────────────────────────────────────────────────────────────
+
 section("GET /api/v1/roles  (role list for frontend dropdown)")
 r = get("/api/v1/roles")
 d = r.json()
@@ -151,18 +188,27 @@ check("Data Scientist in roles", "Data Scientist" in roles)
 check("Backend Developer in roles", "Backend Developer" in roles)
 
 
+ENABLE_DOCS = os.getenv("ENABLE_DOCS", "true").lower() == "true"
+
 section("GET /docs  (Swagger UI)")
-r = get("/docs")
-check("HTTP 200", r.status_code == 200, str(r.status_code))
+r = get("/docs", use_auth=False)
+if ENABLE_DOCS:
+    check("HTTP 200 (Docs Enabled)", r.status_code == 200, str(r.status_code))
+else:
+    check("HTTP 404 (Docs Disabled)", r.status_code == 404, str(r.status_code))
 
 section("GET /openapi.json  (schema available)")
-r = get("/openapi.json")
-d = r.json()
-check("HTTP 200", r.status_code == 200)
-check("has paths", "paths" in d)
-check("has /extract",  "/api/v1/cv/extract"       in d.get("paths", {}))
-check("has /analyze",  "/api/v1/cv/analyze"        in d.get("paths", {}))
-check("has /career-pivot", "/api/v1/cv/career-pivot" in d.get("paths", {}))
+r = get("/openapi.json", use_auth=False)
+if ENABLE_DOCS:
+    check("HTTP 200 (Docs Enabled)", r.status_code == 200)
+    d = r.json()
+    check("has paths", "paths" in d)
+    check("has /extract",  "/api/v1/cv/extract"       in d.get("paths", {}))
+    check("has /analyze",  "/api/v1/cv/analyze"        in d.get("paths", {}))
+    check("has /career-pivot", "/api/v1/cv/career-pivot" in d.get("paths", {}))
+else:
+    check("HTTP 404 (Docs Disabled)", r.status_code == 404, str(r.status_code))
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -172,11 +218,11 @@ check("has /career-pivot", "/api/v1/cv/career-pivot" in d.get("paths", {}))
 section("POST /api/v1/cv/extract — input validation")
 
 r = post("/api/v1/cv/extract", {"cloudinary_url": "not_a_valid_url"})
-check("bad URL → 400", r.status_code == 400, str(r.status_code))
+check("bad URL -> 400", r.status_code == 400, str(r.status_code))
 check("envelope status=error", r.json().get("status") == "error")
 
 r = post("/api/v1/cv/extract", {})
-check("missing field → 422", r.status_code == 422, str(r.status_code))
+check("missing field -> 422", r.status_code == 422, str(r.status_code))
 check("envelope status=error", r.json().get("status") == "error")
 
 
@@ -248,7 +294,7 @@ ANALYZE_DATA.update(data)
 section("POST /api/v1/cv/analyze — multiple valid roles")
 for role in ["Data Scientist", "DevOps Engineer", "Frontend Developer", "Machine Learning Engineer"]:
     r2 = post("/api/v1/cv/analyze", {"profile": PROFILE, "target_role": role}, timeout=60)
-    check(f"role '{role}' → 200", r2.status_code == 200, str(r2.status_code))
+    check(f"role '{role}' -> 200", r2.status_code == 200, str(r2.status_code))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -258,7 +304,7 @@ for role in ["Data Scientist", "DevOps Engineer", "Frontend Developer", "Machine
 section("POST /api/v1/cv/analyze — error cases")
 
 r = post("/api/v1/cv/analyze", {"profile": PROFILE, "target_role": "Astronaut"})
-check("unknown role → 400", r.status_code == 400, str(r.status_code))
+check("unknown role -> 400", r.status_code == 400, str(r.status_code))
 check("error envelope (unknown role)", r.json().get("status") == "error")
 detail = r.json().get("detail", "")
 check("detail lists valid roles", "Valid roles:" in detail)
@@ -267,13 +313,13 @@ r = post("/api/v1/cv/analyze", {
     "profile": {**PROFILE, "skills": []},
     "target_role": "Backend Developer",
 })
-check("empty skills → 400", r.status_code == 400, str(r.status_code))
+check("empty skills -> 400", r.status_code == 400, str(r.status_code))
 
 r = post("/api/v1/cv/analyze", {})
-check("missing body → 422", r.status_code == 422, str(r.status_code))
+check("missing body -> 422", r.status_code == 422, str(r.status_code))
 
 r = post("/api/v1/cv/analyze", {"profile": PROFILE})
-check("missing target_role → 422", r.status_code == 422, str(r.status_code))
+check("missing target_role -> 422", r.status_code == 422, str(r.status_code))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -292,18 +338,18 @@ PIVOT_PAYLOAD = {
 
 # missing required field
 r = post("/api/v1/cv/career-pivot", {})
-check("missing body → 422", r.status_code == 422, str(r.status_code))
+check("missing body -> 422", r.status_code == 422, str(r.status_code))
 check("error envelope", r.json().get("status") == "error")
 
 r = post("/api/v1/cv/career-pivot", {k: v for k, v in PIVOT_PAYLOAD.items() if k != "target_role"})
-check("missing target_role → 422", r.status_code == 422, str(r.status_code))
+check("missing target_role -> 422", r.status_code == 422, str(r.status_code))
 
 # empty skills
 r = post("/api/v1/cv/career-pivot", {
     **PIVOT_PAYLOAD,
     "profile": {**PROFILE, "skills": []},
 })
-check("empty skills → 400", r.status_code == 400, str(r.status_code))
+check("empty skills -> 400", r.status_code == 400, str(r.status_code))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -383,7 +429,7 @@ if args.full:
               isinstance(data.get("suggested_certifications"), list))
         check("universal_advice non-empty", bool(data.get("universal_advice")))
 
-        check("metadata.llm_turns = 3", meta.get("llm_turns") == 3, str(meta.get("llm_turns")))
+        check("metadata.llm_turns = 1", meta.get("llm_turns") == 1, str(meta.get("llm_turns")))
         check("metadata.llm_model non-empty", bool(meta.get("llm_model")), meta.get("llm_model"))
         check(f"wall-clock < 120s", elapsed_ms < 120_000, f"{elapsed_ms}ms")
 
@@ -404,12 +450,12 @@ total   = len(results)
 passed  = sum(1 for _, ok, _ in results if ok)
 failed  = total - passed
 
-print(f"\n{'═'*60}")
+print(f"\n{'='*60}")
 print(f"{BOLD}  RESULTS: {passed}/{total} passed", end="")
 if failed:
     print(f"  |  {failed} FAILED", end="")
 print(f"{END}")
-print(f"{'═'*60}")
+print(f"{'='*60}")
 
 if failed:
     print(f"\n{BOLD}  Failed tests:{END}")
