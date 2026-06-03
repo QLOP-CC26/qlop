@@ -33,3 +33,7 @@ openai>=1.30.0
 
 # JSON repair — recovers truncated/malformed LLM output (missing braces, trailing commas, etc.)
 json-repair>=0.30.0
+
+# Rate limiting
+slowapi>=0.1.9
+

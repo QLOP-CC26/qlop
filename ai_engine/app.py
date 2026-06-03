@@ -12,13 +12,17 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from core.config import settings
 from core.model_loader import registry
 from schemas.envelope import error_envelope
+from utils.security import verify_api_key
+from utils.rate_limiter import limiter
+from slowapi.errors import RateLimitExceeded
 
 # ──────────────────────────────────────────────────────────────────────
 # Logging
@@ -62,7 +66,13 @@ app = FastAPI(
     version="2.1.0",
     description="Unified CV analysis API with NER, skill gap, course recommendations, readiness scoring, and career pivot radar.",
     lifespan=lifespan,
+    docs_url="/docs" if settings.enable_docs else None,
+    redoc_url="/redoc" if settings.enable_docs else None,
+    openapi_url="/openapi.json" if settings.enable_docs else None,
 )
+
+# Register rate limiter on FastAPI application state
+app.state.limiter = limiter
 
 app.add_middleware(
     CORSMiddleware,
@@ -71,6 +81,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Global middleware
+# ──────────────────────────────────────────────────────────────────────
+
+@app.middleware("http")
+async def limit_request_size(request: Request, call_next):
+    """Rejects POST requests exceeding 10MB to prevent denial of service."""
+    if request.method == "POST":
+        content_length = request.headers.get("content-length")
+        if content_length:
+            if int(content_length) > 10 * 1024 * 1024:  # 10MB limit
+                return JSONResponse(
+                    status_code=413,
+                    content=error_envelope(detail="Request payload too large.", code=413),
+                )
+    return await call_next(request)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -101,6 +129,14 @@ async def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
     )
 
 
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(_: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content=error_envelope(detail="Rate limit exceeded. Please try again later.", code=429),
+    )
+
+
 @app.exception_handler(Exception)
 async def unhandled_handler(_: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled exception")
@@ -118,16 +154,17 @@ from routers.extract import router as extract_router  # noqa: E402
 from routers.analyze import router as analyze_router  # noqa: E402
 from routers.career_pivot import router as career_pivot_router  # noqa: E402
 
-app.include_router(extract_router)
-app.include_router(analyze_router)
-app.include_router(career_pivot_router)
+# Enforce verify_api_key on all API routers
+app.include_router(extract_router, dependencies=[Depends(verify_api_key)])
+app.include_router(analyze_router, dependencies=[Depends(verify_api_key)])
+app.include_router(career_pivot_router, dependencies=[Depends(verify_api_key)])
 
 
 # ──────────────────────────────────────────────────────────────────────
 # Roles list
 # ──────────────────────────────────────────────────────────────────────
 
-@app.get("/api/v1/roles")
+@app.get("/api/v1/roles", dependencies=[Depends(verify_api_key)])
 async def get_roles():
     roles = sorted(registry.role_to_idx.keys())
     from schemas.envelope import success_envelope
@@ -149,3 +186,4 @@ async def health():
         "sbert_loaded": registry.sbert_model is not None,
         "role_centroids": len(registry.role_centroids),
     }
+

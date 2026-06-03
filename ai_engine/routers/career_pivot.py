@@ -10,7 +10,8 @@ import asyncio
 import logging
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from utils.rate_limiter import limiter
 
 from core.config import settings
 from core.model_loader import registry
@@ -24,8 +25,10 @@ router = APIRouter(prefix="/api/v1/cv", tags=["career-pivot"])
 
 
 @router.post("/career-pivot")
-async def career_pivot_endpoint(body: CareerPivotRequest):
+@limiter.limit("60/minute")
+async def career_pivot_endpoint(request: Request, body: CareerPivotRequest):
     start = time.perf_counter()
+
 
     if not settings.groq_api_key:
         raise HTTPException(

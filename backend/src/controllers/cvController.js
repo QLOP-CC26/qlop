@@ -3,6 +3,7 @@ const cloudinary = require('../config/cloudinary');
 const { query } = require('../config/db');
 
 const AI_BASE = process.env.AI_API_URL || 'http://localhost:8000';
+const AI_KEY = process.env.AI_API_KEY || process.env.AI_ENGINE_API_KEY || '';
 
 const SUPPORTED_ROLES = [
   'AI Engineer', 'Backend Developer', 'Business Analyst',
@@ -64,7 +65,10 @@ const analyzeCV = async (req, res) => {
       const aiRes = await axios.post(
         `${AI_BASE}/api/v1/cv/extract`,
         { cloudinary_url: cvUrl },
-        { timeout: 30000 }
+        { 
+          headers: { 'X-API-Key': AI_KEY },
+          timeout: 30000 
+        }
       );
       // AI envelope: { status, code, data: CVProfile, metadata }
       cvProfile = aiRes.data?.data;
@@ -171,7 +175,10 @@ const getRecommendations = async (req, res) => {
       const aiRes = await axios.post(
         `${AI_BASE}/api/v1/cv/analyze`,
         { profile: cvProfile, target_role: trimmedRole },
-        { timeout: 60000 }
+        { 
+          headers: { 'X-API-Key': AI_KEY },
+          timeout: 60000 
+        }
       );
       // AI envelope data: { profile, target_role, skill_gap, course_recommendations, readiness_score }
       analyzeData = aiRes.data?.data;
@@ -296,7 +303,10 @@ const getCareerPivot = async (req, res) => {
       const aiRes = await axios.post(
         `${AI_BASE}/api/v1/cv/career-pivot`,
         careerPivotBody,
-        { timeout: 120000 } // LLM bisa lambat
+        { 
+          headers: { 'X-API-Key': AI_KEY },
+          timeout: 120000 
+        }
       );
       careerPivotData = aiRes.data?.data;
       pivotMetadata = aiRes.data?.metadata || {};
@@ -342,7 +352,10 @@ const getCareerPivot = async (req, res) => {
 
 const getRoles = async (req, res) => {
   try {
-    const aiRes = await axios.get(`${AI_BASE}/api/v1/roles`, { timeout: 10000 });
+    const aiRes = await axios.get(`${AI_BASE}/api/v1/roles`, { 
+      headers: { 'X-API-Key': AI_KEY },
+      timeout: 10000 
+    });
     const roles = aiRes.data?.data?.roles || SUPPORTED_ROLES;
     const count = aiRes.data?.data?.count || roles.length;
     return res.status(200).json({ status: 'success', data: { roles, count } });

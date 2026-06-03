@@ -1,13 +1,16 @@
 from __future__ import annotations
-
 from pathlib import Path
-
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
+    # --- Security & Documentation ---
+    internal_api_key: str = Field(default="", validation_alias=AliasChoices("internal_api_key", "INTERNAL_API_KEY"))
+    enable_docs: bool = Field(default=True, validation_alias=AliasChoices("enable_docs", "ENABLE_DOCS"))
+
     # --- NER paths ---
     ner_weights_path: Path = _BASE_DIR / "model_assets" / "ner" / "best_weights.weights.h5"
     ner_tokenizer_path: Path = _BASE_DIR / "model_assets" / "ner" / "tokenizer"
@@ -20,7 +23,7 @@ class Settings(BaseSettings):
     rec_model4_path: Path = _BASE_DIR / "model_assets" / "recommendation" / "two_tower_course_model_savedmodel"
 
     # --- NER model config ---
-    ner_base_model: str = "microsoft/deberta-v3-base"
+    ner_base_model: str = Field(default="microsoft/deberta-v3-base", validation_alias=AliasChoices("ner_base_model", "NER_BASE_MODEL"))
     ner_max_length: int = 256
     ner_confidence_threshold: float = 0.5
     ner_sliding_window_size: int = 200
@@ -31,10 +34,10 @@ class Settings(BaseSettings):
     # Defaults to model_assets/hf_cache/ inside the project so the cache
     # survives restarts and doesn't depend on the OS user home directory.
     # Override with HF_CACHE_DIR=/path/to/shared/cache in .env for shared servers.
-    hf_cache_dir: Path = _BASE_DIR / "model_assets" / "hf_cache"
+    hf_cache_dir: Path = Field(default=_BASE_DIR / "model_assets" / "hf_cache", validation_alias=AliasChoices("hf_cache_dir", "HF_CACHE_DIR"))
 
     # SBERT model name — change to a larger model if readiness quality needs improvement
-    sbert_model_name: str = "all-MiniLM-L6-v2"
+    sbert_model_name: str = Field(default="all-MiniLM-L6-v2", validation_alias=AliasChoices("sbert_model_name", "EMBEDDING_MODEL", "embedding_model"))
 
     # --- Groq (OpenAI-compatible, free tier) ---
     groq_api_key: str = ""
@@ -51,3 +54,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
