@@ -67,7 +67,7 @@ const analyzeCV = async (req, res) => {
         { cloudinary_url: cvUrl },
         { 
           headers: { 'X-API-Key': AI_KEY },
-          timeout: 30000 
+          timeout: 60000 
         }
       );
       // AI envelope: { status, code, data: CVProfile, metadata }
