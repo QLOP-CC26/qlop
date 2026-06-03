@@ -386,7 +386,7 @@ async def generate_career_pivot(
             model = settings.gemini_model
             if not model.startswith("google/"):
                 model = f"google/{model}"
-            max_tokens = 8192
+            max_tokens = settings.gemini_max_tokens
             used_model = model
 
             prompt = _build_single_shot_prompt(profile, target_role, readiness, retrieved_roles, skill_gap)
