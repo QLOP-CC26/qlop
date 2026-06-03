@@ -13,12 +13,30 @@ const GithubIcon = ({ className }) => (
   </svg>
 );
 
+const LinkedinIcon = ({ className = '' }) => {
+  const classes = `${className} w-4 h-4 text-blue-600 opacity-60 group-hover:opacity-100 transition-opacity`;
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="currentColor"
+      className={classes}
+    >
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.036-1.849-3.036-1.851 0-2.134 1.445-2.134 2.94v5.665H9.355V9h3.414v1.561h.049c.476-.9 1.637-1.849 3.372-1.849 3.604 0 4.271 2.372 4.271 5.456v6.284zM5.337 7.433c-1.144 0-2.069-.927-2.069-2.07 0-1.143.925-2.069 2.069-2.069s2.069.926 2.069 2.069c0 1.143-.925 2.07-2.069 2.07zM6.814 20.452H3.86V9h2.954v11.452z" />
+    </svg>
+  );
+};
+
 const teamMembers = [
   {
     id: 1,
     name: 'Fauzan Arif Tricahya',
     role: 'Full-Stack Web Developer',
     github: 'fauzan-arift',
+    linkedin: 'fauzanarft',
     image: '/Fauzan-qlop.png',
   },
   {
@@ -26,6 +44,7 @@ const teamMembers = [
     name: 'Dinaranaya Putri Hutauruk',
     role: 'Data Scientist',
     github: 'Dnrany',
+    linkedin: 'dinaranaya-ph',
     image: '/Dinar-qlop.png',
   },
   {
@@ -33,6 +52,7 @@ const teamMembers = [
     name: 'Husni Abdillah',
     role: 'AI Engineer',
     github: 'HusniAbdillah',
+    linkedin: 'husniabdillah',
     image: '/Husni-qlop.png',
   },
   {
@@ -40,6 +60,7 @@ const teamMembers = [
     name: 'Wandy Chandra Wijaya',
     role: 'Full-Stack Web Developer',
     github: 'wandychandra',
+    linkedin: 'wandy-chandra-wijaya',
     image: '/Wandy-qlop.png',
   },
   {
@@ -47,6 +68,7 @@ const teamMembers = [
     name: 'Diko Duwi Saputra',
     role: 'Data Scientist',
     github: 'dikosaputra1231',
+    linkedin: 'dikosaputra1231',
     image: '/Diko-qlop.png',
   },
   {
@@ -54,6 +76,7 @@ const teamMembers = [
     name: 'Gilang Agung Prakoso',
     role: 'AI Engineer',
     github: 'prakoso09',
+    linkedin: 'gilang-agung-prakoso',
     image: '/Gilang-qlop.png',
   },
 ];
@@ -107,15 +130,29 @@ const AboutUsPage = () => {
               <div className="flex flex-col items-start">
                 <h3 className="text-lg font-bold text-gray-900 mb-1">{member.name}</h3>
                 
-                <a 
-                  href={`https://github.com/${member.github}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors mb-3"
-                >
-                  <GithubIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  {member.github}
-                </a>
+                <div className="flex flex-col items-start gap-1 mb-3">
+                  {member.linkedin && (
+                    <a
+                      href={`https://www.linkedin.com/in/${member.linkedin}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                      <LinkedinIcon className="w-4 h-4 text-blue-600 group-hover:text-blue-800 transition-colors" />
+                      {member.linkedin}
+                    </a>
+                  )}
+
+                  <a
+                    href={`https://github.com/${member.github}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                  >
+                    <GithubIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                    {member.github}
+                  </a>
+                </div>
 
                 <span className="px-3 py-1 bg-blue-50 text-blue-700 text-[11px] uppercase tracking-wider font-bold rounded-full">
                   {member.role}

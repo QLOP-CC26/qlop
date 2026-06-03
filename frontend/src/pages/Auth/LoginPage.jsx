@@ -147,7 +147,6 @@ const LoginPage = () => {
               type="password"
               placeholder="••••••••"
               icon="lock"
-              hint="Forgot password?"
               value={form.password}
               onChange={handleChange('password')}
             />

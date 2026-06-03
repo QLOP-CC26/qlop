@@ -1,4 +1,5 @@
-import { Mail, Lock, User } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 const icons = { mail: Mail, lock: Lock, user: User };
 
@@ -14,7 +15,10 @@ const InputField = ({
   error,
   id,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
   const IconComponent = icon ? icons[icon] : null;
+  const isPassword = type === 'password';
+  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -50,13 +54,25 @@ const InputField = ({
 
         <input
           id={id}
-          type={type}
+          type={inputType}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
           autoComplete="off"
-          className="flex-1 border-none bg-transparent text-base text-[#0F172A] placeholder-[#75777D] outline-none"
+          className="flex-1 border-none bg-transparent text-base text-[#0F172A] placeholder-[#75777D] outline-none [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+          style={{ WebkitTextSecurity: undefined }}
         />
+
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-[#75777D] flex-shrink-0 hover:text-[#45474C] transition-colors"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        )}
       </div>
 
       {error && <span className="text-xs text-red-500">{error}</span>}
