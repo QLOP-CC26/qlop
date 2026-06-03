@@ -138,6 +138,8 @@ check("sbert_loaded = True", d.get("sbert_loaded") is True)
 check("role_centroids >= 27", d.get("role_centroids", 0) >= 27, str(d.get("role_centroids")))
 check("model3_available = True", d.get("model3_available") is True)
 check("model4_available = True", d.get("model4_available") is True)
+check("skill_gap_priority_scorer_available = True", d.get("skill_gap_priority_scorer_available") is True)
+check("course_matching_two_tower_model_available = True", d.get("course_matching_two_tower_model_available") is True)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
