@@ -18,7 +18,7 @@ from core.model_loader import registry
 from schemas.career_pivot import CareerPivotRequest
 from schemas.envelope import success_envelope
 from services.career_pivot_service import generate_career_pivot, retrieve_alternative_roles
-from utils.skill_normalizer import flatten_skills
+from utils.skill_normalizer import flatten_skills, is_garbage
 
 logger = logging.getLogger("qlop.router.career_pivot")
 router = APIRouter(prefix="/api/v1/cv", tags=["career-pivot"])
@@ -49,7 +49,10 @@ async def career_pivot_endpoint(request: Request, body: CareerPivotRequest):
             raise HTTPException(status_code=400, detail=f"Role '{target_role}' not recognized. Valid roles: {valid}")
 
     cv_skills = flatten_skills(body.profile.skills)
-    designations = [w.designation for w in body.profile.work_experience if w.designation]
+    designations = [
+        w.designation.strip() for w in body.profile.work_experience 
+        if w.designation and not is_garbage(w.designation)
+    ]
 
     if not cv_skills:
         raise HTTPException(status_code=400, detail="No skills detected in the profile.")
