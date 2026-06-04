@@ -1,0 +1,6 @@
+{
+  "model_name": "Two-Tower Course (SBERT mapping + Category Affinity)",
+  "trained_at": "2026-06-04T06:08:01.141527",
+  "demand_type": "TF-IDF top-15",
+  "mapping_type": "SBERT semantic"
+}

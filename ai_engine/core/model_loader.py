@@ -280,7 +280,7 @@ class ModelRegistry:
             logger.warning("coursera_cleaned.csv not found — course recommendations will be empty")
             self.df_coursera = pd.DataFrame()
 
-        npz = np.load(str(data_dir / "synthetic_demand_course_model4.npz"))
+        npz = np.load(str(data_dir / "synthetic_demand_course_two_tower.npz"))
         course_vectors = np.asarray(npz["course_vectors"])
         self.course_vectors = course_vectors
         self.num_courses = int(course_vectors.shape[0])

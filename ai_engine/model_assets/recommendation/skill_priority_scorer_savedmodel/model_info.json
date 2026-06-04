@@ -1,0 +1,6 @@
+{
+  "model_name": "Skill Priority Scorer (TF-IDF)",
+  "trained_at": "2026-06-04T06:08:01.140853",
+  "vocab_size": 489,
+  "target_type": "TF-IDF"
+}
