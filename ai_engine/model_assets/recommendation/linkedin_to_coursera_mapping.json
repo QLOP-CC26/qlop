@@ -1,219 +1,112 @@
 {
-  "c": [
-    "c (programming language)"
-  ],
-  "c++": [
-    "c++ (programming language)"
-  ],
-  "c#": [
-    "c# (programming language)"
-  ],
-  "python": [
-    "python programming"
-  ],
-  "javascript": [
-    "javascript"
-  ],
-  "typescript": [
-    "typescript"
-  ],
-  "ruby": [
-    "ruby (programming language)"
-  ],
-  "ruby on rails": [
-    "ruby (programming language)"
-  ],
-  "swift": [
-    "swift programming"
-  ],
-  "kotlin": [
-    "kotlin"
-  ],
-  "scala": [
-    "scala programming"
-  ],
-  "rust": [
-    "rust (programming language)"
-  ],
-  "r": [
-    "r programming"
-  ],
-  "mysql": [
-    "mysql"
-  ],
-  "postgresql": [
-    "postgresql"
-  ],
-  "mongodb": [
-    "mongodb"
-  ],
-  "redis": [
-    "redis"
-  ],
-  "apache kafka": [
-    "apache kafka"
-  ],
-  "apache spark": [
-    "apache spark"
-  ],
-  "apache hadoop": [
-    "apache hadoop"
-  ],
-  "apache hive": [
-    "apache hive"
-  ],
-  "apache airflow": [
-    "apache airflow"
-  ],
-  "apache cassandra": [
-    "apache cassandra"
-  ],
-  "docker": [
-    "docker (software)"
-  ],
-  "kubernetes": [
-    "kubernetes"
-  ],
-  "jenkins": [
-    "jenkins"
-  ],
-  "git": [
-    "git (version control system)"
-  ],
-  "github": [
-    "github"
-  ],
-  "linux": [
-    "linux"
-  ],
-  "unix": [
-    "unix"
-  ],
-  "nodejs": [
-    "nodejs"
-  ],
-  "django": [
-    "django (web framework)"
-  ],
-  "flask": [
-    "flask (web framework)"
-  ],
-  "spring boot": [
-    "spring boot"
-  ],
-  "jquery": [
-    "jquery"
-  ],
-  "bootstrap": [
-    "bootstrap (front-end framework)"
-  ],
-  "html": [
-    "hypertext markup language (html)"
-  ],
-  "css": [
-    "cascading style sheets (css)"
-  ],
-  "webpack": [
-    "webpack"
-  ],
-  "restful api": [
-    "restful api"
-  ],
-  "tensorflow": [
-    "tensorflow"
-  ],
-  "pytorch": [
-    "pytorch (machine learning library)"
-  ],
-  "keras": [
-    "keras (neural network library)"
-  ],
-  "scikit-learn": [
-    "scikit learn (machine learning library)"
-  ],
-  "pandas": [
-    "pandas (python package)"
-  ],
-  "numpy": [
-    "numpy"
-  ],
-  "tableau": [
-    "tableau software"
-  ],
-  "junit": [
-    "junit"
-  ],
-  "jest": [
-    "jest (javascript testing framework)"
-  ],
-  "postman": [
-    "postman api platform"
-  ],
-  "figma": [
-    "figma (design software)"
-  ],
-  "adobe xd": [
-    "adobe xd"
-  ],
-  "xcode": [
-    "apple xcode"
-  ],
-  "salesforce": [
-    "salesforce"
-  ],
-  "workday": [
-    "workday (software)"
-  ],
-  "servicenow": [
-    "servicenow"
-  ],
-  "canva": [
-    "canva (software)"
-  ],
-  "adobe photoshop": [
-    "adobe photoshop"
-  ],
-  "adobe illustrator": [
-    "adobe illustrator"
-  ],
-  "adobe after effects": [
-    "adobe after effects"
-  ],
-  "hugging face": [
-    "hugging face"
-  ],
-  "windows server": [
-    "windows servers"
-  ],
   ".net": [
+    ".net framework",
     "asp.net"
+  ],
+  "abbott": [
+    "finance"
   ],
   "accounting software": [
-    "accounting software"
+    "accounting",
+    "accounting and finance software",
+    "accounting records",
+    "accounting software",
+    "accounting systems",
+    "accrual accounting",
+    "business software",
+    "contract accounting",
+    "cost accounting",
+    "financial accounting",
+    "fund accounting",
+    "general accounting",
+    "inventory accounting",
+    "ledgers (accounting)",
+    "management accounting",
+    "productivity software",
+    "quickbooks (accounting software)",
+    "specialized accounting",
+    "technical accounting"
+  ],
+  "ada": [
+    "disabilities"
   ],
   "addressing software": [
-    "design software"
+    "system software"
   ],
   "ado.net": [
-    "asp.net"
+    "meta ads manager"
+  ],
+  "adobe acrobat": [
+    "adobe indesign",
+    "adobe xd"
+  ],
+  "adobe after effects": [
+    "adobe after effects",
+    "adobe express",
+    "adobe premiere",
+    "adobe xd"
   ],
   "adobe analytics": [
-    "advanced analytics"
+    "adobe express",
+    "advanced analytics",
+    "analytics",
+    "business analytics",
+    "google analytics",
+    "web analytics"
+  ],
+  "adobe audition": [
+    "adobe after effects"
   ],
   "adobe creative cloud software": [
-    "adobe creative cloud"
+    "adobe creative cloud",
+    "adobe express"
+  ],
+  "adobe experience manager (aem)": [
+    "adobe express"
   ],
   "adobe framemaker": [
-    "adobe premiere"
+    "adobe xd"
+  ],
+  "adobe illustrator": [
+    "adobe illustrator",
+    "adobe xd"
+  ],
+  "adobe photoshop": [
+    "adobe photoshop",
+    "adobe xd"
   ],
   "adobe premiere pro": [
     "adobe premiere"
+  ],
+  "adobe robohelp": [
+    "adobe photoshop",
+    "adobe xd"
+  ],
+  "adobe xd": [
+    "adobe after effects",
+    "adobe creative cloud",
+    "adobe express",
+    "adobe illustrator",
+    "adobe photoshop",
+    "adobe xd"
+  ],
+  "adp workforce now": [
+    "workforce planning"
+  ],
+  "aeronautical charts": [
+    "run chart"
+  ],
+  "airtable": [
+    "tableau software"
   ],
   "ajax": [
     "ajax"
   ],
   "altium designer": [
-    "api design"
+    "design software"
+  ],
+  "altova mapforce": [
+    "canva (software)"
   ],
   "amazon dynamodb": [
     "amazon dynamodb"
@@ -225,531 +118,2090 @@
     "amazon redshift"
   ],
   "analytical software": [
-    "mathematical software"
+    "accounting software",
+    "data analysis software",
+    "engineering software",
+    "mathematical software",
+    "software engineering tools"
   ],
   "animation software": [
-    "accounting software"
+    "animation and game design",
+    "animations",
+    "graphic and visual design software",
+    "graphics software",
+    "motion graphics"
   ],
   "antivirus software": [
-    "gis software"
+    "malware protection",
+    "security software"
+  ],
+  "apache airflow": [
+    "apache airflow"
+  ],
+  "apache cassandra": [
+    "apache cassandra"
+  ],
+  "apache hadoop": [
+    "apache hadoop",
+    "apache hive",
+    "apache spark"
+  ],
+  "apache hive": [
+    "apache hadoop",
+    "apache hive"
+  ],
+  "apache http server": [
+    "apache",
+    "web servers"
   ],
   "apache jmeter": [
-    "apache maven"
+    "apache"
+  ],
+  "apache kafka": [
+    "apache kafka"
   ],
   "apache maven": [
+    "apache mahout",
     "apache maven"
   ],
   "apache oozie": [
-    "apache hive"
+    "apache"
   ],
   "apache solr": [
+    "apache"
+  ],
+  "apache spark": [
+    "apache hadoop",
     "apache spark"
   ],
   "apache struts": [
-    "apache spark"
+    "apache"
   ],
   "apache tomcat": [
-    "apache mahout"
+    "apache"
+  ],
+  "appium": [
+    "google app engine"
   ],
   "apple ios": [
-    "apple ios"
+    "apple ios",
+    "apple xcode",
+    "ios development"
   ],
   "artificial intelligence software": [
-    "artificial intelligence"
+    "ai integrations",
+    "ai workflows",
+    "artificial intelligence",
+    "artificial intelligence and machine learning (ai/ml)",
+    "business intelligence software",
+    "computer programming",
+    "decision intelligence",
+    "engineering software",
+    "machine learning software",
+    "software systems",
+    "system software"
+  ],
+  "asana": [
+    "grafana"
+  ],
+  "aspen": [
+    "tree maps"
   ],
   "assessment software": [
-    "business software"
+    "clinical assessment"
   ],
-  "autodesk revit": [
+  "atlas search": [
+    "search engine optimization"
+  ],
+  "atlassian bamboo": [
+    "terraform"
+  ],
+  "atlassian bitbucket": [
+    "github"
+  ],
+  "atlassian confluence": [
+    "semantic web"
+  ],
+  "atlassian jira": [
+    "jira (software)"
+  ],
+  "audacity": [
+    "music"
+  ],
+  "autodesk fusion 360": [
+    "autodesk",
+    "autodesk maya",
     "autodesk revit"
   ],
+  "autodesk inventor": [
+    "autodesk",
+    "autodesk maya"
+  ],
+  "autodesk revit": [
+    "autodesk",
+    "autodesk revit"
+  ],
+  "awk": [
+    "aws kinesis"
+  ],
+  "backbone": [
+    "structural analysis"
+  ],
+  "basecamp": [
+    "training programs"
+  ],
+  "bash": [
+    "bash (scripting language)",
+    "linux commands",
+    "shell script",
+    "unix commands",
+    "unix shell"
+  ],
   "bigquery": [
-    "jquery"
+    "big data"
   ],
   "billing software": [
-    "business software"
+    "accounting and finance software",
+    "accounting software",
+    "billing",
+    "billing & invoicing",
+    "business software",
+    "medical billing",
+    "medical billing and coding"
   ],
   "bing": [
-    "billing"
+    "microsoft windows"
+  ],
+  "bing ads": [
+    "google ads"
+  ],
+  "blender": [
+    "computer graphics"
+  ],
+  "blink": [
+    "follow through"
+  ],
+  "bootstrap": [
+    "bootstrap (front-end framework)"
+  ],
+  "brightedge": [
+    "redis"
+  ],
+  "bugzilla": [
+    "adobe firefly"
+  ],
+  "building automation software": [
+    "automation",
+    "it automation",
+    "product automation",
+    "test automation"
   ],
   "business intelligence software": [
-    "business intelligence software"
+    "business analysis tools",
+    "business analytics",
+    "business intelligence",
+    "business intelligence software",
+    "business software",
+    "data analysis software",
+    "data warehousing",
+    "database software",
+    "market intelligence"
   ],
   "business management software": [
-    "business management"
+    "accounting and finance software",
+    "accounting software",
+    "business analysis tools",
+    "business intelligence software",
+    "business management",
+    "business process management",
+    "business relationship management",
+    "business software",
+    "customer relationship management (crm) software",
+    "enterprise application management",
+    "project management software"
   ],
   "business software applications": [
-    "business software"
+    "application design",
+    "application development",
+    "business intelligence software",
+    "business modeling",
+    "business software",
+    "business solutions",
+    "business systems",
+    "enterprise application management",
+    "sap applications",
+    "software as a service",
+    "software design",
+    "web applications"
+  ],
+  "c": [
+    "c (programming language)"
+  ],
+  "c#": [
+    ".net framework",
+    "asp.net",
+    "c# (programming language)",
+    "visual basic (programming language)"
+  ],
+  "c++": [
+    "c (programming language)",
+    "c and c++",
+    "c++ (programming language)",
+    "computer programming",
+    "system programming"
+  ],
+  "cadence concept": [
+    "coordinating"
   ],
   "calibration software": [
-    "collaborative software"
+    "mathematical software"
+  ],
+  "canva": [
+    "canva (software)"
+  ],
+  "cents": [
+    "arithmetic"
   ],
   "chatgpt": [
     "chatgpt"
   ],
+  "chef": [
+    "chef (configuration management tool)"
+  ],
+  "cisco ios": [
+    "apple ios",
+    "ios development"
+  ],
+  "cisco webex": [
+    "web applications"
+  ],
+  "citrix xenapp": [
+    "adobe xd"
+  ],
+  "classdojo": [
+    "apache mahout"
+  ],
+  "clearedge": [
+    "data cleansing"
+  ],
   "client system": [
-    "file systems"
+    "client services",
+    "client support",
+    "customer and client support"
+  ],
+  "cmake": [
+    "linux commands"
+  ],
+  "code libraries": [
+    "other programming languages"
+  ],
+  "compilers": [
+    "c++ (programming language)",
+    "computer programming",
+    "data compilation",
+    "system programming"
+  ],
+  "component libraries": [
+    "web components"
   ],
   "computer operating systems": [
-    "operating systems"
+    "computer architecture",
+    "computer systems",
+    "file systems",
+    "linux",
+    "microsoft windows",
+    "operating system administration",
+    "operating systems",
+    "os process management",
+    "real-time operating systems",
+    "software systems",
+    "system software",
+    "system support"
   ],
   "configuration management software": [
-    "configuration management"
+    "chef (configuration management tool)",
+    "configuration management",
+    "puppet (configuration management tool)",
+    "software configuration management"
   ],
   "contract management software": [
+    "business software",
+    "contract management",
     "project management software"
   ],
   "control system software": [
+    "change control",
+    "control systems",
+    "machine controls",
+    "process control",
+    "software systems",
+    "system programming",
     "system software"
   ],
+  "couchbase server": [
+    "amazon dynamodb"
+  ],
+  "css": [
+    "html and css"
+  ],
+  "cubic": [
+    "three-phase"
+  ],
   "cyberark": [
-    "cyber risk"
+    "cybersecurity"
   ],
   "data acquisition systems": [
-    "database systems"
+    "data capture",
+    "data collection",
+    "data processing"
   ],
   "data analysis software": [
-    "data analysis software"
+    "business analysis tools",
+    "business intelligence software",
+    "data analysis",
+    "data analysis software",
+    "data science",
+    "data visualization software",
+    "database software",
+    "machine learning software",
+    "spreadsheet software",
+    "stata (software)",
+    "statistical software"
   ],
   "data management software": [
-    "project management software"
+    "business intelligence software",
+    "clinical data management",
+    "customer data management",
+    "data analysis software",
+    "data collection",
+    "data engineering",
+    "data maintenance",
+    "data management",
+    "data store",
+    "data visualization software",
+    "data warehousing",
+    "data-oriented programming",
+    "database administration",
+    "database application",
+    "database management",
+    "database management systems",
+    "database software",
+    "database systems",
+    "databases",
+    "operational data store",
+    "project management software",
+    "statistical software"
   ],
   "data visualization software": [
-    "data visualization software"
+    "data analysis software",
+    "data presentation",
+    "data visualization",
+    "data visualization software",
+    "datamaps",
+    "graphical tools",
+    "interactive data visualization",
+    "scientific visualization",
+    "software visualization",
+    "statistical visualization",
+    "visualization (computer graphics)"
   ],
   "database management systems": [
-    "database management systems"
+    "customer data management",
+    "data management",
+    "database administration",
+    "database application",
+    "database architecture and administration",
+    "database design",
+    "database development",
+    "database management",
+    "database management systems",
+    "database software",
+    "database systems",
+    "database theory",
+    "databases",
+    "information management",
+    "metadata management",
+    "microsoft sql servers",
+    "operational databases",
+    "oracle databases",
+    "records management",
+    "relational databases"
   ],
   "database software": [
-    "database software"
+    "business intelligence software",
+    "data analysis software",
+    "data management",
+    "database administration",
+    "database application",
+    "database architecture and administration",
+    "database design",
+    "database development",
+    "database management",
+    "database management systems",
+    "database software",
+    "database systems",
+    "database theory",
+    "databases",
+    "operational databases",
+    "oracle databases",
+    "relational databases",
+    "sql"
+  ],
+  "davinci resolve": [
+    "reconciliation"
+  ],
+  "debuggers": [
+    "debugging"
   ],
   "debugging software": [
-    "design software"
+    "debugging"
   ],
   "dental software": [
-    "design software"
+    "oral and dental care"
   ],
   "diagramming software": [
-    "design software"
+    "data visualization software",
+    "diagram design",
+    "figma (design software)",
+    "graphical tools",
+    "process flow diagrams",
+    "schematic diagrams",
+    "software visualization"
+  ],
+  "dig": [
+    "devsecops"
+  ],
+  "digsilent powerfactory": [
+    "power electronics"
   ],
   "disaster recovery software": [
     "disaster recovery"
   ],
+  "django": [
+    "django (web framework)"
+  ],
+  "docker": [
+    "docker (software)"
+  ],
+  "dotnet": [
+    ".net framework"
+  ],
   "drafting software": [
-    "accounting software"
+    "design software",
+    "drafting and engineering design"
   ],
   "drawing software": [
-    "design software"
+    "design software",
+    "engineering drawings",
+    "figma (design software)",
+    "graphic and visual design software",
+    "graphical tools",
+    "graphics software",
+    "technical drawing"
+  ],
+  "dropbox": [
+    "cloud solutions"
+  ],
+  "drupal": [
+    "salesforce development"
+  ],
+  "dynatrace": [
+    "devsecops"
+  ],
+  "e-verify": [
+    "verification and validation"
+  ],
+  "eclipse ide": [
+    "eclipse (software)"
   ],
   "editing software": [
-    "engineering software"
+    "editing",
+    "software development tools",
+    "video editing",
+    "writing and editing"
+  ],
+  "elasticsearch": [
+    "search engine optimization"
   ],
   "emulators": [
-    "simulations"
+    "virtualization"
   ],
   "encryption software": [
+    "data encryption standard",
+    "encryption",
     "security software"
   ],
   "erp software": [
-    "r (software)"
+    "business intelligence software",
+    "business software",
+    "enterprise resource planning"
   ],
   "esri arcgis": [
     "arcgis"
   ],
   "esri software": [
-    "design software"
+    "system software"
+  ],
+  "etap": [
+    "epic emr"
+  ],
+  "excavator": [
+    "construction"
+  ],
+  "exe": [
+    "microsoft windows"
+  ],
+  "facebook": [
+    "instagram",
+    "social media",
+    "social media content"
+  ],
+  "factsage": [
+    "data storytelling"
+  ],
+  "figma": [
+    "figma (design software)"
   ],
   "file management software": [
+    "data management",
+    "document management",
+    "file management",
+    "file systems",
     "project management software"
   ],
   "file management systems": [
-    "learning management systems"
+    "data management",
+    "data storage",
+    "data storage technologies",
+    "database management systems",
+    "document management",
+    "file management",
+    "file systems"
+  ],
+  "file server software": [
+    "file management",
+    "file systems"
   ],
   "financial reporting software": [
-    "financial reporting"
+    "accounting and finance software",
+    "accounting software",
+    "business reporting",
+    "financial accounting",
+    "financial auditing",
+    "financial data",
+    "financial reporting",
+    "quickbooks (accounting software)"
+  ],
+  "fitnesse": [
+    "exercise science"
+  ],
+  "flask": [
+    "flask (web framework)"
   ],
   "fleet management software": [
-    "project management software"
+    "inventory management system"
   ],
   "fleet management systems": [
-    "learning management systems"
+    "transportation operations"
+  ],
+  "flexbox": [
+    "adobe express"
+  ],
+  "forth": [
+    "english language"
+  ],
+  "fortran": [
+    "gis software"
+  ],
+  "gazebo": [
+    "storyboarding"
+  ],
+  "gensuite": [
+    "metasploit"
+  ],
+  "git": [
+    "gis software",
+    "git (version control system)",
+    "github"
+  ],
+  "github": [
+    "gis software",
+    "git (version control system)",
+    "github",
+    "github copilot"
+  ],
+  "gitlab": [
+    "gis software"
+  ],
+  "go": [
+    "follow through"
   ],
   "google ads": [
-    "google ads"
+    "advertising",
+    "advertising campaigns",
+    "digital advertising",
+    "google ads",
+    "meta ads manager",
+    "online advertising"
   ],
   "google analytics": [
-    "google analytics"
+    "advanced analytics",
+    "analytics",
+    "business analytics",
+    "descriptive analytics",
+    "google analytics",
+    "marketing analytics",
+    "people analytics",
+    "predictive analytics",
+    "social media analytics",
+    "web analytics",
+    "web analytics and seo"
   ],
   "google calendar": [
-    "google ads"
+    "workday (software)"
   ],
-  "google docs": [
-    "google ads"
-  ],
-  "google drive": [
-    "google ads"
-  ],
-  "google meet": [
-    "google sheets"
-  ],
-  "google sheets": [
-    "google sheets"
-  ],
-  "google slides": [
-    "google ads"
-  ],
-  "grails": [
+  "google chrome": [
     "gmail"
   ],
+  "google docs": [
+    "document management"
+  ],
+  "google drive": [
+    "cloud storage"
+  ],
+  "google meet": [
+    "meeting facilitation"
+  ],
+  "google sheets": [
+    "excel formulas",
+    "excel macros",
+    "google sheets",
+    "microsoft excel",
+    "spreadsheet software"
+  ],
+  "google slides": [
+    "microsoft powerpoint"
+  ],
+  "google tag manager": [
+    "meta ads manager"
+  ],
+  "gradle": [
+    "android studio"
+  ],
+  "grails": [
+    "grep"
+  ],
   "graphics pipelines": [
-    "sales pipelines"
+    "computer graphics",
+    "data pipelines",
+    "graphics software"
   ],
   "graphics software": [
-    "graphics software"
+    "computer graphic techniques",
+    "computer graphics",
+    "design software",
+    "figma (design software)",
+    "graphic and visual design",
+    "graphic and visual design software",
+    "graphic design",
+    "graphical tools",
+    "graphics software",
+    "motion graphics",
+    "system software"
+  ],
+  "graphql": [
+    "graphing"
+  ],
+  "harvest": [
+    "production management"
+  ],
+  "haskell": [
+    "computational logic"
+  ],
+  "hec-hms": [
+    "seaborn"
+  ],
+  "hec-ras": [
+    "histogram"
   ],
   "hibernate": [
     "hibernate (java)"
   ],
+  "hms": [
+    "seaborn"
+  ],
+  "hootsuite": [
+    "kotlin"
+  ],
+  "hp fortify": [
+    "devsecops"
+  ],
+  "hp webinspect": [
+    "web language"
+  ],
+  "html": [
+    "html and css",
+    "hypertext markup language (html)",
+    "web content",
+    "web design"
+  ],
+  "hugging face": [
+    "hugging face"
+  ],
   "human resources software": [
+    "hr tech",
+    "human resource management",
+    "human resource policies",
+    "human resource strategy",
+    "human resources",
+    "human resources information system (hris)",
+    "human resources management and planning",
     "human resources software"
   ],
+  "hydraulic modeling software": [
+    "engineering software"
+  ],
+  "hydrological modeling software": [
+    "mathematical software"
+  ],
+  "hyperspace": [
+    "hyper-v"
+  ],
   "ibm cloud": [
-    "ibm cloud"
+    "cloud applications",
+    "cloud computing",
+    "cloud computing architecture",
+    "cloud development",
+    "cloud engineering",
+    "cloud infrastructure",
+    "cloud platforms",
+    "cloud services",
+    "cloud solutions",
+    "cloud technologies",
+    "cloud-based integration",
+    "google cloud platform",
+    "ibm cloud",
+    "ibm db2",
+    "multi-cloud",
+    "oracle cloud"
+  ],
+  "ibm cognos": [
+    "ibm cognos analytics"
   ],
   "ibm db2": [
+    "ibm cloud",
     "ibm db2"
   ],
+  "ibm informix": [
+    "ibm cloud"
+  ],
   "ibm rational": [
-    "vibrations"
+    "ibm db2"
   ],
-  "imaging software": [
-    "gis software"
+  "ibm websphere": [
+    "ibm cloud"
   ],
-  "impact software": [
-    "gis software"
+  "ibm websphere mq": [
+    "ibm cloud"
   ],
-  "inspection management system": [
-    "inventory management system"
+  "icims": [
+    "icd coding (icd-9/icd-10)"
   ],
-  "instagram": [
+  "igrafx": [
     "instagram"
   ],
+  "imaging software": [
+    "graphics software",
+    "medical imaging"
+  ],
+  "impact software": [
+    "engineering software"
+  ],
+  "informatica powercenter": [
+    "microsoft power platform"
+  ],
+  "inspection management system": [
+    "facility management and maintenance"
+  ],
+  "instagram": [
+    "instagram",
+    "social media"
+  ],
+  "installshield": [
+    "software installation"
+  ],
+  "instrument control software": [
+    "machine controls"
+  ],
   "inventory management software": [
-    "inventory management system"
+    "accounting software",
+    "business software",
+    "inventory accounting",
+    "inventory and warehousing",
+    "inventory control",
+    "inventory management",
+    "inventory management system",
+    "supply chain management",
+    "supply management"
   ],
   "inventory management systems": [
-    "inventory management system"
+    "inventory accounting",
+    "inventory and warehousing",
+    "inventory control",
+    "inventory management",
+    "inventory management system",
+    "order management",
+    "supplier management",
+    "supply chain management",
+    "supply chain systems",
+    "supply management",
+    "warehouse management"
   ],
   "inventory software": [
-    "inventory control"
+    "accounting software",
+    "business software",
+    "inventory accounting",
+    "inventory and warehousing",
+    "inventory control",
+    "inventory management",
+    "inventory management system"
+  ],
+  "ipconfig": [
+    "tcp/ip"
+  ],
+  "iptables": [
+    "firewall"
+  ],
+  "iris": [
+    "instagram"
+  ],
+  "javascript": [
+    "javascript",
+    "javascript and jquery",
+    "javascript frameworks",
+    "jquery",
+    "nodejs"
+  ],
+  "jdbc": [
+    "java"
+  ],
+  "jenkins": [
+    "jenkins"
+  ],
+  "jest": [
+    "jest (javascript testing framework)"
+  ],
+  "jet": [
+    "android jetpack"
+  ],
+  "jfrog artifactory": [
+    "java"
+  ],
+  "joomla": [
+    "apache"
+  ],
+  "jquery": [
+    "javascript",
+    "javascript and jquery",
+    "jquery"
+  ],
+  "julia": [
+    "jenkins"
+  ],
+  "junit": [
+    "junit"
+  ],
+  "jupyter notebook": [
+    "jupyter"
+  ],
+  "kali linux": [
+    "linux"
+  ],
+  "keras": [
+    "keras (neural network library)"
+  ],
+  "kicad": [
+    "kibana"
+  ],
+  "kismet": [
+    "kibana"
+  ],
+  "kornshell": [
+    "kotlin"
+  ],
+  "kotlin": [
+    "kotlin"
+  ],
+  "kubeflow": [
+    "kubernetes"
+  ],
+  "kubernetes": [
+    "kubernetes"
+  ],
+  "ladder logic": [
+    "computational logic"
+  ],
+  "lamp stack": [
+    "full-stack web development"
+  ],
+  "latex": [
+    "infographics"
+  ],
+  "lexisnexis": [
+    "langgraph"
+  ],
+  "lighting calculation software": [
+    "mathematical software"
+  ],
+  "linux": [
+    "linux",
+    "linux administration",
+    "linux servers",
+    "operating systems",
+    "ubuntu",
+    "unix"
+  ],
+  "loom": [
+    "combinatorics"
+  ],
+  "lua": [
+    "stata"
+  ],
+  "lucidchart": [
+    "infographics"
+  ],
+  "mailchimp": [
+    "newsletters"
   ],
   "maintenance management software": [
-    "project management software"
+    "facility management and maintenance"
+  ],
+  "mapinfo": [
+    "data mapping"
   ],
   "mapping software": [
-    "accounting software"
+    "data mapping",
+    "datamaps",
+    "geospatial mapping",
+    "gis software"
+  ],
+  "mariadb": [
+    "database software"
+  ],
+  "mastermind": [
+    "artificial intelligence"
   ],
   "mathematical software": [
-    "mathematical software"
+    "computer programming tools",
+    "engineering software",
+    "mathematical modeling",
+    "mathematical software",
+    "mathematics and mathematical modeling",
+    "spreadsheet software",
+    "statistical software"
+  ],
+  "mcafee": [
+    "cybersecurity"
   ],
   "medical imaging software": [
     "medical imaging"
   ],
   "medical software": [
-    "mathematical software"
+    "business software",
+    "medical coding",
+    "medical devices",
+    "medical office procedures",
+    "software systems",
+    "system software"
+  ],
+  "mentor graphics calibre": [
+    "graphics software"
   ],
   "metasploit": [
     "metasploit"
   ],
   "microservices architecture": [
-    "microarchitecture"
+    "microservices",
+    "service oriented architecture"
   ],
   "microsoft access": [
+    "data access",
     "microsoft access"
   ],
   "microsoft active directory": [
-    "active directory"
+    "active directory",
+    "azure active directory"
   ],
   "microsoft asp.net": [
-    "microsoft azure"
+    ".net framework",
+    "asp.net",
+    "c# (programming language)"
   ],
   "microsoft dynamics": [
-    "microsoft teams"
-  ],
-  "microsoft dynamics ax": [
-    "microsoft teams"
-  ],
-  "microsoft dynamics nav": [
-    "microsoft teams"
-  ],
-  "microsoft edge": [
-    "microsoft excel"
-  ],
-  "microsoft excel": [
-    "microsoft excel"
-  ],
-  "microsoft exchange": [
-    "microsoft excel"
-  ],
-  "microsoft office": [
     "microsoft office"
   ],
+  "microsoft dynamics ax": [
+    "microsoft office"
+  ],
+  "microsoft dynamics nav": [
+    "microsoft 365"
+  ],
+  "microsoft edge": [
+    "microsoft windows"
+  ],
+  "microsoft excel": [
+    "excel formulas",
+    "excel macros",
+    "google sheets",
+    "microsoft excel",
+    "spreadsheet software"
+  ],
+  "microsoft exchange": [
+    "microsoft office"
+  ],
+  "microsoft office": [
+    "microsoft office",
+    "microsoft powerpoint",
+    "microsoft windows"
+  ],
   "microsoft power automate": [
-    "microsoft powerpoint"
+    "microsoft power platform"
   ],
   "microsoft power bi": [
-    "microsoft powerpoint"
+    "microsoft power platform",
+    "power bi"
   ],
   "microsoft powerpoint": [
+    "microsoft office",
     "microsoft powerpoint"
   ],
   "microsoft project": [
-    "microsoft powerpoint"
+    "microsoft visual studio",
+    "project controls",
+    "project coordination",
+    "project design",
+    "project estimation",
+    "project implementation",
+    "project management",
+    "project management software",
+    "project planning"
   ],
   "microsoft sharepoint": [
-    "microsoft powerpoint"
+    "microsoft office",
+    "microsoft servers",
+    "microsoft windows",
+    "salesforce"
   ],
   "microsoft sql server": [
-    "microsoft sql servers"
+    "database administration",
+    "database application",
+    "microsoft sql servers",
+    "sql"
   ],
   "microsoft teams": [
-    "microsoft teams"
+    "microsoft teams",
+    "team building",
+    "team collaboration",
+    "team management",
+    "virtual teams"
   ],
   "microsoft visio": [
-    "microsoft visual studio"
+    "graphics software"
   ],
   "microsoft visual studio": [
-    "microsoft visual studio"
+    "microsoft development tools",
+    "microsoft visual studio",
+    "visual basic (programming language)"
   ],
   "microsoft windows": [
-    "microsoft windows"
+    "microsoft office",
+    "microsoft servers",
+    "microsoft windows",
+    "operating systems",
+    "windows servers"
   ],
   "microsoft windows xp": [
     "microsoft windows"
   ],
   "microsoft word": [
-    "microsoft windows"
+    "microsoft office"
+  ],
+  "microstrategy": [
+    "microservices"
+  ],
+  "minesight": [
+    "computer vision"
   ],
   "minitab": [
     "minitab"
   ],
+  "mlflow": [
+    "dataflow"
+  ],
   "modeling software": [
-    "design software"
+    "3d modeling",
+    "business modeling",
+    "data modeling",
+    "design software",
+    "engineering software",
+    "enterprise modeling",
+    "mathematical modeling",
+    "mathematical software",
+    "model based systems engineering",
+    "process modeling",
+    "simulation and simulation software",
+    "software design",
+    "unified modeling language"
+  ],
+  "mongodb": [
+    "mongodb",
+    "nosql"
+  ],
+  "moodle": [
+    "jupyter"
+  ],
+  "mysql": [
+    "mysql",
+    "mysql workbench",
+    "sql"
+  ],
+  "nagios": [
+    "istio"
+  ],
+  "national instruments labview": [
+    "laboratory equipment"
   ],
   "navigation software": [
-    "data visualization software"
+    "system software"
+  ],
+  "neo4j": [
+    "java"
+  ],
+  "netstat": [
+    "network monitoring"
+  ],
+  "netsuite": [
+    "fintech"
   ],
   "network management software": [
-    "project management software"
+    "computer networking",
+    "network administration",
+    "network engineering",
+    "network monitoring",
+    "network performance management"
+  ],
+  "next.js": [
+    "javascript"
+  ],
+  "nmap": [
+    "network monitoring"
+  ],
+  "nodejs": [
+    "javascript",
+    "nodejs"
   ],
   "nosql": [
+    "mongodb",
     "nosql"
+  ],
+  "numpy": [
+    "numpy"
   ],
   "nunit": [
     "junit"
   ],
   "object-oriented programming languages": [
+    "data-oriented programming",
+    "object oriented design",
+    "object oriented programming (oop)",
+    "other programming languages"
+  ],
+  "objective-c": [
     "objective-c (programming language)"
   ],
+  "office suite software": [
+    "business software",
+    "microsoft office",
+    "productivity software",
+    "spreadsheet software"
+  ],
   "online databases": [
-    "oracle databases"
+    "data store",
+    "database administration",
+    "database application",
+    "database management",
+    "database management systems",
+    "database software",
+    "database systems",
+    "database theory",
+    "databases",
+    "operational databases",
+    "oracle databases",
+    "relational databases",
+    "vector databases"
+  ],
+  "onshape": [
+    "kotlin"
+  ],
+  "opengl": [
+    "graphics software"
   ],
   "openshift": [
     "openshift"
   ],
+  "openstack": [
+    "openai"
+  ],
+  "opentable": [
+    "tableau software"
+  ],
   "operational databases": [
-    "operational databases"
+    "data management",
+    "database administration",
+    "database application",
+    "database architecture and administration",
+    "database development",
+    "database management",
+    "database management systems",
+    "database software",
+    "database systems",
+    "database theory",
+    "databases",
+    "operational analysis",
+    "operational data store",
+    "operational databases",
+    "operational performance management",
+    "operations support systems",
+    "oracle databases",
+    "relational databases"
   ],
   "optimization software": [
-    "data visualization software"
+    "machine learning software",
+    "mathematical software",
+    "model optimization",
+    "process optimization"
   ],
   "oracle data guard": [
     "oracle databases"
   ],
   "oracle database": [
+    "database administration",
+    "database application",
+    "database software",
+    "database systems",
+    "databases",
+    "oracle cloud",
+    "oracle cloud applications",
+    "oracle databases",
+    "oracle sql developer"
+  ],
+  "oracle designer": [
+    "oracle databases",
+    "oracle sql developer"
+  ],
+  "oracle e-business suite": [
     "oracle databases"
   ],
+  "oracle enterprise manager": [
+    "enterprise application management",
+    "oracle databases",
+    "oracle sql developer"
+  ],
+  "oracle enterprise manager cloud control": [
+    "oracle cloud",
+    "oracle cloud applications"
+  ],
+  "oracle fusion middleware": [
+    "middleware"
+  ],
+  "oracle golden gate": [
+    "oracle sql developer"
+  ],
+  "oracle hyperion": [
+    "oracle databases"
+  ],
+  "oracle peoplesoft": [
+    "oracle sql developer"
+  ],
+  "oracle pl/sql": [
+    "oracle databases",
+    "oracle sql developer",
+    "sql"
+  ],
+  "oracle recovery manager": [
+    "service recovery"
+  ],
   "oracle reports": [
-    "annual reports"
+    "business reporting",
+    "management reporting",
+    "oracle databases",
+    "oracle sql developer",
+    "statistical reporting"
+  ],
+  "oracle solaris": [
+    "oracle cloud"
+  ],
+  "oracle weblogic server": [
+    "oracle cloud"
   ],
   "orcad capture": [
     "data capture"
   ],
+  "outlook": [
+    "microsoft office"
+  ],
+  "padlet": [
+    "tiktok"
+  ],
+  "pandas": [
+    "pandas (python package)"
+  ],
+  "parthenon": [
+    "langchain"
+  ],
+  "pascal": [
+    "combinatorics"
+  ],
+  "paypal": [
+    "payment systems"
+  ],
   "payroll software": [
-    "payroll tax"
+    "accounting and finance software",
+    "accounting software",
+    "business software",
+    "payroll",
+    "payroll administration",
+    "payroll processing",
+    "payroll reporting",
+    "payroll systems",
+    "payroll tax",
+    "productivity software"
+  ],
+  "penultimate": [
+    "grep"
+  ],
+  "perl": [
+    "unix"
+  ],
+  "phantomjs": [
+    "nodejs"
+  ],
+  "phonegap": [
+    "chatgpt"
+  ],
+  "php": [
+    "apache"
+  ],
+  "ping identity": [
+    "network routing"
   ],
   "pinterest": [
-    "intranet"
+    "social media"
+  ],
+  "pixelmator": [
+    "computer vision"
+  ],
+  "postgresql": [
+    "postgresql"
+  ],
+  "postman": [
+    "postman api platform"
   ],
   "powershell": [
+    "shell script",
     "windows powershell"
   ],
   "presentation software": [
-    "presentations"
+    "data presentation",
+    "design software",
+    "microsoft powerpoint",
+    "presentations",
+    "sales presentation",
+    "sales presentations"
   ],
   "pricing software": [
-    "accounting software"
+    "business software",
+    "cost control"
   ],
   "process control software": [
-    "process control"
+    "business process management",
+    "os process management",
+    "process capability",
+    "process control",
+    "process design",
+    "process engineering",
+    "process management",
+    "process modeling",
+    "statistical process controls",
+    "system software"
+  ],
+  "process simulation software": [
+    "process engineering",
+    "process modeling",
+    "simulation and simulation software"
   ],
   "production planning software": [
-    "productivity software"
+    "production management",
+    "production process",
+    "project management software"
   ],
   "productivity software": [
-    "productivity software"
+    "accounting software",
+    "business software",
+    "engineering software",
+    "productivity",
+    "productivity software",
+    "software development tools",
+    "workday (software)"
+  ],
+  "profilers": [
+    "people analytics"
   ],
   "project management software": [
-    "project management software"
+    "agile project management",
+    "gis software",
+    "healthcare project management",
+    "milestones (project management)",
+    "package and software management",
+    "program management",
+    "project controls",
+    "project coordination",
+    "project design",
+    "project implementation",
+    "project management",
+    "project management institute (pmi) methodology",
+    "project management life cycle",
+    "project management office (pmo)",
+    "project management software",
+    "project planning",
+    "project risk management",
+    "software development tools"
+  ],
+  "prometheus": [
+    "prometheus (software)"
+  ],
+  "ptc windchill": [],
+  "ptv vissim": [
+    "vision transformer (vit)"
+  ],
+  "puppet": [
+    "puppet (configuration management tool)"
+  ],
+  "putty": [
+    "salesforce"
+  ],
+  "pvsyst": [
+    "hyper-v"
   ],
   "pyspark": [
     "pyspark"
   ],
+  "python": [
+    "computer programming",
+    "python programming"
+  ],
+  "pytorch": [
+    "pytorch (machine learning library)"
+  ],
+  "qgis": [
+    "microsoft windows"
+  ],
+  "qnx": [
+    "quantum computing"
+  ],
+  "r": [
+    "r programming"
+  ],
+  "rabbitmq": [
+    "chatgpt"
+  ],
+  "rapide": [
+    "unreal engine"
+  ],
   "react native": [
-    "react native"
-  ],
-  "react redux": [
-    "react redux"
-  ],
-  "react.js": [
+    "react native",
+    "react redux",
     "react.js"
   ],
+  "react redux": [
+    "react native",
+    "react redux",
+    "react.js"
+  ],
+  "react.js": [
+    "react native",
+    "react redux",
+    "react.js"
+  ],
+  "redis": [
+    "redis"
+  ],
+  "redmine": [
+    "redis"
+  ],
   "requirejs": [
-    "equities"
+    "nodejs"
   ],
   "reservation software": [
-    "design software"
+    "system software"
+  ],
+  "restful api": [
+    "restful api"
   ],
   "rhel": [
     "rhel"
   ],
   "risk management software": [
-    "project management software"
+    "business risk management",
+    "enterprise risk management (erm)",
+    "project management software",
+    "project risk management",
+    "risk analysis",
+    "risk control",
+    "risk management",
+    "risk management framework",
+    "risk modeling",
+    "security software"
   ],
   "robot framework": [
-    "web frameworks"
+    "robotics"
+  ],
+  "route": [
+    "network routing"
+  ],
+  "rss": [
+    "newsletters"
+  ],
+  "ruby": [
+    "ruby (programming language)"
+  ],
+  "ruby on rails": [
+    "ruby (programming language)"
+  ],
+  "rust": [
+    "rust (programming language)"
   ],
   "sales software": [
-    "sas (software)"
+    "accounting software",
+    "business software",
+    "enterprise sales",
+    "general sales practices",
+    "retail sales",
+    "sales",
+    "sales development",
+    "sales enablement",
+    "sales management",
+    "sales operations",
+    "sales presentation",
+    "sales process",
+    "sales prospecting",
+    "sales strategy",
+    "sales support",
+    "sales training",
+    "software systems",
+    "system software"
+  ],
+  "salesforce": [
+    "salesforce",
+    "salesforce development"
+  ],
+  "salesforce marketing cloud": [
+    "cloud applications",
+    "cloud services",
+    "cloud solutions"
+  ],
+  "sand": [
+    "hardening"
+  ],
+  "sap": [
+    "sap applications"
+  ],
+  "sap business objects": [
+    "sap applications"
+  ],
+  "sap concur": [
+    "sap applications"
+  ],
+  "sap netweaver": [
+    "sap applications"
   ],
   "sap software": [
-    "sas (software)"
+    "business intelligence software",
+    "business software",
+    "sap applications"
   ],
   "sas": [
-    "sales"
-  ],
-  "scheduling software": [
-    "accounting software"
-  ],
-  "shape software": [
     "sas (software)"
   ],
+  "scala": [
+    "scala programming"
+  ],
+  "scheduling software": [
+    "content scheduling",
+    "project schedules",
+    "scheduling",
+    "workday (software)"
+  ],
+  "scheme": [
+    "design"
+  ],
+  "scikit-learn": [
+    "scikit learn (machine learning library)"
+  ],
+  "scipy": [
+    "numpy"
+  ],
+  "selenium": [
+    "web scraping"
+  ],
+  "semrush": [
+    "jupyter"
+  ],
+  "sendgrid": [
+    "gmail"
+  ],
+  "servicenow": [
+    "customer service",
+    "service management",
+    "servicenow"
+  ],
+  "shape software": [
+    "graphics software"
+  ],
   "shell script": [
-    "shell script"
+    "bash (scripting language)",
+    "scripting",
+    "shell script",
+    "unix commands",
+    "unix shell"
+  ],
+  "shiny": [
+    "shiny (r package)"
   ],
   "shipconstructor": [
-    "construction"
+    "transportation operations"
   ],
   "shipping software": [
-    "design software"
+    "solution delivery"
   ],
   "shipping solutions": [
-    "business solutions"
+    "solution delivery"
+  ],
+  "siemens nx": [
+    "industrial engineering"
+  ],
+  "siemens teamcenter": [
+    "team management"
+  ],
+  "silver peak": [
+    "servicenow"
   ],
   "simulation software": [
-    "data visualization software"
+    "engineering software",
+    "graphics software",
+    "mathematical software",
+    "simulation and simulation software",
+    "simulations"
   ],
   "site manager": [
-    "it management"
+    "content management"
+  ],
+  "skype": [
+    "telephone skills"
+  ],
+  "slack": [
+    "splunk"
   ],
   "smalltalk": [
-    "small data"
+    "communication"
+  ],
+  "smartsheet": [
+    "google sheets"
+  ],
+  "snapchat": [
+    "social media"
   ],
   "snowflake": [
     "snowflake schema"
   ],
   "software development tools": [
-    "software development tools"
+    "agile software development",
+    "build tools",
+    "computer programming tools",
+    "design software",
+    "devops tools",
+    "engineering software",
+    "gis software",
+    "graphical tools",
+    "microsoft development tools",
+    "mobile development tools",
+    "productivity software",
+    "program development",
+    "project management software",
+    "salesforce development",
+    "software development",
+    "software development methodologies",
+    "software development tools",
+    "software engineering",
+    "software engineering tools",
+    "software systems",
+    "test tools",
+    "web development tools"
+  ],
+  "software libraries": [
+    "software development tools",
+    "software systems",
+    "system software"
+  ],
+  "solarwinds": [
+    "control panels"
+  ],
+  "solidity": [
+    "design"
+  ],
+  "sonarqube": [
+    "seaborn"
+  ],
+  "spacy": [
+    "crewai"
   ],
   "splunk": [
     "splunk"
   ],
   "spreadsheet software": [
-    "spreadsheet software"
-  ],
-  "spring framework": [
-    "spring framework"
-  ],
-  "statistical software": [
+    "data analysis software",
+    "excel macros",
+    "google sheets",
+    "mathematical software",
+    "microsoft excel",
+    "spreadsheet software",
     "statistical software"
   ],
+  "spring boot": [
+    "spring boot",
+    "spring framework"
+  ],
+  "spring framework": [
+    "spring boot",
+    "spring framework"
+  ],
+  "sqlite": [
+    "database software"
+  ],
+  "square": [
+    "geometry"
+  ],
+  "statistical software": [
+    "data analysis software",
+    "machine learning software",
+    "mathematical software",
+    "spreadsheet software",
+    "stata (software)",
+    "statistical analysis",
+    "statistical machine learning",
+    "statistical methods",
+    "statistical modeling",
+    "statistical programming",
+    "statistical reporting",
+    "statistical software",
+    "statistics"
+  ],
   "statistics databases": [
-    "statistical analysis"
+    "analytics",
+    "database software",
+    "databases",
+    "operational databases",
+    "relational databases",
+    "statistical reporting",
+    "statistical software",
+    "statistics"
+  ],
+  "swift": [
+    "swift programming"
   ],
   "switch software": [
-    "security software"
+    "network switches"
+  ],
+  "synopsys design compiler": [
+    "devops tools"
+  ],
+  "synopsys hspice": [
+    "devsecops"
   ],
   "systems integration software": [
+    "software systems",
+    "system software",
+    "systems administration",
+    "systems development",
+    "systems engineering",
     "systems integration"
   ],
+  "systemverilog": [
+    "microsoft copilot"
+  ],
+  "tableau": [
+    "tableau software"
+  ],
+  "talend data fabric": [
+    "data storytelling"
+  ],
+  "tanks": [
+    "team building"
+  ],
+  "taproot": [
+    "wireframing"
+  ],
+  "tcpdump": [
+    "data capture"
+  ],
+  "tenable nessus": [
+    "tenacity"
+  ],
+  "tensorflow": [
+    "tensorflow"
+  ],
   "test automation software": [
-    "test automation"
+    "automation",
+    "it automation",
+    "product automation",
+    "software testing",
+    "system testing",
+    "test automation",
+    "test engineering",
+    "test tools"
   ],
   "testing software": [
-    "design software"
+    "acceptance testing",
+    "api testing",
+    "development testing",
+    "integration testing",
+    "performance testing",
+    "product testing",
+    "regression testing",
+    "scenario testing",
+    "security testing",
+    "software testing",
+    "system testing",
+    "test automation",
+    "test data",
+    "test engineering",
+    "test planning",
+    "test script development",
+    "test tools",
+    "testability",
+    "unit testing",
+    "usability testing"
   ],
   "testng": [
-    "api testing"
+    "test tools"
+  ],
+  "tfs": [
+    "file systems"
+  ],
+  "tibco spotfire": [
+    "tiktok"
   ],
   "tiktok": [
     "tiktok"
   ],
+  "traceroute": [
+    "network routing"
+  ],
   "training software": [
-    "accounting software"
+    "developing training materials",
+    "end user training and support",
+    "engineering software",
+    "machine learning software",
+    "model training",
+    "system software",
+    "training programs"
   ],
   "transact-sql": [
+    "sql",
     "transact-sql"
   ],
+  "travis": [
+    "jenkins"
+  ],
+  "trimble geomatics office": [
+    "microsoft office"
+  ],
+  "troubleshooting software": [
+    "debugging",
+    "hardware troubleshooting"
+  ],
+  "twitter": [
+    "instagram",
+    "social media",
+    "social media content"
+  ],
+  "typescript": [
+    "typescript"
+  ],
   "ubuntu": [
+    "linux",
     "ubuntu"
   ],
+  "unix": [
+    "linux",
+    "linux commands",
+    "operating systems",
+    "unix",
+    "unix commands",
+    "unix shell"
+  ],
   "unix shell": [
+    "linux commands",
+    "shell script",
+    "unix",
+    "unix commands",
     "unix shell"
   ],
   "value analysis": [
-    "failure analysis"
+    "analysis",
+    "business analysis",
+    "data analysis",
+    "earned value management",
+    "value propositions"
+  ],
+  "vector canalyzer": [
+    "vector databases"
+  ],
+  "vector canoe": [
+    "vector databases"
+  ],
+  "verilog": [
+    "system programming"
+  ],
+  "veritas netbackup": [
+    "network support"
   ],
   "version control software": [
+    "git (version control system)",
+    "software versioning",
     "version control"
   ],
+  "vigilant": [
+    "risking"
+  ],
+  "vimeo": [
+    "video production"
+  ],
   "vision software": [
-    "gis software"
+    "computer vision",
+    "graphics software"
   ],
   "vmware": [
+    "virtual machines",
+    "virtualization",
+    "virtualization and virtual machines",
+    "vmware esx servers",
     "vmware vsan"
   ],
   "vmware esx server": [
-    "vmware esx servers"
+    "vmware esx servers",
+    "vmware vsan"
+  ],
+  "vue": [
+    "hyper-v"
   ],
   "web application software": [
-    "web applications"
+    "application design",
+    "application development",
+    "back-end web development",
+    "business software",
+    "front-end web development",
+    "system software",
+    "web applications",
+    "web components",
+    "web design",
+    "web development",
+    "web development tools",
+    "web frameworks",
+    "web language",
+    "web services"
+  ],
+  "webpack": [
+    "webpack"
+  ],
+  "whatsapp": [
+    "gmail"
+  ],
+  "windows media player": [
+    "multimedia"
+  ],
+  "windows server": [
+    "microsoft servers",
+    "microsoft windows",
+    "server administration",
+    "server side",
+    "servers",
+    "web servers",
+    "windows servers"
+  ],
+  "wireshark": [
+    "network monitoring"
   ],
   "word processing software": [
-    "design software"
+    "microsoft office"
   ],
-  "workflow software": [
+  "wordpress": [
+    "social media"
+  ],
+  "workday": [
     "workday (software)"
   ],
+  "workflow software": [
+    "agentic workflows",
+    "ai workflows",
+    "business software",
+    "business workflow analysis",
+    "dataflow",
+    "productivity software",
+    "software engineering tools",
+    "system software",
+    "workflow management"
+  ],
   "workforce management software": [
-    "project management software"
+    "human resources software",
+    "productivity software",
+    "workforce development",
+    "workforce management",
+    "workforce planning"
+  ],
+  "worldcat": [
+    "terraform"
+  ],
+  "wrike": [
+    "yaml"
+  ],
+  "xcode": [
+    "apple ios",
+    "apple xcode",
+    "ios development"
+  ],
+  "xgboost": [
+    "adobe xd"
   ],
   "xquery": [
-    "jquery"
+    "sql"
   ],
   "yield management systems": [
-    "clinic management systems"
+    "production management"
+  ],
+  "youtube": [
+    "live streaming"
+  ],
+  "zabbix": [
+    "alteryx"
+  ],
+  "zemax": [
+    "kotlin"
   ],
   "zend framework": [
     "web frameworks"
+  ],
+  "zoom": [
+    "photography"
   ]
 }
