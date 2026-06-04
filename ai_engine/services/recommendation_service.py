@@ -14,6 +14,8 @@ from core.model_loader import registry
 from schemas.analyze import CourseRecommendation, MissingSkill, SkillGap
 from utils.skill_normalizer import fuzzy_match_skill, safe_float
 
+from core.config import settings
+
 # Social-media / non-technical terms that appear in the LinkedIn skill vocabulary
 # but should never surface as "missing skills" for a developer profile.
 _SKILL_NOISE_BLOCKLIST: frozenset[str] = frozenset({
@@ -68,6 +70,16 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
         user_skills=tf.constant(user_vec),
         role_index=tf.constant(role_idx),
     )
+    model_dir = settings.rec_skill_gap_priority_scorer_path
+    info_path = model_dir / "model_info.json"
+    if info_path.exists():
+        import json
+        with open(info_path) as f:
+            info = json.load(f)
+        logger.info(f" Model info: {info}")
+    else:
+        logger.warning("[x] model_info.json tidak ditemukan di folder model")
+    logger.info(f" Model path: {settings.rec_skill_gap_priority_scorer_path}")
     pred_scores = out3["output_0"].numpy()[0]
 
     mask = user_vec[0] == 0
@@ -95,13 +107,12 @@ def analyze(cv_skills: list[str], target_role: str) -> tuple[SkillGap, list[Cour
     skill_gap = SkillGap(matched_skills=matched_skills, missing_skills=missing_skills)
 
     # ── Course Matching Two-Tower Model (Model 4) ──
-    courses = _recommend_courses(missing_skills)
+    courses = _recommend_courses(missing_skills, target_role)
 
     return skill_gap, courses
 
-
-def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecommendation]:
-    import tensorflow as tf  # lazy import
+def _recommend_courses(missing_skills: list[MissingSkill], target_role: str) -> list[CourseRecommendation]:
+    import tensorflow as tf
 
     r = registry
 
@@ -128,8 +139,29 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
     out4 = r.infer_course_matching_two_tower_model(args_0=demand_f16, args_0_1=course_f16)
     match_scores = next(iter(out4.values())).numpy().flatten()
 
-    top_course_idx = np.argsort(match_scores)[::-1][:20]
+    # ── Category affinity + combined scoring ──
+    combined_scores = match_scores.copy().astype(np.float32)
+    role_emb = r.role_embeddings.get(target_role)
+    if role_emb is not None and r.course_cat_embeddings is not None and r.course_cat_norms is not None:
+        role_norm = np.linalg.norm(role_emb) + 1e-9
+        cat_affinities = np.dot(r.course_cat_embeddings, role_emb) / (r.course_cat_norms.flatten() * role_norm)
+        cat_affinities = np.clip(cat_affinities, 0.0, 1.0)
 
+        CAT_WEIGHT = 0.4
+        combined_scores = (1 - CAT_WEIGHT) * match_scores + CAT_WEIGHT * cat_affinities
+
+    # ── Dedup by URL, ambil 20 unik ──
+    seen_urls = set()
+    top_course_idx = []
+    for cid in np.argsort(combined_scores)[::-1]:
+        url = str(r.df_coursera.iloc[cid].get("Url", ""))
+        if url not in seen_urls:
+            seen_urls.add(url)
+            top_course_idx.append(cid)
+        if len(top_course_idx) == 20:
+            break
+
+    # ── Demand Coursera untuk covered skills ──
     demand_vec_cr = np.zeros(r.n_skills_cr, dtype=np.float32)
     for item in missing_skills:
         li_skill = item.skill
@@ -138,22 +170,15 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
                 if cr_skill in r.skill_to_idx_cr:
                     demand_vec_cr[r.skill_to_idx_cr[cr_skill]] = 1.0
 
-    seen_urls: set[str] = set()
+    # ── Bangun response ──
     recommended: list[CourseRecommendation] = []
     for cid in top_course_idx:
-        score = safe_float(match_scores[cid])
+        score = safe_float(match_scores[cid])   
         if cid >= len(r.df_coursera):
             continue
         row = r.df_coursera.iloc[cid]
-        url = str(row.get("Url", ""))
-
-        # Skip exact-URL duplicates (same course listed multiple times in dataset)
-        if url in seen_urls:
-            continue
-        seen_urls.add(url)
 
         course_vec = r.course_vectors[cid] if r.course_vectors is not None else None
-
         covered = [
             r.idx_to_skill_cr[str(k)]
             for k in range(r.n_skills_cr)
@@ -162,7 +187,7 @@ def _recommend_courses(missing_skills: list[MissingSkill]) -> list[CourseRecomme
 
         recommended.append(CourseRecommendation(
             name=str(row.get("Name", "")),
-            url=url,
+            url=str(row.get("Url", "")),
             match_score=round(score, 4),
             job_category=str(row.get("Job category", "")),
             difficulty=str(row.get("Difficulty", "")),

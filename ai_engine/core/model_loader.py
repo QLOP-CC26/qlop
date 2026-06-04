@@ -51,6 +51,11 @@ class ModelRegistry:
         self.num_courses: int = 0
         self.role_freq: dict[str, dict[str, float]] = {}
         self.role_to_idx: dict[str, int] = {}
+        # Category and role embeddings (untuk course matching berbasis kategori)
+        self.cat_embeddings: dict[str, np.ndarray] = {}
+        self.role_embeddings: dict[str, np.ndarray] = {}
+        self.course_cat_embeddings: np.ndarray | None = None
+        self.course_cat_norms: np.ndarray | None = None
 
         # Readiness
         self.sbert_model = None
@@ -285,7 +290,49 @@ class ModelRegistry:
         role_list = sorted(self.role_freq.keys())
         self.role_to_idx = {role: i for i, role in enumerate(role_list)}
 
-        logger.info("Recommendation models loaded (Skill Gap Priority Scorer + Course Matching Two-Tower Model)")
+        # ── Load category embeddings ──
+        cat_embed_path = data_dir / "cat_embeddings.npz"
+        if cat_embed_path.exists():
+            try:
+                cat_data = np.load(str(cat_embed_path), allow_pickle=True)
+                self.cat_embeddings = {name: emb for name, emb in zip(cat_data['categories'], cat_data['embeddings'])}
+                logger.info("Category embeddings loaded: %d categories", len(self.cat_embeddings))
+            except Exception as e:
+                logger.warning("Failed to load category embeddings: %s", e)
+                self.cat_embeddings = {}
+        else:
+            logger.warning("cat_embeddings.npz not found at %s", cat_embed_path)
+
+        # ── Load role embeddings ──
+        role_embed_path = data_dir / "role_embeddings.npz"
+        if role_embed_path.exists():
+            try:
+                role_data = np.load(str(role_embed_path), allow_pickle=True)
+                self.role_embeddings = {name: emb for name, emb in zip(role_data['roles'], role_data['embeddings'])}
+                logger.info("Role embeddings loaded: %d roles", len(self.role_embeddings))
+            except Exception as e:
+                logger.warning("Failed to load role embeddings: %s", e)
+                self.role_embeddings = {}
+        else:
+            logger.warning("role_embeddings.npz not found at %s", role_embed_path)
+
+        # ── Build course category embeddings matrix ──
+        if self.cat_embeddings and not self.df_coursera.empty:
+            try:
+                embed_dim = next(iter(self.cat_embeddings.values())).shape[0]
+                course_categories = self.df_coursera['Job category'].fillna('Unknown').values
+                self.course_cat_embeddings = np.zeros((len(self.df_coursera), embed_dim), dtype=np.float32)
+                for i, cat in enumerate(course_categories):
+                    self.course_cat_embeddings[i] = self.cat_embeddings.get(cat, self.cat_embeddings.get('Unknown', np.zeros(embed_dim, dtype=np.float32)))
+                # Pre-compute norms untuk normalisasi cepat saat inference
+                self.course_cat_norms = np.linalg.norm(self.course_cat_embeddings, axis=1, keepdims=True) + 1e-9
+                logger.info("Course category embeddings matrix built: shape %s", self.course_cat_embeddings.shape)
+            except Exception as e:
+                logger.warning("Failed to build course category embeddings matrix: %s", e)
+                self.course_cat_embeddings = None
+                self.course_cat_norms = None
+
+        logger.info("Recommendation models loaded (Skill Gap Priority Scorer + Course Matching Two-Tower Model + Embeddings)")
 
     # ------------------------------------------------------------------
     # Readiness (SBERT)
