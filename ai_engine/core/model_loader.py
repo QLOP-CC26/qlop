@@ -287,8 +287,19 @@ class ModelRegistry:
 
         with open(data_dir / "role_freq.json", "r", encoding="utf-8") as f:
             self.role_freq = json.load(f)
-        role_list = sorted(self.role_freq.keys())
-        self.role_to_idx = {role: i for i, role in enumerate(role_list)}
+
+        # Gunakan role_list.json (urutan asli training) jika tersedia
+        role_list_path = data_dir / "role_list.json"
+        if role_list_path.exists():
+            with open(role_list_path, "r", encoding="utf-8") as f:
+                role_list_ordered = json.load(f)
+            logger.info("Menggunakan role_list.json (%d roles)", len(role_list_ordered))
+        else:
+            logger.warning("role_list.json tidak ditemukan. Fallback ke sorted() – indeks role mungkin salah!")
+            role_list_ordered = sorted(self.role_freq.keys())
+
+        self.role_to_idx = {role: i for i, role in enumerate(role_list_ordered)}
+
 
         # ── Load category embeddings ──
         cat_embed_path = data_dir / "cat_embeddings.npz"
