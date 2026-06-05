@@ -8,6 +8,8 @@ This directory contains the data scraping pipelines, notebooks for Exploratory D
 
 The QLOP dashboard is a modern, high-contrast visual analytics platform built on Streamlit and Plotly to analyze tech industry trends and match curriculum profiles against market realities.
 
+* Live Dashboard: [dashboard-qlop.streamlit.app](https://dashboard-qlop.streamlit.app/)
+
 ### How to Run Locally
 
 1. **Setup Environment**: Ensure your virtual environment is active and dependencies are installed.
@@ -30,16 +32,16 @@ The QLOP dashboard is a modern, high-contrast visual analytics platform built on
 
 The following Python scripts handle raw data processing, mapping, and cleaning:
 
-* **[clean_roles.py](file:///d:/DBSCodingCamp/qlop/data_science/scripts/clean_roles.py)**: Cleans scraped job titles, normalizes them into 27 canonical IT target roles, and cleans duplicate strings.
-* **[skill_extraction_pipeline.py](file:///d:/DBSCodingCamp/qlop/data_science/scripts/skill_extraction_pipeline.py)**: Heavy pipeline that processes text fields to extract and filter tech skill vectors using keyword taxonomies and matcher lists.
-* **[download_data.py](file:///d:/DBSCodingCamp/qlop/data_science/scripts/download_data.py)**: Helper script to manage raw data ingestion.
+* **[clean_roles.py](./scripts/clean_roles.py)**: Cleans scraped job titles, normalizes them into 27 canonical IT target roles, and cleans duplicate strings.
+* **[skill_extraction_pipeline.py](./scripts/skill_extraction_pipeline.py)**: Heavy pipeline that processes text fields to extract and filter tech skill vectors using keyword taxonomies and matcher lists.
+* **[download_data.py](./scripts/download_data.py)**: Helper script to manage raw data ingestion.
 
 ---
 
 ## Local Notebooks
 
-* **[EDA_Skill_Gap_Analysis.ipynb](file:///d:/DBSCodingCamp/qlop/data_science/notebooks/EDA_Skill_Gap_Analysis.ipynb)**: Detailed exploratory analysis on raw scraped datasets mapping the density of tech skills across different roles.
-* **[AB_Testing.ipynb](file:///d:/DBSCodingCamp/qlop/data_science/notebooks/AB_Testing.ipynb)**: Hypothesis testing and metric analysis to validate the significance of recommendations and user readiness score distributions.
+* **[EDA_Skill_Gap_Analysis.ipynb](./notebooks/EDA_Skill_Gap_Analysis.ipynb)**: Detailed exploratory analysis on raw scraped datasets mapping the density of tech skills across different roles.
+* **[AB_Testing.ipynb](./notebooks/AB_Testing.ipynb)**: Hypothesis testing and metric analysis to validate the significance of recommendations and user readiness score distributions.
 
 ---
 

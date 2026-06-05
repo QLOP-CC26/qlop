@@ -3,6 +3,7 @@
   <h1>QLOP</h1>
   <p><strong>AI-Driven Skill Gap Analysis & Career Navigation Platform</strong></p>
   <p>Bridge the gap between talent and opportunity — powered by NLP, ML, and Generative AI.</p>
+  <p><a href="https://www.qlop.biz.id/" target="_blank"><strong>www.qlop.biz.id</strong></a></p>
 </div>
 
 ---
@@ -52,11 +53,13 @@ The AI pipeline runs in **three phases**:
 
 ## Repository Structure (Monorepo)
 
-* **[frontend/](file:///d:/DBSCodingCamp/qlop/frontend/README.md)** — User Interface built with React, Vite, and Tailwind CSS.
-* **[backend/](file:///d:/DBSCodingCamp/qlop/backend/README.md)** — Main API Server and business logic built with Express.js and PostgreSQL.
-* **[ai_engine/](file:///d:/DBSCodingCamp/qlop/ai_engine/README.md)** — NLP and Machine Learning service built with FastAPI, TensorFlow, SBERT, and Groq.
-* **[data_science/](file:///d:/DBSCodingCamp/qlop/data_science/README.md)** — Web scraping pipelines, analytical notebooks, and Streamlit Market Insight Dashboard.
-* **[docs/](file:///d:/DBSCodingCamp/qlop/docs)** — Project documentation and final deliverables.
+Please read the respective `README.md` file in each directory for detailed setup, configuration, and structural documentation of each component:
+
+* **[frontend/](./frontend/README.md)** — User Interface built with React, Vite, and Tailwind CSS.
+* **[backend/](./backend/README.md)** — Main API Server and business logic built with Express.js and PostgreSQL.
+* **[ai_engine/](./ai_engine/README.md)** — NLP and Machine Learning service built with FastAPI, TensorFlow, SBERT, and Groq.
+* **[data_science/](./data_science/README.md)** — Web scraping pipelines, analytical notebooks, and Streamlit Market Insight Dashboard.
+* **[docs/](./docs)** — Project documentation and final deliverables.
 
 
 ## Environment Setup Instructions
