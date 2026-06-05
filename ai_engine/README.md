@@ -493,15 +493,37 @@ const pivotMessages = [
 
 ## Kaggle Research & Datasets
 
-The machine learning core is built on the following Kaggle resources:
+The core machine learning models in QLOP were researched, modeled, and trained on Kaggle using GPU/TPU instances. Below is a deep analysis of the Kaggle assets used in the development of QLOP:
 
-### Kaggle Notebooks
-* **AI 1 (NER Skill Extractor)**: [qlop-ner-v2-it-skill-extraction-from-cvs](https://www.kaggle.com/code/husniabdillah/qlop-ner-v2-it-skill-extraction-from-cvs) — Fine-tuning code for DeBERTa-v3 on Indonesian IT resume entities.
-* **AI 2 (Two-Tower Matcher & Gap Analysis)**: [qlop-two-tower-course-matcher-and-gap-analysis](https://www.kaggle.com/code/gilangagung/qlop-two-tower-course-matcher-and-gap-analysis) — TensorFlow implementation of the skill gap scoring model (Model 3) and Two-Tower Coursera recommender (Model 4).
-* **Synthetic Profile Generator**: [qlop-synthethic-data-for-ai-training](https://www.kaggle.com/code/husniabdillah/qlop-synthethic-data-for-ai-training) — Creates virtual candidates to pre-train Model 3 and Model 4.
+### 1. Kaggle Notebooks (AI Model Development)
 
-### Kaggle Datasets
-* **QLOP NER Dataset**: [husniabdillah/qlop-ner-dataset](https://www.kaggle.com/datasets/husniabdillah/qlop-ner-dataset) — Annotated resume corpus for fine-tuning the DeBERTa extractor.
-* **Intelligent Learning Recommendation Dataset**: [gilangagung/qlop-intelligent-learning-recommendation-dataset](https://www.kaggle.com/datasets/gilangagung/qlop-intelligent-learning-recommendation-dataset) — Coursera catalogs, skill vocabs, mapping JSONs, and pre-computed synthetic matrices.
-* **Dataset QLOP (Mastered Jobs)**: [husniabdillah/dataset-qlop](https://www.kaggle.com/datasets/husniabdillah/dataset-qlop) — Baseline IT job vacancies crawled and mapped across Indonesian platforms.
+#### [AI 1: DeBERTa-v3 NER CV Extraction](https://www.kaggle.com/code/husniabdillah/qlop-ner-v2-it-skill-extraction-from-cvs)
+* **Description**: Contains the training, validation, and optimization code for the Phase 1 CV extraction model.
+* **Model Base**: Fine-tuned on `microsoft/deberta-v3-base`.
+* **Architecture Details**: Integrates a custom token classification head (`QLOPNERModelV2`) that utilizes a multi-head projection layer and gating mechanics. It maps tokens to BILOU labels for entities like Name, Email, Institution, Designation, Degree, and Skills.
+* **Weights**: The resulting token classification head weights (`best_weights.weights.h5`) are deployed in `ai_engine/model_assets/ner/`.
+
+#### [AI 2: Two-Tower Course Recommender & Scorer](https://www.kaggle.com/code/gilangagung/qlop-two-tower-course-matcher-and-gap-analysis)
+* **Description**: Focuses on modeling and training the recommendation engines used in Phase 2.
+* **Model 3 (Skill Scorer)**: A neural network classifier predicting the priority score of missing skills given user profiles and target role indices.
+* **Model 4 (Course Matcher)**: A Two-Tower matching model that maps candidate demand profiles and Coursera course skill vectors to a shared embedding space, optimizing cosine similarity.
+* **SavedModels**: Exported as TensorFlow SavedModels (`saved_model.pb`) and deployed in `ai_engine/model_assets/recommendation/`.
+
+#### [AI Synthetic Profile Generator](https://www.kaggle.com/code/husniabdillah/qlop-synthethic-data-for-ai-training)
+* **Description**: Script designed to generate synthetic candidate skill profiles and course enrollment patterns.
+* **Purpose**: Solves cold-start and data sparsity problems, providing millions of virtual vector profiles to pre-train Model 3 and Model 4 before fine-tuning on real datasets.
+
+### 2. Kaggle Datasets (Base Corpora & Annotated Data)
+
+#### [Dataset QLOP (Mastered Job Postings)](https://www.kaggle.com/datasets/husniabdillah/dataset-qlop)
+* **Contents**: Scraped jobs dataset containing raw job descriptions, requirements, and tags from major Indonesian job portals (Jobstreet, Kalibrr, etc.).
+* **Role**: Represents the demand side of the industry, used to calculate role centroids and baseline skill frequencies.
+
+#### [QLOP NER Dataset](https://www.kaggle.com/datasets/husniabdillah/qlop-ner-dataset)
+* **Contents**: Annotated resume tokens labeled with entities (Name, Location, Degree, Company, Skill, etc.).
+* **Role**: Used as the direct training and validation corpus for the custom DeBERTa-v3 NER model.
+
+#### [Intelligent Learning Recommendation Dataset](https://www.kaggle.com/datasets/gilangagung/qlop-intelligent-learning-recommendation-dataset)
+* **Contents**: Cleaned Coursera courses database, skill dictionaries, LinkedIn-to-Coursera mappings, and synthetic training vectors.
+* **Role**: Serves as the training corpus for the Two-Tower matching neural networks.
 

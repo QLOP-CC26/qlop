@@ -1,84 +1,210 @@
-# QLOP Data Science Component
+# Komponen Data Science QLOP
 
-This directory contains the data scraping pipelines, notebooks for Exploratory Data Analysis (EDA), A/B Testing, and the Streamlit Market Insight Dashboard used to visualize job demand, hiring trends, and learning supply.
+Direktori ini berisi pipeline scraping data, notebook untuk Exploratory Data Analysis (EDA), A/B Testing, dan Streamlit Market Insight Dashboard yang digunakan untuk memvisualisasikan kebutuhan pekerjaan, tren perekrutan, dan suplai pembelajaran.
 
 ---
 
 ## Streamlit Market Insight Dashboard
 
-The QLOP dashboard is a modern, high-contrast visual analytics platform built on Streamlit and Plotly to analyze tech industry trends and match curriculum profiles against market realities.
+Dashboard QLOP adalah platform analitik visual modern dengan kontras tinggi yang dibangun menggunakan Streamlit dan Plotly untuk menganalisis tren industri teknologi dan mencocokkan profil kurikulum dengan realitas pasar.
 
-* Live Dashboard: [dashboard-qlop.streamlit.app](https://dashboard-qlop.streamlit.app/)
+* Live Dashboard: [dashboard-qlop.streamlit.app](https://dashboard-qlop.streamlit.app)
 
-### How to Run Locally
+### Cara Menjalankan Secara Lokal
 
-1. **Setup Environment**: Ensure your virtual environment is active and dependencies are installed.
+1. **Setup Environment**: Pastikan virtual environment Anda aktif dan dependensi telah terinstal.
    ```bash
    pip install -r requirements.txt
    ```
-2. **Launch Dashboard**:
+2. **Jalankan Dashboard**:
    ```bash
    streamlit run dashboard.py
    ```
-3. **Dashboard Structure**:
-   * **Overview**: Global summaries of job listings, unique skills, remote work proportions, and course distribution. Includes interactive treemaps and area charts of posting trends.
-   * **Skill Demand**: Details of top global hard skills, skills required per target role, and semantic heatmaps.
-   * **Hiring Trends**: Visualizes recruitment timelines, contract type compositions, and seniority level demands.
-   * **Course Supply**: Map of online courses (Coursera) vs. skills demanded by IT recruiters.
+3. **Struktur Dashboard**:
+   - **Overview**: Ringkasan global dari postingan pekerjaan, skill unik, proporsi kerja remote, dan distribusi kursus. Mencakup treemap interaktif dan grafik area tren postingan.
+   - **Skill Demand**: Detail dari hard skill global teratas, skill yang dibutuhkan per target role, dan heatmap semantik.
+   - **Hiring Trends**: Memvisualisasikan linimasa rekrutmen, komposisi tipe kontrak, dan kebutuhan tingkat senioritas.
+   - **Course Supply**: Pemetaan kursus online (Coursera) vs. skill yang dibutuhkan oleh perekrut IT.
 
 ---
 
-## Data Scripts & Pipelines
+## Script & Pipeline Data
 
-The following Python scripts handle raw data processing, mapping, and cleaning:
+Script Python berikut menangani pemrosesan, pemetaan, dan pembersihan data mentah:
 
-* **[clean_roles.py](./scripts/clean_roles.py)**: Cleans scraped job titles, normalizes them into 27 canonical IT target roles, and cleans duplicate strings.
-* **[skill_extraction_pipeline.py](./scripts/skill_extraction_pipeline.py)**: Heavy pipeline that processes text fields to extract and filter tech skill vectors using keyword taxonomies and matcher lists.
-* **[download_data.py](./scripts/download_data.py)**: Helper script to manage raw data ingestion.
-
----
-
-## Local Notebooks
-
-* **[EDA_Skill_Gap_Analysis.ipynb](./notebooks/EDA_Skill_Gap_Analysis.ipynb)**: Detailed exploratory analysis on raw scraped datasets mapping the density of tech skills across different roles.
-* **[AB_Testing.ipynb](./notebooks/AB_Testing.ipynb)**: Hypothesis testing and metric analysis to validate the significance of recommendations and user readiness score distributions.
+- **[clean_roles.py](./scripts/clean_roles.py)**: Membersihkan judul pekerjaan hasil scraping, menormalisasinya menjadi 27 target role IT kanonik, dan membersihkan string duplikat.
+- **[skill_extraction_pipeline.py](./scripts/skill_extraction_pipeline.py)**: Pipeline berat yang memproses bidang teks untuk mengekstrak dan memfilter vektor skill teknologi menggunakan taksonomi kata kunci dan daftar pencocokan.
+- **[download_data.py](./scripts/download_data.py)**: Script pembantu untuk mengelola ingest data mentah.
 
 ---
 
-## Kaggle Research, Notebooks, & Datasets
+## Notebook Lokal
 
-The core machine learning models in QLOP were researched, modeled, and trained on Kaggle using GPU/TPU instances. Below is a deep analysis of the Kaggle assets used in the development of QLOP:
-
-### 1. Kaggle Notebooks (AI Model Development)
-
-#### [AI 1: DeBERTa-v3 NER CV Extraction](https://www.kaggle.com/code/husniabdillah/qlop-ner-v2-it-skill-extraction-from-cvs)
-* **Description**: Contains the training, validation, and optimization code for the Phase 1 CV extraction model.
-* **Model Base**: Fine-tuned on `microsoft/deberta-v3-base`.
-* **Architecture Details**: Integrates a custom token classification head (`QLOPNERModelV2`) that utilizes a multi-head projection layer and gating mechanics. It maps tokens to BILOU labels for entities like Name, Email, Institution, Designation, Degree, and Skills.
-* **Weights**: The resulting token classification head weights (`best_weights.weights.h5`) are deployed in `ai_engine/model_assets/ner/`.
-
-#### [AI 2: Two-Tower Course Recommender & Scorer](https://www.kaggle.com/code/gilangagung/qlop-two-tower-course-matcher-and-gap-analysis)
-* **Description**: Focuses on modeling and training the recommendation engines used in Phase 2.
-* **Model 3 (Skill Scorer)**: A neural network classifier predicting the priority score of missing skills given user profiles and target role indices.
-* **Model 4 (Course Matcher)**: A Two-Tower matching model that maps candidate demand profiles and Coursera course skill vectors to a shared embedding space, optimizing cosine similarity.
-* **SavedModels**: Exported as TensorFlow SavedModels (`saved_model.pb`) and deployed in `ai_engine/model_assets/recommendation/`.
-
-#### [AI Synthetic Profile Generator](https://www.kaggle.com/code/husniabdillah/qlop-synthethic-data-for-ai-training)
-* **Description**: Script designed to generate synthetic candidate skill profiles and course enrollment patterns.
-* **Purpose**: Solves cold-start and data sparsity problems, providing millions of virtual vector profiles to pre-train Model 3 and Model 4 before fine-tuning on real datasets.
+- **[EDA_Skill_Gap_Analysis.ipynb](./notebooks/EDA_Skill_Gap_Analysis.ipynb)**: Analisis eksplorasi mendalam pada dataset mentah hasil scraping yang memetakan kepadatan skill teknologi di berbagai role.
+- **[AB_Testing.ipynb](./notebooks/AB_Testing.ipynb)**: Pengujian hipotesis dan analisis metrik untuk memvalidasi signifikansi rekomendasi dan distribusi skor kesiapan pengguna (user readiness score).
 
 ---
 
-### 2. Kaggle Datasets (Base Corpora & Annotated Data)
+## Dataset yang Digunakan
 
-#### [Dataset QLOP (Mastered Job Postings)](https://www.kaggle.com/datasets/husniabdillah/dataset-qlop)
-* **Contents**: Scraped jobs dataset containing raw job descriptions, requirements, and tags from major Indonesian job portals (Jobstreet, Kalibrr, etc.).
-* **Role**: Represents the demand side of the industry, used to calculate role centroids and baseline skill frequencies.
+| Dataset | Fungsi |
+|---|---|
+| LinkedIn Jobs | Sumber kebutuhan skill industri dari data lowongan kerja |
+| Coursera Courses | Sumber rekomendasi pembelajaran/kursus |
+| O*NET Skills | Referensi standar keterampilan untuk validasi dan skill dictionary |
 
-#### [QLOP NER Dataset](https://www.kaggle.com/datasets/husniabdillah/qlop-ner-dataset)
-* **Contents**: Annotated resume tokens labeled with entities (Name, Location, Degree, Company, Skill, etc.).
-* **Role**: Used as the direct training and validation corpus for the custom DeBERTa-v3 NER model.
+## Sumber Dataset
 
-#### [Intelligent Learning Recommendation Dataset](https://www.kaggle.com/datasets/gilangagung/qlop-intelligent-learning-recommendation-dataset)
-* **Contents**: Cleaned Coursera courses database, skill dictionaries, LinkedIn-to-Coursera mappings, and synthetic training vectors.
-* **Role**: Serves as the training corpus for the Two-Tower matching neural networks.
+- **LinkedIn Jobs**: Dataset hasil scraping lowongan kerja LinkedIn menggunakan Apify.
+- **Coursera Courses**: Dataset kursus online yang berisi nama kursus, partner, skill, URL, kategori pekerjaan, tingkat kesulitan, dan durasi.
+- **O*NET Skills**: Dataset referensi keterampilan standar industri yang digunakan untuk membangun skill dictionary.
+
+## Alur Pengolahan Data
+
+```text
+Raw LinkedIn Jobs
+        ↓
+Role Mapping & Standardisasi Posisi
+        ↓
+Skill Extraction menggunakan FlashText + Skill Dictionary
+        ↓
+Skill Cleaning, Noise Removal, dan Deduplikasi
+        ↓
+Filtering Role IT
+        ↓
+Role Merging & Balancing
+        ↓
+MASTERED_DATA_FINAL_MODELING.csv
+        ↓
+EDA, Skill Gap Analysis, dan Rekomendasi Skill
+```
+
+## Metodologi
+
+### 1. Role Mapping
+
+Role mapping dilakukan untuk menstandarisasi variasi nama pekerjaan. Proses ini menggunakan pendekatan **rule-based classification** dengan **weighted keyword matching**.
+
+Bobot kolom yang digunakan:
+
+| Kolom | Bobot |
+|---|---:|
+| standardizedTitle | 5 |
+| title | 4 |
+| jobFunction | 2 |
+| industries | 1 |
+| descriptionText | 1 |
+
+Role dengan skor tertinggi dipilih sebagai `role_label`. Jika tidak ada keyword yang cocok, data diberi label default `General IT Specialist`.
+
+### 2. Skill Extraction
+
+Skill extraction dilakukan menggunakan pendekatan **Dictionary-Based Skill Extraction** dengan algoritma **FlashText Keyword Matching**. Skill dictionary dibangun dari dataset O*NET dan tambahan skill teknis yang umum digunakan pada industri IT.
+
+Output utama tahap ini:
+
+| Kolom | Deskripsi |
+|---|---|
+| extracted_skills | Daftar skill yang berhasil diekstraksi dari deskripsi pekerjaan |
+| skill_count | Jumlah skill unik yang ditemukan dalam satu lowongan |
+
+### 3. Final Dataset Preparation
+
+Tahap ini menghasilkan dataset final bernama `MASTERED_DATA_FINAL_MODELING.csv`. Proses yang dilakukan meliputi:
+
+- Parsing kolom skill
+- Skill noise removal
+- Validasi skill pendek
+- Deduplikasi skill
+- Filtering role non-IT
+- Role merging
+- Role balancing
+- Pembentukan fitur final
+
+### 4. Exploratory Data Analysis
+
+EDA dilakukan untuk memahami kebutuhan skill industri IT. Analisis yang dilakukan meliputi:
+
+- Skill paling banyak dibutuhkan industri
+- Skill inti berdasarkan role IT
+- Missing skill
+- Distribusi role
+- Tingkat kompetisi lowongan kerja
+- Distribusi seniority level
+- Perbandingan skill Entry Level dan Mid-Senior Level
+- Remote working
+- Employment type
+- Jumlah skill per lowongan
+
+## Hasil Utama EDA
+
+Beberapa temuan utama dari analisis:
+
+- Skill yang paling banyak dicari industri adalah **Python**, diikuti oleh **React.js**, **JavaScript**, **Next.js**, dan **TypeScript**.
+- Role dengan tingkat kompetisi tertinggi adalah **Data Analyst**, **Business Intelligence Analyst**, dan **Frontend Developer**.
+- Mayoritas lowongan berada pada kategori **Mid-Senior Level**.
+- Sebagian besar lowongan masih menerapkan sistem kerja **on-site**, tetapi role seperti AI Engineer, Machine Learning Engineer, dan Software Engineer memiliki peluang remote yang lebih tinggi.
+- Rata-rata jumlah skill per lowongan adalah sekitar **4,9 skill**.
+
+## Evaluasi Rekomendasi Skill Gap
+
+Evaluasi dilakukan menggunakan A/B Testing dengan dua strategi:
+
+| Strategi | Metode | Precision@1 |
+|---|---|---:|
+| Strategi A | Top-3 Heuristik | 12,96% |
+| Strategi B | Cosine Similarity | 22,93% |
+
+Strategi B memberikan peningkatan akurasi sebesar **9,97 poin persentase** dan dipilih sebagai pendekatan rekomendasi skill gap yang lebih efektif.
+
+## Struktur File yang Disarankan
+
+```text
+qlop-data-science/
+├── data/
+│   ├── raw/
+│   │   ├── RAW_DATA_SCRAPING_CAPSTONE_.csv
+│   │   ├── coursera.csv
+│   │   └── Skills_ONET.csv
+│   ├── interim/
+│   │   ├── DATA_CAPSTONE_MAPPING_AI.csv
+│   ├── processed/
+│   │   ├── JOBS_WITH_EXTRACTED_SKILLS.csv
+│   │   └── MASTERED_DATA_FINAL_MODELING.csv
+├── notebooks/
+│   ├── EDA_Skill_Gap_Analysis.ipynb
+│   └── AB_Testing.ipynb
+├── scripts/
+│   ├── mapping_role.py
+│   ├── clean_roles.py
+│   └── skill_extraction_pipeline.py
+├── README.md
+└── DATA_DICTIONARY.md
+```
+
+## Teknologi yang Digunakan
+
+- Python
+- Pandas
+- FlashText
+- NumPy
+- Matplotlib / Seaborn
+- Scikit-learn
+- NLP preprocessing
+- Cosine Similarity
+- Bootstrap Evaluation
+- McNemar Test
+
+## Output Akhir
+
+Output utama proyek ini adalah dataset final `MASTERED_DATA_FINAL_MODELING.csv` yang digunakan untuk:
+
+- Analisis kebutuhan skill industri IT
+- Analisis skill gap
+- Skill matching
+- Rekomendasi pembelajaran
+- Pengembangan model AI pada platform QLOP
+
+## Kesimpulan
+
+QLOP berhasil membangun fondasi data untuk memahami kebutuhan skill industri IT. Melalui proses role mapping, skill extraction, cleaning, balancing, dan EDA, dataset menjadi lebih terstruktur dan siap digunakan untuk analisis skill gap serta rekomendasi pembelajaran. Hasil evaluasi menunjukkan bahwa pendekatan **Cosine Similarity** lebih efektif dibandingkan metode heuristik dalam menghasilkan rekomendasi skill yang relevan.
