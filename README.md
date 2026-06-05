@@ -52,14 +52,12 @@ The AI pipeline runs in **three phases**:
 
 ## Repository Structure (Monorepo)
 
-```text
-qlop/
-├── frontend/             # User Interface (React + Vite + Tailwind)
-├── backend/              # Main API Server & Business Logic (Express.js)
-├── ai_engine/            # NLP Model Service & AI API (FastAPI)
-├── data_science/         # Scraping Scripts & Analytical Dashboard (Streamlit)
-└── docs/                 # Project Documentation & Final Deliverables
-```
+* **[frontend/](file:///d:/DBSCodingCamp/qlop/frontend/README.md)** — User Interface built with React, Vite, and Tailwind CSS.
+* **[backend/](file:///d:/DBSCodingCamp/qlop/backend/README.md)** — Main API Server and business logic built with Express.js and PostgreSQL.
+* **[ai_engine/](file:///d:/DBSCodingCamp/qlop/ai_engine/README.md)** — NLP and Machine Learning service built with FastAPI, TensorFlow, SBERT, and Groq.
+* **[data_science/](file:///d:/DBSCodingCamp/qlop/data_science/README.md)** — Web scraping pipelines, analytical notebooks, and Streamlit Market Insight Dashboard.
+* **[docs/](file:///d:/DBSCodingCamp/qlop/docs)** — Project documentation and final deliverables.
+
 
 ## Environment Setup Instructions
 
